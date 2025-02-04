@@ -10,4 +10,4 @@ Aquest repositori s'estructura en tres paquets:
 - `data` és el paquet encarregat de l'esplotació estadística i visualització de dades del corpus. La seva funcionalitat és complementària a la de `corpus` i `escansor_scr`.
 
 #### **© 2022-2025, Pere Garau Borràs**
-<img src="uib.png" alt="UIB" width="30%">
+<img src="https://logo.uib.cat/digitalAssets/338/338690_logo-uib-horizontal300.png" alt="UIB" width="30%">
