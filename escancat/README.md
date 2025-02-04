@@ -7,7 +7,7 @@ Aquest repositori s'estructura en tres paquets:
 
 - `escansor_scr` és el paquet que conté el nucli de l'escansor, l'aplicació encarregada d'analitzar mètricament els versos. Aquest paquet permet l'ús de l'escansor de manera independent de la resta de l'aplicatiu. A través del paquet `corpus` l'escansor és executat automàticament per al conjunt de versos que componen el corpus.
 
-- `data` és el paquet encarregat de l'esplotació estadística i visualització  de dades del corpus. La seva funcionalitat és complementària a la de `corpus` i `escansor_scr`.
+- `data` és el paquet encarregat de l'esplotació estadística i visualització de dades del corpus. La seva funcionalitat és complementària a la de `corpus` i `escansor_scr`.
 
 #### **© 2022-2025, Pere Garau Borràs**
 <img src="uib.png" alt="UIB" width="30%">
