@@ -10,12 +10,12 @@ import pandas as pd
 
 import spacy
 
-from escancat.corpus.modules.getUSB import getUSB
-from escancat.corpus.modules.author import Author
-from escancat.corpus.modules.book import Book
-from escancat.corpus.modules.poem import Poem
+from AIMeRiC.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.modules.author import Author
+from AIMeRiC.corpus.modules.book import Book
+from AIMeRiC.corpus.modules.poem import Poem
 
-from escancat.escansor_scr.escansor import escaneja
+from AIMeRiC.escansor.escansor import escaneja
 
 usb = getUSB()
 

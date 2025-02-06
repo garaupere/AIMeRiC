@@ -7,7 +7,7 @@ from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
-from escancat.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.modules.getUSB import getUSB
 
 plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams["font.family"] = "Times New Roman"

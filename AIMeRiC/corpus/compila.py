@@ -1,8 +1,8 @@
 """Un mòdul per a compliar el corpus de cada autor."""
 
 from tqdm import tqdm
-from escancat.corpus.modules.getUSB import getUSB
-from escancat.corpus.modules.parse import *
+from AIMeRiC.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.modules.parse import *
 import time
 
 usb = getUSB()

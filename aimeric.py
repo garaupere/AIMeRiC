@@ -3,13 +3,13 @@ import time
 import spacy
 from datetime import datetime
 
-from escancat.corpus.backup import backup_files
-from escancat.corpus.compila import compile_corpus
-from escancat.corpus.modules.getUSB import getUSB
-from escancat.corpus.etiqueta import etiqueta
-from escancat.corpus.obten_dades import analitza_corpus
-from escancat.corpus.valida import valida
-from escancat.escansor_scr.escansor import escaneja
+from AIMeRiC.corpus.backup import backup_files
+from AIMeRiC.corpus.compila import compile_corpus
+from AIMeRiC.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.etiqueta import etiqueta
+from AIMeRiC.corpus.obten_dades import analitza_corpus
+from AIMeRiC.corpus.valida import valida
+from AIMeRiC.escansor.escansor import escaneja
 
 
 def compile(raw_files_path, corpus):
@@ -54,7 +54,7 @@ def scan(nlp, verse, goal:int = 10):
 
 def help():
     print("--" * 40)
-    print("Aquesta és l'ajuda de l'aplicació escancat:")
+    print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
     print("Si necessitau ajuda, podeu consultar la web de l'aplicació: https://github.com/garaupere/escancat, o contactar amb l'autor a p.garau@uib.cat.")
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
@@ -140,10 +140,10 @@ def main():
 
 
 if __name__ == "__main__":
-    from art import text2art
-    text = text2art("AVeRiC")
+    from cfonts import render, say
+    text = render("AIMeRiC", font='chrome', colors=['system', 'gray', 'system'], align='center')
     print(text)
-    print("© 2022-2025, Pere Garau Borràs")
+    print(render("Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs", font='console', colors=['system'], align='center'))
 
     # Carrega el model de Spacy en català
     print("--" * 40)
@@ -158,5 +158,5 @@ if __name__ == "__main__":
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
     print(text)
-    print("© 2022-2025, Pere Garau Borràs")
+    print(render("Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs", font='console', colors=['system'], align='center'))
     print("--" * 40)
