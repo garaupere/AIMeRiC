@@ -3,6 +3,7 @@ import time
 import spacy
 from datetime import datetime
 
+from escancat.corpus.backup import backup_files
 from escancat.corpus.compila import compile_corpus
 from escancat.corpus.modules.getUSB import getUSB
 from escancat.corpus.etiqueta import etiqueta
@@ -72,9 +73,10 @@ def main():
         print("\t3. Explotació estadística del corpus")
         print("\t4. Validar les dades __test")
         print("\t5. Analitzar un vers")
-        print("\t6. Sortir")
+        print("\t6. Còpia de seguretat del corpus")
         print("\tPer accedir al menú d'ajuda, premeu 'h'.")
-        option = input("Selecciona una opció (1/2/3/4/5/6): ")
+        print("\tPer tancar el programa, premeu Intro.")
+        option = input("Seleccionau una opció (1/2/3/4/5/6): ")
 
         if option == "1":
             print("--" * 40)
@@ -117,9 +119,20 @@ def main():
             print("--" * 40)
             verse = input("Introdueix un vers a analitzar: ")
             scan(nlp, verse)
+
+        elif option == "6":
+            print("--" * 40)
+            start = time.time()
+            backup_path = "C:\\Users\\pere\\OneDrive - Universitat de les Illes Balears\\Documents\\UIB\\Estudis oficials\\Doctorat en Filologia i Filosofia\\Tesi\\TESI ESPAI DE TREBALL NET\\DADES\\.backup\\"
+            corpus_path = getUSB()
+            backup_files(corpus_path, backup_path)
+            elapsed_time = time.time() - start
+            minutes = int(elapsed_time // 60)
+            seconds = int(elapsed_time % 60)
+            print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
         elif option == "h":
             help()
-        elif option == "6":
+        elif option == "":
             print("Sortint del programa.")
             break
         else:

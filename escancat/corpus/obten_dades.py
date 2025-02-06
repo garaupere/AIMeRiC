@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
@@ -15,21 +16,30 @@ usb = getUSB()
 
 
 def analitza_corpus(corpus):
+    p_bar = tqdm(range(11))
     root = fr"{usb}/corpora/"
     data = read_csv(f'{root}{corpus}/etiquetat/{corpus}.csv')
+    p_bar.update(1)
     data = normalitza(data)
+    p_bar.update(1)
     contorn_ritmic(data, corpus)
+    p_bar.update(1)
     distancia_iambe(data, corpus)
+    p_bar.update(1)
     mitjana(data, corpus)
+    p_bar.update(1)
     cmap_accents(data, corpus)
+    p_bar.update(1)
     cmap_subdivisions(data, corpus)
+    p_bar.update(1)
     index_binarietat(data, corpus)
+    p_bar.update(1)
     if corpus != '__test':
         dendrograma(data, corpus)
         dendrograma_lang(data, corpus)
+    p_bar.update(2)
     autors_individuals(data, corpus)
-    print(f">> Corpus '{corpus}' analitzat.")
-    print('--' * 40)
+    p_bar.update(1)
 
 
 
@@ -72,7 +82,6 @@ def contorn_ritmic(data, name):
     # Desa el gràfic en svg
     plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
     plt.close()
-    print(f"\t> Contorn rítmic de cada autor desat en {usb}/corpora/{name}/etiquetat/xlsx/contorn_ritmic.xlsx")
 
 
 def distancia_iambe(data, name):
@@ -98,7 +107,6 @@ def distancia_iambe(data, name):
     # Desa el gràfic en svg
     plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
     plt.close()
-    print(f"\t> Distància respecte del model desada en {usb}/corpora/{name}/etiquetat/xlsx/distancia_iambe.xlsx")
 
 
 def autors_individuals(data, name):
@@ -127,8 +135,6 @@ def autors_individuals(data, name):
         # Desa el gràfic en svg
         plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/autors/{autor}/contorn_ritmic.svg')
         plt.close()
-        print(
-            f"\t>> Contorn rítmic de {autor} desat en {usb}/corpora/{name}/etiquetat/svg/autors/{autor}/contorn_ritmic.svg")
 
         # Gràfic
         plt.plot(range(1, 11), distancies[autor], marker='o', linestyle='--')
@@ -140,8 +146,6 @@ def autors_individuals(data, name):
         # Desa el gràfic en svg
         plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/autors/{autor}/distancia_iambe.svg')
         plt.close()
-        print(
-            f"\t>> Distància respecte del model de {autor} desat en {usb}/corpora/{name}/etiquetat/svg/autors/{autor}/distancia_iambe.svg")
 
 
 def index_binarietat(data, name):
@@ -193,8 +197,6 @@ def index_binarietat(data, name):
     # Desa el gràfic en svg
     plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/index_binarietat.svg')
     plt.close()
-    print(
-        f"\t> Índex de binarietat de cada autor desat en {usb}/corpora/{name}/etiquetat/xlsx/index_binarietat.xlsx")
 
 
 def dendrograma(data, name):
@@ -231,7 +233,6 @@ def dendrograma(data, name):
 
     # Desa les dades del dendrograma en un fitxer xlsx
     pd.DataFrame(Z).to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/dendrograma.xlsx')
-    print(f"\t> Dendrograma de semblança dels autors desat en {usb}/corpora/{name}/etiquetat/svg/dendrograma.svg")
 
 
 def dendrograma_lang(data, name):
@@ -275,9 +276,6 @@ def dendrograma_lang(data, name):
 
     # Desa les dades del dendrograma en un fitxer xlsx
     pd.DataFrame(Z).to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/dendrograma_lang.xlsx')
-    print(
-        f"\t> Dendrograma de semblança dels autors desat en {usb}/corpora/{name}/etiquetat/svg/dendrograma_lang.svg")
-
 
 def mitjana(data, name):
     """Calcula la mitjana de cada síl·laba del contorn accentual per al conjunt d'autors"""
@@ -298,7 +296,6 @@ def mitjana(data, name):
     # Desa el gràfic en svg
     plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/mitjana.svg')
     plt.close()
-    print(f"\t> Mitjana de cada síl·laba desada en {usb}/corpora/{name}/etiquetat/svg/mitjana.svg")
 
 
 def cmap_accents(data, name):

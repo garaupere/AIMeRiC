@@ -35,20 +35,14 @@ def extract_poem(txt_file: str) -> list[str]:
 
             # Comprova si el contingut està buit o només conté espais en blanc
             if content.isspace():
-                print(f'\t\t\tSkipping file {txt_file} due to empty content or whitespaces only.')
+                #print(f'\t\t\tSkipping file {txt_file} due to empty content or whitespaces only.')
                 if os.stat(txt_file).st_size == 0:
-                    print("\t\t\t\tRemoving ", txt_file)
+                    #print("\t\t\t\tRemoving ", txt_file)
                     os.remove(txt_file)
                 return []
 
-            # Comprova si el contingut conté caràcters de l'alfabet
-            #if not any(char.isalpha() for char in content):
-            #    print(f'\t\t\tSkipping file {txt_file} due to invalid content.')
-            #    return []
-
-            # Ignorar les pàgines que contenen les paraules clau
             if should_ignore_page(content):
-                print(f'\t\t\tSkipping file {txt_file} due to table of contents or index.')
+                #print(f'\t\t\tSkipping file {txt_file} due to table of contents or index.')
                 return []
 
             poem = re.sub("\d+", "", content)  # Removes numbers
@@ -57,4 +51,5 @@ def extract_poem(txt_file: str) -> list[str]:
             poem = list(filter(None, poem.split('\n')))
         return poem
     except FileNotFoundError:
-        print(f'File {txt_file} unable to decode it.')
+        pass
+        #print(f'File {txt_file} unable to decode it.')

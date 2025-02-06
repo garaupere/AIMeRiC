@@ -4,12 +4,13 @@ import os
 import time
 import zipfile
 from datetime import datetime
+from tqdm import tqdm
 
 
 def backup_files(corpus_path, backup_path):
     dia = datetime.today().strftime('%Y-%m-%d')
     with zipfile.ZipFile(f'{backup_path}backup_{dia}.zip', 'w') as ziph:
-        for root, dirs, files in os.walk(corpus_path):
+        for root, dirs, files in tqdm(os.walk(corpus_path), desc='Comprimint la còpia de seguretat', ncols=80):
             if '.backup' in dirs:
                 dirs.remove('.backup')
             if 'System Volume Information' in dirs:
@@ -19,8 +20,6 @@ def backup_files(corpus_path, backup_path):
                 ziph.write(os.path.join(root, file),
                            os.path.relpath(os.path.join(root, file),
                                            os.path.join(corpus_path, '..')))
-                print(f'Arxiu {file} afegit al zip.')
-    print('Còpia de seguretat completada.')
 
 
 if __name__ == '__main__':

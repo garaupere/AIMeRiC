@@ -125,8 +125,8 @@ Per accedir a l'aplicatiu, executau el fitxer `escancat.py`. Aquesta interfície
 >>	cv_info: {'hiats_a_fm': [], 'hiats_a_m': [], 'hiats_t_fm': [], 'hiats_t_m': [], 'diftong_a_fm': [], 'diftong_a_m': [], 'diftong_t_fm': [], 'diftong_t_m': [], 'triftong_a_fm': [], 'triftong_a_m': [], 'triftong_t_fm': [], 'triftong_t_m': []}
 >>	metronome: Sw.w.S.w.S.wS.wS.|
 > ````
-> <h3> 7. Sortir </h3>
-> Acaba amb l'execució del programa.
+> <h3> 6. Còpia de seguretat del corpus </h3>
+> Du a terme una còpia de seguretat en format `zip` dels arxius del corpus, tant els compilats i etiquetats com els textos originals.
 
  ---
 > ## Organització interna

@@ -256,7 +256,7 @@ class Word:
                                0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                 w1.get_stress()
                 w1.get_stress_index()
-                print([(syl.text, syl.pes) for syl in w1.stress])
+                #print([(syl.text, syl.pes) for syl in w1.stress])
                 for syl in w1.stress:  # Assignam el valor d'accent secundari a l'accent primari del primer component del mot compost.
                     if int(syl.pes) > 2:
                         syl.pes = "2"
@@ -270,7 +270,7 @@ class Word:
                                    div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                     w2.get_stress()
                     w2.get_stress_index()
-                    print([(syl.text, syl.pes) for syl in w2.stress])
+                    #print([(syl.text, syl.pes) for syl in w2.stress])
                     self.stress = w1.stress + w2.stress  # Unim els dos components del mot compost en un sol mot (el mot que s'està creant).
                     self.is_compost = True
                 else:

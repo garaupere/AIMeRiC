@@ -1,8 +1,6 @@
 """Un mòdul per a compliar el corpus de cada autor."""
 
-import json
-import os
-
+from tqdm import tqdm
 from escancat.corpus.modules.getUSB import getUSB
 from escancat.corpus.modules.parse import *
 import time
@@ -16,20 +14,20 @@ def compile_corpus(path: str, corpus: str) -> None:
     print(f'Compilant el corpus \'{corpus}\'...')
 
     for folder_subcorpus in [x for x in os.listdir(corpus_path) if x != '__test']:
-        print(f'> {folder_subcorpus} autors trobats en new_files.')
-        for folder in os.listdir(corpus_path + '/' + folder_subcorpus):
+        #print(f'> {folder_subcorpus} autors trobats en new_files.')
+        for folder in tqdm(os.listdir(corpus_path + '/' + folder_subcorpus), desc='Compilant el corpus'):
             subcorpus_path = corpus_path + '/' + folder_subcorpus
             author_meta = read_metadata(subcorpus_path + '/' + folder, "author")
             corpus_dict = author_meta
-            print(f'\t> {folder} autor trobat en new_files.')
+            #print(f'\t> {folder} autor trobat en new_files.')
 
             for subfolder in os.listdir(subcorpus_path + '/' + folder):
                 if not subfolder.endswith('.info'):
                     book_path = subcorpus_path + '/' + folder + '/' + subfolder
                     book_meta = read_metadata(book_path, "book")
                     corpus_dict['books'].update({subfolder: book_meta})
-                    print(
-                        f'\t\t>>> {len(os.listdir(book_path))} pàgines del llibre \'{subfolder}\'.')
+                    #print(
+                    #    f'\t\t>>> {len(os.listdir(book_path))} pàgines del llibre \'{subfolder}\'.')
 
                     for file in os.listdir(book_path):
                         if file.endswith('.txt'):
@@ -38,34 +36,29 @@ def compile_corpus(path: str, corpus: str) -> None:
                             corpus_dict['books'][subfolder]['poems'].update({file: poem})
 
             # Crea la carpeta 'corpora'
-            print('-' * 40)
+            #print('-' * 40)
             if not os.path.exists(f'{usb}/corpora/'):
                 os.makedirs(f'{usb}/corpora/')
-                print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
-            else:
-                print(f'>> La carpeta \'{usb}/corpora\' ja existeix.')
-
+            #    print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
             if not os.path.exists(f'{usb}/corpora/{corpus}/'):
                 os.makedirs(f'{usb}/corpora/{corpus}/')
-                print(f'\t>> La carpeta \'{usb}corpora/{corpus}\' ha estat creada.')
-            else:
-                print(f'\t>> La carpeta \'{usb}/corpora/{corpus}\' ja existeix.')
+            #    print(f'\t>> La carpeta \'{usb}corpora/{corpus}\' ha estat creada.')
 
             # Fes que el directori tengui aquesta estructura:
             # corpora/{path}/sense_etiquetar/json/{folder}.json
             if not os.path.exists(f'{usb}/corpora/{corpus}/sense_etiquetar/json/'):
                 os.makedirs(f'{usb}/corpora/{corpus}/sense_etiquetar/json/')
-                print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
+            #    print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
 
             with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{folder}.json", "w", encoding="utf-8") as json_file:
                 json.dump(corpus_dict, json_file, ensure_ascii=False, indent=2)
-                print('-' * 40)
-                print(f"\t>> '{folder}.json' desat.")
+            #    print('-' * 40)
+            #    print(f"\t>> '{folder}.json' desat.")
 
-    print('-' * 40)
-    print(f"\t>> Corpus compilat amb èxit i desat a '{usb}/corpora/{corpus}'.")
-    print(f'\t>> {len(os.listdir(f"{usb}/corpora/{corpus}/sense_etiquetar/json"))} autors compilats dins el corpus.')
-    print('-' * 40)
+    #print('-' * 40)
+    #print(f"\t>> Corpus compilat amb èxit i desat a '{usb}/corpora/{corpus}'.")
+    #print(f'\t>> {len(os.listdir(f"{usb}/corpora/{corpus}/sense_etiquetar/json"))} autors compilats dins el corpus.')
+    #print('-' * 40)
 
 
 if __name__ == "__main__":

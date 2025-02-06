@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+from tqdm import tqdm
 from datetime import datetime
 
 import pandas as pd
@@ -42,7 +43,8 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
     with open(f"{results_path}sumari.sum", 'w', encoding='utf-8') as sumari:
         sumari.write("Data;Versió;Autor;Versos;4+6;5+5;6+4;No classificats;Outsiders\n")
 
-    for file in os.listdir(corpus_path):  # Per cada autor del corpus
+    for file in tqdm(os.listdir(corpus_path), desc="Etiquetant el corpus", leave=True, position=0, ncols=80):  # Per cada autor del corpus
+        #print(f'> Etiquetant el corpus de l\'autor {file}...')
         outsiders = []
         author = Author(os.path.join(corpus_path, file))  # Crea un objecte Autor
         author.print_metadata()  # Imprimeix la metadata de l'autor
@@ -56,7 +58,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                  'patró comparatiu', 'metronome'])
 
         rows = []
-        for book_title in author.books:  # Per cada llibre de l'autor
+        for book_title in author.books: # Per a cada llibre de l'autor
             book = Book(book_title, author.content)  # Crea un objecte Llibre
             book.print_metadata()  # Imprimeix la metadata del llibre
             results_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
@@ -70,14 +72,14 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
                     i = 0
                     for verse in poem.verses:  # Per cada vers del poema
-                        print(f"\t{verse}")
+                        #print(f"\t{verse}")
                         if 110 > len(verse) > 20 and re.search(r"[a-zA-Z]", verse):
                             processed_verses.add(verse)  # Afegeix el vers al conjunt de versos processats
 
                             vers = escaneja(nlp, verse, goal=mode)  # Crea un objecte Vers
                             if verse is not None:
                                 if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
-                                    vers.mostra()  # Imprimeix la metadata del vers
+                                    #vers.mostra()  # Imprimeix la metadata del vers
                                     results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
                                         vers.save)  # Guarda la metadata del vers
                                     rows.append([author.id, author.fast_tagg, author.mov, author.born_date, book_title,
@@ -129,9 +131,9 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
             dades_autors.write(
                 f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.fast_tagg};{author.mov};{len(rows)}\n")
 
-        print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
-        print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
-        print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
+        #print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
+        #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
+        #print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
 
     corpus_name = corpus_path.split('/')[2]
     merge_tables(results_path, corpus_name)
