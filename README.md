@@ -1,3 +1,11 @@
+
+
+                                ╔═╗ ╦ ╔╦╗ ╔═╗ ╦═╗ ╦ ╔═╗ 
+                                ╠═╣ ║ ║║║ ║╣  ╠╦╝ ║ ║   
+                                ╩ ╩ ╩ ╩ ╩ ╚═╝ ╩╚═ ╩ ╚═╝ 
+                Anàlisi Informatitzada del Metre i el Ritme del Català
+                             © 2022-2025, Pere Garau Borràs
+
 Aquest repositori conté l'aplicatiu confeccionat per a la tesi <i>La variabilitat rítmica del decasíl·lab català</i> de Pere Garau Borràs (ORCID: <a href="https://orcid.org/0000-0002-0222-0096">0000-0002-022-0096</a>) a la Universitat de les Illes Balears (UIB) (ROR: <a href="https://ror.org/03e10x626">o3e10x626</a>).
 Les eines aquí aplegades permeten la compilació de corpus de poesia etiquetats mètricament a través d'una eina que n'automatitza l'escansió.
 
