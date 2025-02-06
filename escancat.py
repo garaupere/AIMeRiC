@@ -141,7 +141,7 @@ def main():
 
 if __name__ == "__main__":
     from art import text2art
-    text = text2art("escancat")
+    text = text2art("AVeRiC")
     print(text)
     print("© 2022-2025, Pere Garau Borràs")
 
