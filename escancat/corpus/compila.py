@@ -2,9 +2,12 @@
 
 import json
 import os
-from modules.parse import *
+
+from escancat.corpus.modules.getUSB import getUSB
+from escancat.corpus.modules.parse import *
 import time
 
+usb = getUSB()
 
 def compile_corpus(path: str, corpus: str) -> None:
     """Finds the files in the new_files folders and compiles a corpus in JSON format."""
@@ -35,47 +38,47 @@ def compile_corpus(path: str, corpus: str) -> None:
                             corpus_dict['books'][subfolder]['poems'].update({file: poem})
 
             # Crea la carpeta 'corpora'
-            print('-' * 60)
-            if not os.path.exists('E:/corpora/'):
-                os.makedirs('E:/corpora/')
-                print('>> La carpeta \'E:/corpora\' ha estat creada.')
+            print('-' * 40)
+            if not os.path.exists(f'{usb}/corpora/'):
+                os.makedirs(f'{usb}/corpora/')
+                print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
             else:
-                print('>> La carpeta \'E:/corpora\' ja existeix.')
+                print(f'>> La carpeta \'{usb}/corpora\' ja existeix.')
 
-            if not os.path.exists(f'E:/corpora/{corpus}/'):
-                os.makedirs(f'E:/corpora/{corpus}/')
-                print(f'\t>> La carpeta \'E:corpora/{corpus}\' ha estat creada.')
+            if not os.path.exists(f'{usb}/corpora/{corpus}/'):
+                os.makedirs(f'{usb}/corpora/{corpus}/')
+                print(f'\t>> La carpeta \'{usb}corpora/{corpus}\' ha estat creada.')
             else:
-                print(f'\t>> La carpeta \'E:/corpora/{corpus}\' ja existeix.')
+                print(f'\t>> La carpeta \'{usb}/corpora/{corpus}\' ja existeix.')
 
             # Fes que el directori tengui aquesta estructura:
             # corpora/{path}/sense_etiquetar/json/{folder}.json
-            if not os.path.exists(f'E:/corpora/{corpus}/sense_etiquetar/json/'):
-                os.makedirs(f'E:/corpora/{corpus}/sense_etiquetar/json/')
-                print(f'\t\t>> La carpeta \'E:/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
+            if not os.path.exists(f'{usb}/corpora/{corpus}/sense_etiquetar/json/'):
+                os.makedirs(f'{usb}/corpora/{corpus}/sense_etiquetar/json/')
+                print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
 
-            with open(f"E:/corpora/{corpus}/sense_etiquetar/json/{folder}.json", "w", encoding="utf-8") as json_file:
+            with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{folder}.json", "w", encoding="utf-8") as json_file:
                 json.dump(corpus_dict, json_file, ensure_ascii=False, indent=2)
-                print('-' * 60)
+                print('-' * 40)
                 print(f"\t>> '{folder}.json' desat.")
 
-    print('-' * 60)
-    print(f"\t>> Corpus compilat amb èxit i desat a 'E:/corpora/{corpus}'.")
-    print(f'\t>> {len(os.listdir(f"E:/corpora/{corpus}/sense_etiquetar/json"))} autors compilats dins el corpus.')
-    print('-' * 60)
+    print('-' * 40)
+    print(f"\t>> Corpus compilat amb èxit i desat a '{usb}/corpora/{corpus}'.")
+    print(f'\t>> {len(os.listdir(f"{usb}/corpora/{corpus}/sense_etiquetar/json"))} autors compilats dins el corpus.')
+    print('-' * 40)
 
 
 if __name__ == "__main__":
     print('Aquests són els corpus disponibles:')
 
-    raw_files_path = r"E:/compile_files/"
+    raw_files_path = rf"{usb}/compile_files/"
 
     for folder in os.listdir(raw_files_path):
-        print(f'\t-- {folder}')
+        print(f'\t• {folder}')
 
     enter = input('Quin corpus voleu compilar?\t')
 
-    if enter == "tots":
+    if enter == "":
         start_time = time.time()
         for folder in os.listdir(raw_files_path):
             compile_corpus(path=raw_files_path, corpus=folder)
@@ -94,5 +97,5 @@ if __name__ == "__main__":
     minutes = int(execution_time // 60)
     seconds = int(execution_time % 60)
 
-    print('-' * 60)
+    print('-' * 40)
     print(f'El programa ha tardat {minutes} minuts i {seconds} segons en executar-se.')

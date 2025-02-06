@@ -3,9 +3,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from escancat.corpus.modules.getUSB import getUSB
+
 plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams["font.family"] = "Times New Roman"
 
+
+
+def valida():
+    """Una funció per validar les dades __test."""
+    usb = getUSB()
+    automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
+    manual = read_csv('corpus/fitxers_validacio/__test_manual.csv')
+    manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
+
+    df = compare(automatic, manual)
+    plot_comparison(df)
 
 def read_csv(path):
     """Carrega un fitxer csv a un DataFrame"""
@@ -28,7 +41,7 @@ def normalitza(data):
 def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> pd.DataFrame:
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
-    print('--' * 60)
+    print('--' * 40)
     # Imprimeix el valor de cada fila del df la columna 'text del vers'
     df_comp = pd.DataFrame(
         columns=['text del vers'] + ['1_auto', '2_auto', '3_auto', '4_auto', '5_auto', '6_auto', '7_auto', '8_auto',
@@ -72,17 +85,17 @@ def plot_comparison(comparison_df):
     plt.grid(False)
     plt.tight_layout()
     plt.legend()
-    plt.savefig('fitxers_validacio/comparison.svg')
+    plt.savefig('corpus/fitxers_validacio/comparison.svg')
     plt.close()
 
     # Calcula la distància total entre els valors automàtics i manuals
     total_distance = np.abs(auto_mean - manual_mean).mean()
-    print(f'Distància total: {100 - total_distance:.2f}%')
+    print(f'\t > Precisió de l\'etiquetatge: {100 - total_distance:.2f}%')
 
     # Desa les dades de la comparació en un fitxer xlsx
     difference = abs(auto_mean - manual_mean)
     df = pd.DataFrame({'Automàtic': auto_mean, 'Manual': manual_mean, 'Diferència': difference})
-    df.to_excel('fitxers_validacio/comparison.xlsx', index=False)
+    df.to_excel('corpus/fitxers_validacio/comparison.xlsx', index=False)
     plt.figure(figsize=(5, 5))
     plt.bar(df.index, df['Diferència'], color='skyblue')
     # Difference mean
@@ -91,13 +104,14 @@ def plot_comparison(comparison_df):
     plt.xticks(np.arange(0, 11))
     plt.grid(False)
     plt.tight_layout()
-    plt.savefig('fitxers_validacio/difference.svg')
+    plt.savefig('corpus/fitxers_validacio/difference.svg')
 
 
 if __name__ == '__main__':
     print('Validació de les dades __test.')
-    automatic = normalitza(read_csv('E:/corpora/__test/etiquetat/__test.csv'))
-    manual = read_csv('fitxers_validacio/__test_manual.csv')
+    usb = getUSB()
+    automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
+    manual = read_csv('corpus/fitxers_validacio/__test_manual.csv')
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)

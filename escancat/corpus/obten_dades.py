@@ -6,8 +6,31 @@ import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
+from escancat.corpus.modules.getUSB import getUSB
+
 plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams["font.family"] = "Times New Roman"
+
+usb = getUSB()
+
+
+def analitza_corpus(corpus):
+    root = fr"{usb}/corpora/"
+    data = read_csv(f'{root}{corpus}/etiquetat/{corpus}.csv')
+    data = normalitza(data)
+    contorn_ritmic(data, corpus)
+    distancia_iambe(data, corpus)
+    mitjana(data, corpus)
+    cmap_accents(data, corpus)
+    cmap_subdivisions(data, corpus)
+    index_binarietat(data, corpus)
+    if corpus != '__test':
+        dendrograma(data, corpus)
+        dendrograma_lang(data, corpus)
+    autors_individuals(data, corpus)
+    print(f">> Corpus '{corpus}' analitzat.")
+    print('--' * 40)
+
 
 
 def read_csv(path):
@@ -29,7 +52,7 @@ def contorn_ritmic(data, name):
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
     df = data.groupby('autor')[sillabes].mean() * 100
     # Desa el DataFrame en un fitxer xlsx
-    df.to_excel(f'E:/corpora/{name}/etiquetat/xlsx/contorn_ritmic.xlsx')
+    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/contorn_ritmic.xlsx')
     # Genera un gràfic amb el contorn rítmic de cada autor
 
     x_values = range(1, 11)
@@ -44,12 +67,12 @@ def contorn_ritmic(data, name):
     plt.grid(False)
     plt.tight_layout()
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/contorn_ritmic.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/contorn_ritmic.svg')
 
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
     plt.close()
-    print(f"\t> Contorn rítmic de cada autor guardat en E:/corpora/{name}/etiquetat/xlsx/contorn_ritmic.xlsx")
+    print(f"\t> Contorn rítmic de cada autor desat en {usb}/corpora/{name}/etiquetat/xlsx/contorn_ritmic.xlsx")
 
 
 def distancia_iambe(data, name):
@@ -60,7 +83,7 @@ def distancia_iambe(data, name):
     distancies = pd.DataFrame()
     for autor in df.index:
         distancies[autor] = np.abs(df.loc[autor] - model)
-    distancies.T.to_excel(f'E:/corpora/{name}/etiquetat/xlsx/distancia_iambe.xlsx')
+    distancies.T.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/distancia_iambe.xlsx')
 
     # Genera un gràfic amb la distància respecte del model per a cada síl·laba
     x_values = range(1, 11)
@@ -73,9 +96,9 @@ def distancia_iambe(data, name):
     plt.grid(False)
     plt.tight_layout()
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
     plt.close()
-    print(f"\t> Distància respecte del model guardada en E:/corpora/{name}/etiquetat/xlsx/distancia_iambe.xlsx")
+    print(f"\t> Distància respecte del model desada en {usb}/corpora/{name}/etiquetat/xlsx/distancia_iambe.xlsx")
 
 
 def autors_individuals(data, name):
@@ -89,12 +112,12 @@ def autors_individuals(data, name):
         distancies[autor] = np.abs(df.loc[autor] - model)
 
     # Itera cada autor del DataFrame
-    if not os.path.exists(f'E:/corpora/{name}/etiquetat/svg/autors/'):
-        os.makedirs(f'E:/corpora/{name}/etiquetat/svg/autors/')
+    if not os.path.exists(f'{usb}/corpora/{name}/etiquetat/svg/autors/'):
+        os.makedirs(f'{usb}/corpora/{name}/etiquetat/svg/autors/')
     for autor in df.index:
         # Comprova si l'autor té una carpeta al directori 'gràfics'
-        if not os.path.exists(f'E:/corpora/{name}/etiquetat/svg/autors/{autor}'):
-            os.makedirs(f'E:/corpora/{name}/etiquetat/svg/autors/{autor}')
+        if not os.path.exists(f'{usb}/corpora/{name}/etiquetat/svg/autors/{autor}'):
+            os.makedirs(f'{usb}/corpora/{name}/etiquetat/svg/autors/{autor}')
         # Genera un gràfic amb el contorn rítmic de cada autor
         plt.plot(range(1, 11), df.loc[autor], marker='o', linestyle='--')
         plt.axhline(50, color='gray', linestyle='-', alpha=0.2)
@@ -102,10 +125,10 @@ def autors_individuals(data, name):
         plt.grid(False)
         plt.tight_layout()
         # Desa el gràfic en svg
-        plt.savefig(f'E:/corpora/{name}/etiquetat/svg/autors/{autor}/contorn_ritmic.svg')
+        plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/autors/{autor}/contorn_ritmic.svg')
         plt.close()
         print(
-            f"\t\t>> Contorn rítmic de {autor} guardat en E:/corpora/{name}/etiquetat/svg/autors/{autor}/contorn_ritmic.svg")
+            f"\t>> Contorn rítmic de {autor} desat en {usb}/corpora/{name}/etiquetat/svg/autors/{autor}/contorn_ritmic.svg")
 
         # Gràfic
         plt.plot(range(1, 11), distancies[autor], marker='o', linestyle='--')
@@ -115,10 +138,10 @@ def autors_individuals(data, name):
         plt.grid(False)
         plt.tight_layout()
         # Desa el gràfic en svg
-        plt.savefig(f'E:/corpora/{name}/etiquetat/svg/autors/{autor}/distancia_iambe.svg')
+        plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/autors/{autor}/distancia_iambe.svg')
         plt.close()
         print(
-            f"\t\t>> Distància respecte del model de {autor} guardada en E:/corpora/{name}/etiquetat/svg/autors/{autor}/distancia_iambe.svg")
+            f"\t>> Distància respecte del model de {autor} desat en {usb}/corpora/{name}/etiquetat/svg/autors/{autor}/distancia_iambe.svg")
 
 
 def index_binarietat(data, name):
@@ -138,7 +161,6 @@ def index_binarietat(data, name):
     model = [0, 100, 0, 100, 0, 100, 0, 100, 0, 100]
     df.loc['Iàmbic'] = model
 
-    print(df)
 
     # Aplicar la funció a cada fila del DataFrame
     df['binarietat'] = df.apply(calc_bin_index, axis=1)
@@ -153,7 +175,7 @@ def index_binarietat(data, name):
     df['binarietat_invertida'] = 100 - df['binarietat_normalitzada']
 
     # Desar el DataFrame en un fitxer xlsx
-    df.to_excel(f'E:/corpora/{name}/etiquetat/xlsx/index_binarietat.xlsx')
+    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/index_binarietat.xlsx')
 
     # Ordenar el DataFrame per l'índex de binarietat invertida
     df = df.sort_values('binarietat_invertida')
@@ -169,10 +191,10 @@ def index_binarietat(data, name):
     plt.grid(False)
     plt.tight_layout()
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/index_binarietat.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/index_binarietat.svg')
     plt.close()
     print(
-        f"\t> Índex de binarietat de cada autor guardat en E:/corpora/{name}/etiquetat/xlsx/index_binarietat.xlsx")
+        f"\t> Índex de binarietat de cada autor desat en {usb}/corpora/{name}/etiquetat/xlsx/index_binarietat.xlsx")
 
 
 def dendrograma(data, name):
@@ -204,12 +226,12 @@ def dendrograma(data, name):
 
     plt.tight_layout()
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/dendrograma.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/dendrograma.svg')
     plt.close()
 
     # Desa les dades del dendrograma en un fitxer xlsx
-    pd.DataFrame(Z).to_excel(f'E:/corpora/{name}/etiquetat/xlsx/dendrograma.xlsx')
-    print(f"\t> Dendrograma de semblança dels autors guardat en E:/corpora/{name}/etiquetat/svg/dendrograma.svg")
+    pd.DataFrame(Z).to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/dendrograma.xlsx')
+    print(f"\t> Dendrograma de semblança dels autors desat en {usb}/corpora/{name}/etiquetat/svg/dendrograma.svg")
 
 
 def dendrograma_lang(data, name):
@@ -248,13 +270,13 @@ def dendrograma_lang(data, name):
 
     plt.tight_layout()
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/dendrograma_lang.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/dendrograma_lang.svg')
     plt.close()
 
     # Desa les dades del dendrograma en un fitxer xlsx
-    pd.DataFrame(Z).to_excel(f'E:/corpora/{name}/etiquetat/xlsx/dendrograma_lang.xlsx')
+    pd.DataFrame(Z).to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/dendrograma_lang.xlsx')
     print(
-        f"\t> Dendrograma de semblança dels autors guardat en E:/corpora/{name}/etiquetat/svg/dendrograma_lang.svg")
+        f"\t> Dendrograma de semblança dels autors desat en {usb}/corpora/{name}/etiquetat/svg/dendrograma_lang.svg")
 
 
 def mitjana(data, name):
@@ -265,7 +287,8 @@ def mitjana(data, name):
     dst = df.std()
 
     plt.plot(range(1, 11), mean, marker='o', linestyle='-', color='blue')
-    plt.errorbar(range(1, 11), mean, yerr=dst, fmt='o', color='black', capsize=5)
+    if name != '__test':
+        plt.errorbar(range(1, 11), mean, yerr=dst, fmt='o', color='black', capsize=5)
     # Afegeix els valors de std als caps superiors
     for i, txt in enumerate(dst):
         plt.annotate(f'{dst[i]:.2f}', (i + 1, mean[i] + dst[i] + 1), ha='center', va='bottom')
@@ -273,9 +296,9 @@ def mitjana(data, name):
     plt.grid(False)
     plt.tight_layout()
     # Desa el gràfic en svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/mitjana.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/mitjana.svg')
     plt.close()
-    print(f"\t> Mitjana de cada síl·laba guardada en E:/corpora/{name}/etiquetat/svg/mitjana.svg")
+    print(f"\t> Mitjana de cada síl·laba desada en {usb}/corpora/{name}/etiquetat/svg/mitjana.svg")
 
 
 def cmap_accents(data, name):
@@ -301,11 +324,11 @@ def cmap_accents(data, name):
     plt.tight_layout()
 
     # Desa el gràfic svg
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/cmap_accents.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/cmap_accents.svg')
     plt.close()
 
     # Desa les dades en un full de càlcul
-    df.to_excel(f'E:/corpora/{name}/etiquetat/xlsx/cmap_accents.xlsx')
+    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/cmap_accents.xlsx')
 
 
 def cmap_subdivisions(data, name):
@@ -324,56 +347,23 @@ def cmap_subdivisions(data, name):
             plt.text(j, i, f'{df.iloc[i, j]:.2f}', ha='center', va='center', color=color)
     plt.colorbar(label='Freqüència (%)')
     plt.tight_layout()
-    plt.savefig(f'E:/corpora/{name}/etiquetat/svg/cmap_subdivisions.svg')
+    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/cmap_subdivisions.svg')
     plt.close()
 
     # Desa les dades en un full de càlcul
-    df.to_excel(f'E:/corpora/{name}/etiquetat/xlsx/cmap_subdivisions.xlsx')
+    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/cmap_subdivisions.xlsx')
 
 
 if __name__ == '__main__':
-
-    root = "E:/corpora/"
-
-    print("--" * 60)
+    root = fr"{usb}/corpora/"
+    print("--" * 40)
     print("Corpus disponibles:")
     for corpus_folder in os.listdir(root):
-        print(f"\t-- {corpus_folder}")
-
-    print("--" * 60)
+        print(f"\t• {corpus_folder}")
+    print("--" * 40)
     enter = input("Quin corpus voleu explorar?\t")
-
     if enter != "":
-        data = read_csv(f'{root}{enter}/etiquetat/{enter}.csv')
-        data = normalitza(data)
-        print(data)
-        contorn_ritmic(data, enter)
-        distancia_iambe(data, enter)
-        mitjana(data, enter)
-        cmap_accents(data, enter)
-        cmap_subdivisions(data, enter)
-        index_binarietat(data, enter)
-        if enter != '__test':
-            dendrograma(data, enter)
-            dendrograma_lang(data, enter)
-        autors_individuals(data, enter)
-        print(f">> Corpus '{enter}' analitzat.")
-        print('--' * 60)
-
+        analitza_corpus(enter)
     else:
         for corpus in os.listdir(root):
-            data = read_csv(f'{root}{corpus}/etiquetat/{corpus}.csv')
-            data = normalitza(data)
-            print(data)
-            contorn_ritmic(data, corpus)
-            distancia_iambe(data, corpus)
-            mitjana(data, corpus)
-            cmap_accents(data, corpus)
-            cmap_subdivisions(data, corpus)
-            index_binarietat(data, corpus)
-            if corpus != '__test':
-                dendrograma(data, corpus)
-                dendrograma_lang(data, corpus)
-            autors_individuals(data, corpus)
-            print(f">> Corpus '{corpus}' analitzat.")
-            print('--' * 60)
+            analitza_corpus(corpus)

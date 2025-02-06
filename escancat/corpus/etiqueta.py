@@ -9,19 +9,16 @@ import pandas as pd
 
 import spacy
 
-from modules.author import Author
-from modules.book import Book
-from modules.poem import Poem
+from escancat.corpus.modules.getUSB import getUSB
+from escancat.corpus.modules.author import Author
+from escancat.corpus.modules.book import Book
+from escancat.corpus.modules.poem import Poem
 
 from escancat.escansor_scr.escansor import escaneja
 
-# Carrega el model de Spacy en català
-print("--" * 60)
-print(f"Carregant el model de Spacy 'ca_core_news_md' (versió {spacy.__version__})...")
-nlp = spacy.load("ca_core_news_md", disable=["ner"])
-print("Model carregat correctament.\n")
-print("--" * 60)
-print("--" * 60)
+usb = getUSB()
+
+
 
 
 def merge_tables(results_path, file_name):
@@ -33,10 +30,11 @@ def merge_tables(results_path, file_name):
     data = pd.concat(data, ignore_index=True)
     data.to_csv(f"{results_path}/{file_name}.csv", sep=';', decimal=',', encoding='utf-8',
                 header=True, index=True)
-    print(f"Corpus '{file_name}' compilat!")
+    print(f"Corpus '{file_name}' etiquetat i compilat!")
 
 
-def etiqueta(corpus_path: str, results_path: str, versio: str, mode: int = 10):
+def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
+
 
     global rows
     os.makedirs(f"{results_path}", exist_ok=True)
@@ -86,7 +84,6 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, mode: int = 10):
                                                  poem_title, i + 1] + vers.to_csv())
                                     i += 1
                                 else:
-                                    print("\t\t\t<<", verse)
                                     outsiders.append(verse)
 
         os.makedirs(f"{results_path}json/", exist_ok=True)
@@ -98,7 +95,6 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, mode: int = 10):
         with open(f"{results_path}csv/{author.id}.csv", 'w',
                   encoding='utf-8') as f:
             df = pd.DataFrame(rows, columns=head)
-            print(df)
             df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True)
 
         os.makedirs(f"{results_path}log/", exist_ok=True)
@@ -111,7 +107,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, mode: int = 10):
         counts = {}
         for value in df['subdivisió']:
             counts[value] = counts.get(value, 0) + 1
-        print(counts)
+        #print(counts)
         if '4+6' not in counts:
             counts['4+6'] = 0
         if '5+5' not in counts:
@@ -133,39 +129,47 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, mode: int = 10):
             dades_autors.write(
                 f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.fast_tagg};{author.mov};{len(rows)}\n")
 
-        print(f"Resultats de l'autor {author.id} guardats en {results_path}json/{author.id}.json")
-        print(f"Resultats de l'autor {author.id} guardats en {results_path}csv/{author.id}.csv")
-        print(f"Versos no processats de l'autor {author.id} guardats en {results_path}log/outsiders_log.log")
+        print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
+        print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
+        print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
 
     corpus_name = corpus_path.split('/')[2]
     merge_tables(results_path, corpus_name)
 
 
 if __name__ == "__main__":
-    versio = "2025.02.05"
 
-    root = "E:/corpora/"
+    # Carrega el model de Spacy en català
+    print("--" * 40)
+    print(f"Carregant el model de Spacy 'ca_core_news_md' (versió {spacy.__version__})...")
+    nlp = spacy.load("ca_core_news_md", disable=["ner"])
+    print("Model carregat correctament.")
+    print("--" * 40)
+    versio = datetime.now().strftime('%Y.%m.%d')
+    print(f"Versió de l'etiquetador: {versio}")
 
-    print("--" * 60)
+    root = f"{usb}/corpora/"
+
+    print("--" * 40)
     print("Corpus disponibles:")
     for corpus_folder in os.listdir(root):
-        print(f"\t-- {corpus_folder}")
+        print(f"\t• {corpus_folder}")
+    print("--" * 40)
 
-    print("--" * 60)
     enter = input("Quin corpus voleu etiquetar?\t")
 
     if enter != "":
         start = time.time()
         corpus_path = f"{root}{enter}/sense_etiquetar/json/"
         results_path = f"{root}{enter}/etiquetat/"
-        etiqueta(corpus_path, results_path, versio, mode=10)
+        etiqueta(corpus_path, results_path, versio, nlp, mode=10)
     else:
         start = time.time()
         for corpus_folder in os.listdir(root):
             start = time.time()
             corpus_path = f"{root}{corpus_folder}/sense_etiquetar/json/"
             results_path = f"{root}{corpus_folder}/etiquetat/"
-            etiqueta(corpus_path, results_path, versio, mode=10)
+            etiqueta(corpus_path, results_path, versio, nlp, mode=10)
 
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)
