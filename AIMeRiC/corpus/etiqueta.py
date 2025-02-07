@@ -71,6 +71,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                         poem.save_metadata())  # Guarda la metadata del poema
 
                     i = 0
+
                     for verse in poem.verses:  # Per cada vers del poema
                         #print(f"\t{verse}")
                         if 110 > len(verse) > 20 and re.search(r"[a-zA-Z]", verse):

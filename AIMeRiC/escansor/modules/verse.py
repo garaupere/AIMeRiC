@@ -170,6 +170,26 @@ class Vers:
                                                                          self.h1_words, self.h2_words, self.maxpattern,
                                                                          self.metronome]
 
+    def desa_prosa(self):
+        return {self.text:
+                    {"string": self.string,
+                     "string_stress": self.string_stress,
+                     "pos": self.pos,
+                     "annotated": self.annotated,
+                     "no_words": [syllable.save_metadata() for syllable in self.no_words],
+                     "pattern": self.pattern,
+                     "n_words": self.n_words,
+                     "*CLASH": self._clash,
+                     "*LAPSE": self._lapse,
+                     "*WS_HL": self._ws_hl,
+                     "*NON_INITIAL": self._non_initial,
+                     "*SYMETRY": self._symetry,
+                     "comparative_pattern": self.comparative_pattern,
+                     "cv_info": self.cv_info,
+                     "metronome": self.metronome
+                     }
+                }
+
 
 if __name__ == "__main__":
     import spacy

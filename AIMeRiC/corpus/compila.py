@@ -7,6 +7,7 @@ import time
 
 usb = getUSB()
 
+
 def compile_corpus(path: str, corpus: str) -> None:
     """Finds the files in the new_files folders and compiles a corpus in JSON format."""
     drive = path
@@ -14,19 +15,19 @@ def compile_corpus(path: str, corpus: str) -> None:
     print(f'Compilant el corpus \'{corpus}\'...')
 
     for folder_subcorpus in [x for x in os.listdir(corpus_path) if x != '__test']:
-        #print(f'> {folder_subcorpus} autors trobats en new_files.')
+        # print(f'> {folder_subcorpus} autors trobats en new_files.')
         for folder in tqdm(os.listdir(corpus_path + '/' + folder_subcorpus), desc='Compilant el corpus'):
             subcorpus_path = corpus_path + '/' + folder_subcorpus
             author_meta = read_metadata(subcorpus_path + '/' + folder, "author")
             corpus_dict = author_meta
-            #print(f'\t> {folder} autor trobat en new_files.')
+            # print(f'\t> {folder} autor trobat en new_files.')
 
             for subfolder in os.listdir(subcorpus_path + '/' + folder):
                 if not subfolder.endswith('.info'):
                     book_path = subcorpus_path + '/' + folder + '/' + subfolder
                     book_meta = read_metadata(book_path, "book")
                     corpus_dict['books'].update({subfolder: book_meta})
-                    #print(
+                    # print(
                     #    f'\t\t>>> {len(os.listdir(book_path))} pàgines del llibre \'{subfolder}\'.')
 
                     for file in os.listdir(book_path):
@@ -36,7 +37,7 @@ def compile_corpus(path: str, corpus: str) -> None:
                             corpus_dict['books'][subfolder]['poems'].update({file: poem})
 
             # Crea la carpeta 'corpora'
-            #print('-' * 40)
+            # print('-' * 40)
             if not os.path.exists(f'{usb}/corpora/'):
                 os.makedirs(f'{usb}/corpora/')
             #    print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
@@ -55,10 +56,10 @@ def compile_corpus(path: str, corpus: str) -> None:
             #    print('-' * 40)
             #    print(f"\t>> '{folder}.json' desat.")
 
-    #print('-' * 40)
-    #print(f"\t>> Corpus compilat amb èxit i desat a '{usb}/corpora/{corpus}'.")
-    #print(f'\t>> {len(os.listdir(f"{usb}/corpora/{corpus}/sense_etiquetar/json"))} autors compilats dins el corpus.')
-    #print('-' * 40)
+    # print('-' * 40)
+    # print(f"\t>> Corpus compilat amb èxit i desat a '{usb}/corpora/{corpus}'.")
+    # print(f'\t>> {len(os.listdir(f"{usb}/corpora/{corpus}/sense_etiquetar/json"))} autors compilats dins el corpus.')
+    # print('-' * 40)
 
 
 if __name__ == "__main__":
@@ -82,7 +83,7 @@ if __name__ == "__main__":
         try:
             compile_corpus(path=raw_files_path, corpus=enter)
         except FileNotFoundError:
-           print(f'{FileNotFoundError}: No s\'ha seleccionat cap corpus.')
+            print(f'{FileNotFoundError}: No s\'ha seleccionat cap corpus.')
 
     end_time = time.time()
     execution_time = end_time - start_time

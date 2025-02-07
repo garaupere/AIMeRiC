@@ -8,6 +8,7 @@ from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.etiqueta import etiqueta
 from AIMeRiC.corpus.obten_dades import analitza_corpus
+from AIMeRiC.corpus.prosa import prosa
 from AIMeRiC.corpus.valida import valida
 from AIMeRiC.escansor.escansor import escaneja
 
@@ -73,9 +74,10 @@ def main():
         print("\t3. Explotació estadística del corpus")
         print("\t4. Validar les dades __test")
         print("\t5. Analitzar un vers")
-        print("\t6. Còpia de seguretat del corpus")
+        print("\t6. Analitza un corpus de prosa")
+        print("\t7. Còpia de seguretat del corpus\n")
         print("\tPer accedir al menú d'ajuda, premeu 'h'.")
-        print("\tPer tancar el programa, premeu Intro.")
+        print("\tPer tancar el programa, premeu Intro.\n")
         option = input("Seleccionau una opció (1/2/3/4/5/6): ")
 
         if option == "1":
@@ -121,6 +123,9 @@ def main():
             scan(nlp, verse)
 
         elif option == "6":
+            prosa(nlp)
+
+        elif option == "7":
             print("--" * 40)
             start = time.time()
             backup_path = "C:\\Users\\pere\\OneDrive - Universitat de les Illes Balears\\Documents\\UIB\\Estudis oficials\\Doctorat en Filologia i Filosofia\\Tesi\\TESI ESPAI DE TREBALL NET\\DADES\\.backup\\"
