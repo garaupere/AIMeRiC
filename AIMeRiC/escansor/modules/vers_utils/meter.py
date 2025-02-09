@@ -37,7 +37,17 @@ def words_abstract_pattern(words):
 
 
 def maximal_comparison_pattern(self):
-    if self.recompte_sillabes_metriques == self.goal:
+    if self.goal == 10:
+        if self.recompte_sillabes_metriques == self.goal:
+            result = self.comparative_pattern
+            dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
+                          r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
+                          r"0[23]0": "040", r"4[23]": "40",
+                          r"0$": "4", r"[01]": "W", r"[432]": "S"}
+            for pattern, solution in dictionary.items():
+                result = re.sub(pattern, solution, result)
+            return result[0:10]
+    else:
         result = self.comparative_pattern
         dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
                       r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
@@ -45,4 +55,4 @@ def maximal_comparison_pattern(self):
                       r"0$": "4", r"[01]": "W", r"[432]": "S"}
         for pattern, solution in dictionary.items():
             result = re.sub(pattern, solution, result)
-        return result[0:10]
+        return result

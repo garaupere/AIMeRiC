@@ -6,7 +6,8 @@ from AIMeRiC.escansor.modules.word import Word
 from AIMeRiC.escansor.modules.vers_utils.OT_constraints import analyze_OT
 from AIMeRiC.escansor.modules.vers_utils.fonologia import new_sumvow, cv_get_info
 from AIMeRiC.escansor.modules.vers_utils.POStagger import posTagger
-from AIMeRiC.escansor.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, maximal_comparison_pattern
+from AIMeRiC.escansor.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
+    maximal_comparison_pattern
 from AIMeRiC.escansor.modules.vers_utils.prosody import adjust_pes, cim_maxim
 from AIMeRiC.escansor.modules.vers_utils.decasyllable import tall, subdivideix
 from AIMeRiC.escansor.modules.vers_utils.display import anotate_verse, escansio_plana, escansio_accentual, metronome
@@ -62,7 +63,6 @@ class Vers:
     def __subdivisio__(self):
         self.posicio_tall = tall(self)
         self.subdivision = subdivideix(self)
-
 
     def __disposicio__(self):
         self.ajustat = metre_ajustat(self)
@@ -163,12 +163,13 @@ class Vers:
             sc_col = self.pattern
 
         return [self.text, self.string_stress] + sc_col + [self.recompte_sillabes_metriques,
-                                                                         self.recompte_sillabes_extrametriques,
-                                                                         self.subdivision,
-                                                                         self.llicencies,
-                                                                         self._clash, self._lapse, self._ws_hl, self._non_initial, self._symetry,
-                                                                         self.h1_words, self.h2_words, self.maxpattern,
-                                                                         self.metronome]
+                                                           self.recompte_sillabes_extrametriques,
+                                                           self.subdivision,
+                                                           self.llicencies,
+                                                           self._clash, self._lapse, self._ws_hl, self._non_initial,
+                                                           self._symetry,
+                                                           self.h1_words, self.h2_words, self.maxpattern,
+                                                           self.metronome]
 
     def desa_prosa(self):
         return {self.text:
@@ -189,6 +190,10 @@ class Vers:
                      "metronome": self.metronome
                      }
                 }
+
+    def prosa_to_csv(self):
+        return [self.text, self.string_stress, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques, self.pattern, self.maxpattern, self._clash, self._lapse, self._ws_hl,
+                self._non_initial, self._symetry, self.metronome]
 
 
 if __name__ == "__main__":
