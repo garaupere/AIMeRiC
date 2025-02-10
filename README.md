@@ -12,7 +12,7 @@ Les eines aplegades sota aquest aplicatiu permeten l'escansió (i.e. anàlisi m�
 # Funcions
 L'aplicatiu **AIMeRiC** necessita una memòria externa per funcionar. Aquesta memòria ha de contenir una carpeta `compile_files` amb els fitxers de text que conformen el corpus, segons l'estructura que es descriu a continuació.
 
-## Compilar un corpus 
+## Compilau un corpus 
 Aquesta funció permet compilar un corpus a partir d'un conjunt de fitxers de text pla (`.txt`) que segueixen una estructura determinada. L'estructura dels fitxers de text pla ha de ser la següent:
  ```
  compile_files
@@ -61,7 +61,7 @@ El resultat del corpus compilat i sense etiquetar és un fitxer `.json`, que es 
  ````
  
 
- ## Etiquetar un corpus
+ ## Etiquetau un corpus
 Aquesta funció permet executar l'etiquetatge mètric del corpus, un cop ja ha estat compilat. L'etiquetatge actua sobre el corpus compilat (`.json`). Un cop acabi l'etiquetatge, el resultat és visible en la carpeta corpora, que pren aquesta estructura:
  ````
  corpora
@@ -84,7 +84,7 @@ Aquesta funció permet executar l'etiquetatge mètric del corpus, un cop ja ha e
 La carpeta `csv` conté el corpus en format de fitxer delimitat per comes, exportable a qualsevol programa d'anàlisi de dades.
 La carpeta `json` conté el corpus en format json, que és el format que nativament maneja l'aplicació. La carpeta `log` conté en un fitxer de text pla els vesos que no compleixen amb l'objectiu de l'etiquetatge i que, per tant, no formen part del corpus resultant.
 
- ### 3. Exploració estadística del corpus
+ ## Explorau estadísticament un corpus
 Amb aquest mòdul s'implementa una exploració estadística de les dades d'etiquetatge del corpus. La funció accedeix al corpus etiquetat i en processa factors com la mitjana de tonicitat per síl·laba, la distància entre el contorn rítmic i el model binari (iàmbic), la filiació entre autors a través de dendrogrames, l'extrametricitat, etc. El resultat d'aquesta explotació es recull en la carpeta `etiquetat`, en què s'inclouen dues carpetes més, `svg` per als gràfics resultants de l'exploració i `xlsx` per als documents de dades d'Excel. Dins la carpeta `svg` també s'inclou una carpeta per a cada autor amb els gràfics individuals del contorn rítmic i la distància respecte del model iàmbic.
  ````
  ...
@@ -105,9 +105,9 @@ Amb aquest mòdul s'implementa una exploració estadística de les dades d'etiqu
                   ├── ...
                   └── dendrograma.xlsx
  ````
-## Validar les dades __test
+## Validau les dades __test
 El mòdul de validació de dades compara l'etiquetatge automàtic de l'aplicatiu amb l'etiquetatge manual. Opera a través de l'obra de testeig que és _Sol, i de dol_ de J. V. Foix. En el codi d'`escancat` s'emmagatzema l'etiquetatge manual de l'obra, que és comparada amb el resultat de l'escansió automàtica. Aquesta funció genera un índex de fiabilitat (sobre 100) de l'etiquetatge i en desa una sèrie de gràfics dins la carpeta `corpus/validacio`. Actualment, l'índex de fiabilitat del programa és del **97,56%**.
-## Analitzar un vers
+## Analitzau un vers
 Aquesta funció permet analitzar un vers introduit per l'usuari, per defecte el mode d'anàlisi és el del decasíl·lab. Els resultats es mostren en pantalla i segueixen aquest esquema:
  ````
     ajustat: True
@@ -135,6 +135,9 @@ Aquesta funció permet analitzar un vers introduit per l'usuari, per defecte el 
 	cv_info: {'hiats_a_fm': [], 'hiats_a_m': [], 'hiats_t_fm': [], 'hiats_t_m': [], 'diftong_a_fm': [], 'diftong_a_m': [], 'diftong_t_fm': [], 'diftong_t_m': [], 'triftong_a_fm': [], 'triftong_a_m': [], 'triftong_t_fm': [], 'triftong_t_m': []}
 	metronome: Sw.w.S.w.S.wS.wS.|
  ````
+## Etiquetau un corpus de prosa
+[pendent]
+
 ## Còpia de seguretat del corpus
 Du a terme una còpia de seguretat en format `zip` dels arxius del corpus, tant els compilats i etiquetats com els textos originals.
 
