@@ -10,7 +10,7 @@ from AIMeRiC.corpus.etiqueta import etiqueta
 from AIMeRiC.corpus.obten_dades import analitza_corpus
 from AIMeRiC.corpus.prosa import prosa
 from AIMeRiC.corpus.valida import valida
-from AIMeRiC.escansor.escansor import escaneja
+from AIMeRiC.escansio.escansor import escaneja
 
 
 def compile(raw_files_path, corpus):

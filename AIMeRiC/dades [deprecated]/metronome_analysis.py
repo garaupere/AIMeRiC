@@ -8,10 +8,10 @@ import csv
 
 def prepare_data():
     arr = {}
-    for file in os.listdir('../escansor/results'):
+    for file in os.listdir('../escansio/results'):
         if file.endswith('.csv'):
             print(file)
-            data = pd.read_csv(f'../escansor/results/{file}', delimiter=';')
+            data = pd.read_csv(f'../escansio/results/{file}', delimiter=';')
             print(data)
             author = data['author'][0]
             met_data = ''.join(data['metronome'])

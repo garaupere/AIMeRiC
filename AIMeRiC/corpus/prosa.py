@@ -12,8 +12,8 @@ from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.author import Author
 from AIMeRiC.corpus.modules.book import Book
 from AIMeRiC.corpus.modules.poem import Poem
-from AIMeRiC.escansor.escansor import escaneja
-from AIMeRiC.escansor.modules.verse import Vers
+from AIMeRiC.escansio.escansor import escaneja
+from AIMeRiC.escansio.modules.verse import Vers
 
 
 def prosa(nlp):

@@ -1,7 +1,7 @@
 """A module for the Syllable class."""
 import re
 
-from AIMeRiC.escansor.modules.sillaba_utils.get_vowel import get as get_vowel
+from AIMeRiC.escansio.modules.sillaba_utils.get_vowel import get as get_vowel
 
 class Syllable:
     def __init__(self, index: int, syllable: tuple, len_word: int, fusion_direction=None):
@@ -9,14 +9,14 @@ class Syllable:
         self.s_index = index
         self.pes = syllable[1]
         self.len_word = len_word
-        self.diftong = self.is_diftong() # Afegir a un mòdul independent: /escansor/utils/phonology.py
+        self.diftong = self.is_diftong() # Afegir a un mòdul independent: /escansio/utils/phonology.py
         self.fusion_direction = fusion_direction
         self.pes_fusion = None
         self.fusionada = True if fusion_direction is not None else False
         self.triftong = True if re.search("._._", self.text) else False
-        self.starts_with_vowel = self.starts_with_vowel() # Afegir a un mòdul independent: /escansor/utils/phonology.py i reciclar el de la classe Word
-        self.ends_with_vowel = self.ends_with_vowel() # Afegir a un mòdul independent: /escansor/utils/phonology.py i reciclar el de la classe Word
-        self.fono_info = self.fono() # Afegir a un mòdul independent: /escansor/utils/phonology.py
+        self.starts_with_vowel = self.starts_with_vowel() # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
+        self.ends_with_vowel = self.ends_with_vowel() # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
+        self.fono_info = self.fono() # Afegir a un mòdul independent: /escansio/utils/phonology.py
 
     def save_metadata(self):
         return {attr: getattr(self, attr) for attr in

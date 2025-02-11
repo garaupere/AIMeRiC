@@ -2,7 +2,7 @@ import json
 import os
 from collections import defaultdict, Counter
 
-path = '../escansor/results/'
+path = '../escansio/results/'
 #path = '__test/results/'
 cv_info_fq = {}
 for file in os.listdir(path):

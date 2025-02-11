@@ -1,8 +1,8 @@
 """Un mòdul per a aplicar les solucions prosòdiques forçades"""
 import re
 
-from AIMeRiC.escansor.modules.syllable import Syllable
-from AIMeRiC.escansor.modules.word import Word
+from AIMeRiC.escansio.modules.syllable import Syllable
+from AIMeRiC.escansio.modules.word import Word
 from .fonologia import force_sum, force_subs
 from .meter import recompte_metric
 from .tools import seguent

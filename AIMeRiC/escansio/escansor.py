@@ -1,10 +1,10 @@
 import spacy
-from AIMeRiC.escansor.modules.verse import Vers
+from AIMeRiC.escansio.modules.verse import Vers
 
 
 def escaneja(nlp, verse: str, goal: int) -> Vers:
     """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse."""
-    from AIMeRiC.escansor.modules.verse import Vers
+    from AIMeRiC.escansio.modules.verse import Vers
     return Vers(nlp, verse, goal)
 
 

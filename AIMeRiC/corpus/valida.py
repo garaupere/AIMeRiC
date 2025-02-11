@@ -1,4 +1,6 @@
 """Un mòdul per a la validació de les dades __test que compara l'etiquetatge automàtic amb l'etiquetatge manual."""
+import Levenshtein as leven
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -14,7 +16,7 @@ def valida():
     """Una funció per validar les dades __test."""
     usb = getUSB()
     automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
-    manual = read_csv('validacio/__test_manual.csv')
+    manual = read_csv('AIMeRiC/corpus/validacio/__test_manual.csv')
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)
@@ -29,7 +31,7 @@ def read_csv(path):
 def normalitza(data):
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
-    data[sillabes] = data[sillabes].applymap(
+    data[sillabes] = data[sillabes].map(
         lambda x: 1 if x > 1 else 0)  # 1 si és major que 1, 0 si no ho és
 
     # Selecciona les columnes pertinents: autor, text del vers, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -38,7 +40,7 @@ def normalitza(data):
     return data
 
 
-def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> pd.DataFrame:
+def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> (pd.DataFrame, list):
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
     print('--' * 40)
@@ -48,6 +50,9 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> pd.DataFrame:
                                      '9_auto', '10_auto'] + ['1_manual', '2_manual', '3_manual', '4_manual', '5_manual',
                                                              '6_manual', '7_manual', '8_manual', '9_manual',
                                                              '10_manual'])
+
+    accuracy = []
+    accuracy_leven = []
 
     for i in range(len(automatic)):
         vers = automatic.iloc[i]['text del vers']
@@ -60,6 +65,15 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> pd.DataFrame:
 
             row = pd.Series([vers] + list(sill_autom) + list(sill_manual), index=df_comp.columns)
             df_comp = pd.concat([df_comp, row.to_frame().T], ignore_index=True)
+
+            accuracy.append(''.join(str(x) for x in sill_autom) == ''.join(str(x) for x in sill_manual))
+            accuracy_leven.append(leven.distance(''.join(str(x) for x in sill_autom), ''.join(str(x) for x in sill_manual)))
+
+    accuracy = sum(accuracy) / len(accuracy) * 100
+    accuracy_leven = sum(accuracy_leven) / len(accuracy_leven) * 100
+    print(f'\t > Freqüència d\'encerts per vers: {accuracy:.2f}%')
+    print(f'\t > Precisió de l\'etiquetatge (Levenshtein): {100 - accuracy_leven:.2f}%')
+
     return df_comp
 
 
@@ -85,7 +99,7 @@ def plot_comparison(comparison_df):
     plt.grid(False)
     plt.tight_layout()
     plt.legend()
-    plt.savefig('validacio/comparison.svg')
+    plt.savefig('AIMeRiC/corpus/validacio/comparison.svg')
     plt.close()
 
     # Calcula la distància total entre els valors automàtics i manuals
@@ -95,7 +109,7 @@ def plot_comparison(comparison_df):
     # Desa les dades de la comparació en un fitxer xlsx
     difference = abs(auto_mean - manual_mean)
     df = pd.DataFrame({'Automàtic': auto_mean, 'Manual': manual_mean, 'Diferència': difference})
-    df.to_excel('validacio/comparison.xlsx', index=False)
+    df.to_excel('AIMeRiC/corpus/validacio/comparison.xlsx', index=False)
     plt.figure(figsize=(5, 5))
     plt.bar(df.index, df['Diferència'], color='skyblue')
     # Difference mean
@@ -104,14 +118,14 @@ def plot_comparison(comparison_df):
     plt.xticks(np.arange(0, 11))
     plt.grid(False)
     plt.tight_layout()
-    plt.savefig('validacio/difference.svg')
+    plt.savefig('AIMeRiC/corpus/validacio/difference.svg')
 
 
 if __name__ == '__main__':
     print('Validació de les dades __test.')
     usb = getUSB()
     automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
-    manual = read_csv('validacio/__test_manual.csv')
+    manual = read_csv('AIMeRiC/corpus/validacio/__test_manual.csv')
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)

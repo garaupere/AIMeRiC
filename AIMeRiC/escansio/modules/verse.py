@@ -2,17 +2,17 @@
 import time
 from copy import deepcopy
 
-from AIMeRiC.escansor.modules.word import Word
-from AIMeRiC.escansor.modules.vers_utils.OT_constraints import analyze_OT
-from AIMeRiC.escansor.modules.vers_utils.fonologia import new_sumvow, cv_get_info
-from AIMeRiC.escansor.modules.vers_utils.POStagger import posTagger
-from AIMeRiC.escansor.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
+from AIMeRiC.escansio.modules.word import Word
+from AIMeRiC.escansio.modules.vers_utils.OT_constraints import analyze_OT
+from AIMeRiC.escansio.modules.vers_utils.fonologia import new_sumvow, cv_get_info
+from AIMeRiC.escansio.modules.vers_utils.POStagger import posTagger
+from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
     maximal_comparison_pattern
-from AIMeRiC.escansor.modules.vers_utils.prosody import adjust_pes, cim_maxim
-from AIMeRiC.escansor.modules.vers_utils.decasyllable import tall, subdivideix
-from AIMeRiC.escansor.modules.vers_utils.display import anotate_verse, escansio_plana, escansio_accentual, metronome
-from AIMeRiC.escansor.modules.vers_utils.licenses import aplica_llicencies
-from AIMeRiC.escansor.modules.vers_utils.word_info import quants_mots, safe_words
+from AIMeRiC.escansio.modules.vers_utils.prosody import adjust_pes, cim_maxim
+from AIMeRiC.escansio.modules.vers_utils.decasyllable import tall, subdivideix
+from AIMeRiC.escansio.modules.vers_utils.display import anotate_verse, escansio_plana, escansio_accentual, metronome
+from AIMeRiC.escansio.modules.vers_utils.licenses import aplica_llicencies
+from AIMeRiC.escansio.modules.vers_utils.word_info import quants_mots, safe_words
 
 
 class Vers:

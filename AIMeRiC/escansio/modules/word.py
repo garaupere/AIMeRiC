@@ -5,8 +5,8 @@ from copy import deepcopy
 
 import spacy
 
-from AIMeRiC.escansor.modules.syllable import Syllable
-from AIMeRiC.escansor.modules.word_utils.syllabify import hyphenate_word
+from AIMeRiC.escansio.modules.syllable import Syllable
+from AIMeRiC.escansio.modules.word_utils.syllabify import hyphenate_word
 
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
@@ -33,20 +33,20 @@ class Word:
         self.w_index = index
         self.text = word.lower()
         self.cat = word_pos
-        self.syllables = hyphenate_word(self.text)  # Mòdul independent: escansor/utils/syllabes.py
-        self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansor/utils/syllabes.py (?, no ho sé)
-        self.word_ment = self.word_ment()  # Crear un mòdul independent: escansor/utils/stress.py
+        self.syllables = hyphenate_word(self.text)  # Mòdul independent: escansio/utils/syllabes.py
+        self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?, no ho sé)
+        self.word_ment = self.word_ment()  # Crear un mòdul independent: escansio/utils/stress.py
         self.n_syllables = len(self.syllables)  # Número de síl·labes
-        self.stress = self.get_stress()  # Afegir a un mòdul independent: escansor/utils/stress.py
-        self.stress_index = self.get_stress_index()  # Afegir a un mòdul independent: escansor/utils/stress.py
+        self.stress = self.get_stress()  # Afegir a un mòdul independent: escansio/utils/stress.py
+        self.stress_index = self.get_stress_index()  # Afegir a un mòdul independent: escansio/utils/stress.py
         if self.stress_index is not None and self.stress_index > 2:
             self.compost()
         self.is_compost = False
 
-        self.secondary_stress()  # Afegir a un mòdul independent: escansor/utils/stress.py
-        self.starts_with_vowel = self.starts_with_vowel()  # Afegir a un mòdul independent: escansor/utils/phonology.py
-        self.ends_with_vowel = self.ends_with_vowel()  # Afegir a un mòdul independent: escansor/utils/phonology.py
-        self.plain_syllables = self.plain()  # Afegir a un mòdul independent: escansor/utils/representation.py
+        self.secondary_stress()  # Afegir a un mòdul independent: escansio/utils/stress.py
+        self.starts_with_vowel = self.starts_with_vowel()  # Afegir a un mòdul independent: escansio/utils/phonology.py
+        self.ends_with_vowel = self.ends_with_vowel()  # Afegir a un mòdul independent: escansio/utils/phonology.py
+        self.plain_syllables = self.plain()  # Afegir a un mòdul independent: escansio/utils/representation.py
         self.fusionada = False
         self.monosyllable = [True if self.n_syllables == 1 else False][0]
         self.paraula_tall = False
