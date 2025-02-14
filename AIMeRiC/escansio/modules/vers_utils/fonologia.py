@@ -55,7 +55,7 @@ def best_contacte_vocalic(vers):
                 candidats.append((syllable, next_syllable, points)) if points > 0 else None
     # Ordena els candidats per puntuació de major a menor:
     candidats = sorted(candidats, key=lambda x: x[2], reverse=True)
-    print('> Candidats contacte:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
+    #print('> Candidats contacte:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
     return candidats
 
 
@@ -284,7 +284,7 @@ def best_sinalefa(vers):
                     candidats.append((syllable, next_syllable, punts))
 
     candidats = sorted(candidats, key=lambda x: x[2], reverse=True)
-    print('> Candidats sinalefa:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
+    #print('> Candidats sinalefa:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
     return candidats
 
 
@@ -298,5 +298,5 @@ def best_sineresi(vers):
                     candidats.append((syllable, next_syllable, punts))
 
     candidats = sorted(candidats, key=lambda x: x[2], reverse=True)
-    print('> Candidats sineresi:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
+    #print('> Candidats sineresi:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
     return candidats
