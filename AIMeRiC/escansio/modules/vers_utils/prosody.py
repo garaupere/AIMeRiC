@@ -44,14 +44,14 @@ def adjust_pes(self):
                     elif current_value.pes == '2' and (int(previous_value.pes) > 2 or int(next_value.pes) > 2):
                         change_pes(current_value, '1')
             elif next_value is not None:
-                if current_value.pes == '3' and int(next_value.pes) > 3:
+                if current_value.pes == '3' and int(next_value.pes) > 2:
                     change_pes(current_value, '1')
-                elif current_value.pes == '2' and int(next_value.pes) > 2:
+                elif current_value.pes == '2' and int(next_value.pes) > 1:
                     change_pes(current_value, '1')
             elif previous_value is not None:
-                if current_value.pes == '3' and int(previous_value.pes) > 3:
+                if current_value.pes == '3' and int(previous_value.pes) > 2:
                     change_pes(current_value, '1')
-                elif current_value.pes == '2' and int(previous_value.pes) > 2:
+                elif current_value.pes == '2' and int(previous_value.pes) > 1:
                     change_pes(current_value, '1')
 
         if current_value.pes == '1':
