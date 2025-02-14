@@ -12,7 +12,7 @@ from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric, metre_aju
 from AIMeRiC.escansio.modules.vers_utils.prosody import adjust_pes, cim_maxim
 from AIMeRiC.escansio.modules.vers_utils.decasyllable import tall, subdivideix
 from AIMeRiC.escansio.modules.vers_utils.display import anotate_verse, escansio_plana, escansio_accentual, metronome
-from AIMeRiC.escansio.modules.vers_utils.licenses import aplica_llicencies
+from AIMeRiC.escansio.modules.vers_utils.licenses import llicencies
 from AIMeRiC.escansio.modules.vers_utils.word_info import quants_mots, safe_words
 
 
@@ -26,7 +26,7 @@ class Vers:
         self.__patrons__()
         self.__subdivisio__()
         self.__disposicio__()
-        self.llicencies = aplica_llicencies(self)
+        self.llicencies = llicencies(self)
         self.__prosodia__()
         self.__ot_analisi__()
         self.__mot_info__()

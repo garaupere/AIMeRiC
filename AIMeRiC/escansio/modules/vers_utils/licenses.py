@@ -9,6 +9,37 @@ from .meter import recompte_metric
 from .tools import seguent
 
 
+def llicencies(self) -> str:
+    """Aquesta funció aplica les llicències mètriques a un vers donat."""
+    result = None
+    diff = self.recompte_sillabes_metriques - self.goal
+    max_iterations = self.goal  # Limita el nombre d'iteracions
+    iterations = 0
+    while diff > 0 and iterations < max_iterations:
+        resol_contactes_vocalics(self, best=best_sinalefa(self.no_words))
+        result = f'sinalefa {diff}'
+        self.__actualitza__()
+        diff = self.recompte_sillabes_metriques - self.goal
+        if diff > 0:
+            sineresi(self)
+            result = f'sineresis {diff}'
+            self.__actualitza__()
+            diff = self.recompte_sillabes_metriques - self.goal
+        iterations += 1
+    while diff < 0 and iterations < max_iterations:
+        dialefa(self, abs(diff))
+        result = f'dialefa {abs(diff)}'
+        self.__actualitza__()
+        diff = self.recompte_sillabes_metriques - self.goal
+        if diff < 0:
+            dialefa(self, abs(diff))
+            result = f'dialefa {abs(diff)}'
+            self.__actualitza__()
+            diff = self.recompte_sillabes_metriques - self.goal
+        iterations += 1
+    return result
+
+
 def aplica_llicencies(self) -> str:
     """Aquesta funció aplica les llicències mètriques a un vers donat."""
     result = None
@@ -27,7 +58,7 @@ def aplica_llicencies(self) -> str:
                 self.__actualitza__()
                 diferencia = self.recompte_sillabes_metriques - self.goal
             elif diferencia > 0:
-                sineresi2(self)
+                sineresi(self)
                 result = f'sineresis {diferencia}'
                 self.__actualitza__()
         elif diferencia < 0:
@@ -41,12 +72,12 @@ def aplica_llicencies(self) -> str:
                 self.__actualitza__()
                 diferencia = self.recompte_sillabes_metriques - self.goal
                 if diferencia > 0:
-                    sineresi2(self)
+                    sineresi(self)
                     result = f'sineresis {diferencia}'
                     self.__actualitza__()
             diferencia = self.recompte_sillabes_metriques - self.goal
             if diferencia > 0:
-                sineresi2(self)
+                sineresi(self)
                 result = f'sineresis {diferencia}'
                 self.__actualitza__()
             # if diferencia < 0:
@@ -57,7 +88,8 @@ def aplica_llicencies(self) -> str:
     return result
 
 
-def sineresi2(self):
+def sineresi(self):
+    """Una funció per a aplicar la sinèresi a un vers donat. La sineresi consisteix a unir dues síl·labes en una sola síl·laba en interior de mot. Ex.: his.tò.ri.a > his.tò.ria"""
     best = best_sineresi(self.no_words)
     if best is not None:
         diff = self.recompte_sillabes_metriques - self.goal  # Calcula la diferència
@@ -78,104 +110,6 @@ def sineresi2(self):
                 wi += 1
             diff = self.recompte_sillabes_metriques - self.goal  # Recalcula la diferència
             self.no_words = sum([word.stress for word in self.words], [])  # Actualitza la llista de síl·labes
-
-
-
-
-
-
-
-def sineresis(self, times):
-    global nou
-    counter = 0
-    for syllable in self.no_words:
-        next_syllable = seguent(syllable, self.no_words)
-        if next_syllable is not None:
-            if syllable.vowel_end and next_syllable.vowel_start:
-                if syllable.fono_info['alta']:
-                    nou = join_syllables(syllable, next_syllable)
-                    nou.text = nou.text.replace("_", "")
-                    nou = nou
-                    i = 0
-                    while i < len(self.words) - 1:
-                        word = self.words[i]
-                        next_word = self.words[i + 1]
-                        if syllable in word.stress and next_syllable in word.stress:
-                            word.stress.insert(word.stress.index(syllable), nou)
-                            word.stress.remove(syllable)
-                            word.stress.remove(next_syllable)
-                            word.stress_index = word.get_stress_index()
-                            word.secondary_stress()
-
-                        elif syllable in next_word.stress and next_syllable in next_word.stress:
-                            next_word.stress.insert(next_word.stress.index(syllable), nou)
-                            next_word.stress.remove(syllable)
-                            next_word.stress.remove(next_syllable)
-                            word.stress_index = word.get_stress_index()
-                            next_word.stress_index = next_word.get_stress_index()
-                            word.secondary_stress()
-                            next_word.secondary_stress()
-
-                        elif syllable in word.stress and next_syllable in next_word.stress:
-                            word.stress.insert(word.stress.index(syllable), nou)
-                            word.stress.remove(syllable)
-                            next_word.stress.remove(next_syllable)
-                            if len(next_word.stress) == 0:
-                                self.words.remove(next_word)
-                            word.stress_index = word.get_stress_index()
-                            next_word.stress_index = next_word.get_stress_index()
-                            word.secondary_stress()
-                            next_word.secondary_stress()
-                        i += 1
-
-                    self.no_words.insert(self.no_words.index(syllable), nou)
-                    self.no_words.remove(syllable)
-                    self.no_words.remove(next_syllable)
-                    counter += 1
-                    if counter == times:
-                        return True
-
-                if syllable.fono_info['vocal'] == next_syllable.fono_info['vocal']:
-                    """Mètode 2: fusiona dues vocals idèntiques"""
-                    nou = join_syllables(syllable, next_syllable)
-                    if nou is not None:
-                        try:
-                            nou.text = nou.text.replace("_", "")
-                        except AttributeError:
-                            nou.text = nou.text.replace(":", "")
-                        nou = nou
-                        i = 0
-                        while i < len(self.words) - 1:
-                            word = self.words[i]
-                            next_word = self.words[i + 1]
-                            if syllable in word.stress and next_syllable in word.stress:
-                                word.stress.insert(word.stress.index(syllable), nou)
-                                word.stress.remove(syllable)
-                                word.stress.remove(next_syllable)
-                                word.stress_index = word.get_stress_index()
-
-                            elif syllable in next_word.stress and next_syllable in next_word.stress:
-                                next_word.stress.insert(next_word.stress.index(syllable), nou)
-                                next_word.stress.remove(syllable)
-                                next_word.stress.remove(next_syllable)
-                                next_word.stress_index = next_word.get_stress_index()
-                                word.stress_index = word.get_stress_index()
-
-                            elif syllable in word.stress and next_syllable in next_word.stress:
-                                word.stress.insert(word.stress.index(syllable), nou)
-                                word.stress.remove(syllable)
-                                next_word.stress.remove(next_syllable)
-                                if len(next_word.stress) == 0:
-                                    self.words.remove(next_word)
-                                word.stress_index = word.get_stress_index()
-                                next_word.stress_index = next_word.get_stress_index()
-                            i += 1
-
-                        self.no_words.insert(self.no_words.index(syllable), nou)
-                        self.no_words.remove(syllable)
-                        counter += 1
-                        if counter == times:
-                            return True
 
 
 def dieresi(self, times):

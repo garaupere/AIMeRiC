@@ -11,12 +11,17 @@ from AIMeRiC.escansio.modules.word_utils.syllabify import hyphenate_word
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
 
-def bivalents(result):
+def bivalents(result, cat):
     for syllable in result:
         if syllable[1] == "4":
-            o_syllable = syllable
-            syllable = (syllable[0], "3")
-            result[result.index(o_syllable)] = syllable
+            if cat in ["AUX", "NUM", "PRON", "PRONE", "INTJ"]:
+                o_syllable = syllable
+                syllable = (syllable[0], "3")
+                result[result.index(o_syllable)] = syllable
+            if cat in ['ADP']:
+                o_syllable = syllable
+                syllable = (syllable[0], "2")
+                result[result.index(o_syllable)] = syllable
         else:
             o_syllable = syllable
             syllable = (syllable[0], "0")
@@ -195,7 +200,7 @@ class Word:
         result = []
         oxytone_ending = re.compile(
             r"(?:[àáèéíìóòúùâêîôûý]|"  # Vocals accentuades.
-            r"[aeiouïüy][ui]|"  # Diftongs ascendents.
+            r"[aeiouïüy][ui]$|"  # Diftongs ascendents.
             r"[aouïü][^'aeiuos]+|"  # Vocals (a, o, u) + consonants excepte <s>.
             r"[^qg]?[aouïü][^aeouïü][^aouïüs]|"  # Vocals (a, o, u) + consonants  + consonant (tipus: rebost).
             r"[eiy]([^'aeiuons]|[^'aeiuo]+[^'aeiuo]))"  # Vocals (e, i) + consonants, excepte <s> i  <en>, <in>.
@@ -213,7 +218,7 @@ class Word:
             """Si el mot conté accents gràfics"""
             result = [(syllable, "4") if re.findall(accents, syllable) else (syllable, "0") for syllable in stressed]
             if self.is_bivalent():
-                result = bivalents(result)
+                result = bivalents(result, self.cat)
 
         else:
             """Si el mot no conté accents gràfics"""
@@ -229,7 +234,7 @@ class Word:
                     result = [(stressed[-2], "4"), (stressed[-1], "0")]  # Paraula plana
                 result = [(syllable, "0") for syllable in stressed[:-2]] + result  # La resta de síl·labes àtones
                 if self.is_bivalent():
-                    result = bivalents(result)
+                    result = bivalents(result, self.cat)
         if self.word_ment is not None:
             result = [(syllable[0], "2") if syllable[1] == "4" else (syllable[0], "0") for syllable in result]
             result = result + [("ment", "4")]
@@ -244,8 +249,8 @@ class Word:
 
     def print_metadata(self):
         for attr in ["text", "cat", "word_ment", "syllables", "n_syllables", "print_stress",
-                     "vowel_start",
-                     "vowel_end", "plain_syllables", "is_compost"]:
+                     "starts_with_vowel",
+                     "ends_with_vowel", "plain_syllables", "is_compost"]:
             print(f"\t\t\t\t{attr}:", getattr(self, attr))
         print("\n")
 
@@ -311,7 +316,7 @@ class Word:
 
 if __name__ == "__main__":
     start = time.time()
-    sentence = ("escaur")
+    sentence = ("deliquis")
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     doc = nlp(sentence)
     doc = [tok.pos_ for tok in doc]

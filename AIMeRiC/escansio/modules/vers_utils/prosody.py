@@ -39,26 +39,27 @@ def adjust_pes(self):
                 elif current_value.pes == '2' and previous_value.pes == '0' and next_value.pes == '0':
                     change_pes(current_value, '2') # Això no fa res.
                 else:
-                    if current_value.pes == '3' and (int(previous_value.pes) > 3 or int(next_value.pes) > 1):
+                    if current_value.pes == '3' and (int(previous_value.pes) > 3 or int(next_value.pes) > 3):
                         change_pes(current_value, '1')
-                    elif current_value.pes == '2' and (int(previous_value.pes) > 1 or int(next_value.pes) > 1):
+                    elif current_value.pes == '2' and (int(previous_value.pes) > 2 or int(next_value.pes) > 2):
                         change_pes(current_value, '1')
             elif next_value is not None:
-                if current_value.pes == '3' and int(next_value.pes) > 1:
+                if current_value.pes == '3' and int(next_value.pes) > 3:
                     change_pes(current_value, '1')
-                elif current_value.pes == '2' and int(next_value.pes) > 1:
+                elif current_value.pes == '2' and int(next_value.pes) > 2:
                     change_pes(current_value, '1')
             elif previous_value is not None:
-                if current_value.pes == '3' and int(previous_value.pes) > 1:
+                if current_value.pes == '3' and int(previous_value.pes) > 3:
                     change_pes(current_value, '1')
-                elif current_value.pes == '2' and int(previous_value.pes) > 1:
+                elif current_value.pes == '2' and int(previous_value.pes) > 2:
                     change_pes(current_value, '1')
+
         if current_value.pes == '1':
             if previous_value is not None and next_value is not None:
-                if int(previous_value.pes) < 2 and int(next_value.pes) < 2:
+                if int(previous_value.pes) < 3 and int(next_value.pes) < 3:
                     change_pes(current_value, '2')
             elif previous_value is None and next_value is not None: # Principi de vers
-                if int(next_value.pes) < 2:
+                if int(next_value.pes) < 3:
                     change_pes(current_value, '2')
 
 #----------------------------------------------------------------------------------------------

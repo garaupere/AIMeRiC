@@ -12,7 +12,7 @@ def correct_spacy(doc):
                    'dels': 'ADP', 'del': 'ADP', 'als': 'ADP', 'al': 'ADP', "des": 'ADP',
                    'hom': 'NOUN', 'om': 'NOUN',
                    #"lo": "DET",
-                   'tal': 'PRON', 'tals': 'PRON', "cap": "NOUN", "caps": "NOUN", 'així': 'ADV',
+                   'així': 'ADV',
                    'cell': 'PRON', "quell": "PRON", "·quell": "PRON", 'ceyl': 'PRON', 'si': 'PRON', 'mi': 'PRON',
                    'que': 'PRON', 'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON', 'quina': 'PRON', 'quines': 'PRON',
                    'yo': 'PRON', 'vós': 'NOUN', 'nós': 'NOUN', 'ne': 'CCONJ', 'ni': 'CCONJ',
@@ -34,15 +34,17 @@ def correct_spacy(doc):
                    #'-li': 'DET', '-los': 'DET', '-la': 'DET', '-les': 'DET', '-els': 'DET', '-ne': 'DET', '-en': 'DET',
                    #'-mos': 'DET', '-us': 'DET', 'nos': 'DET', '-nos': 'DET', 'vos': 'DET', '-vos': 'DET', 'us': 'DET',
                    #'el': 'DET', 'els': 'DET', 'la': 'DET', 'les': 'DET',
-                   'ab': 'ADP', 'com': 'PRON', 'quan': 'ADP', 'on': 'ADP', 'perquè': 'ADV', 'perque': 'ADV',
+                   'ab': 'ADP',
+                   'com': 'PRON', 'quan': 'ADP', 'on': 'ADP', 'perquè': 'ADV', 'perque': 'ADV',
                    'perqué': 'ADV', 'no': 'ADP', 'sí': 'ADP',
                    'ja': 'ADP', 'encara': 'ADV', 'ans': 'ADV', 'ara': 'ADV', 'ací': 'ADV', 'allà': 'ADV', 'allí': 'ADV',
                    'açà': 'ADV', 'dallà': 'ADV',
                    'dallí': 'ADV', 'pus': 'ADV',
-                   'tot': 'NOUN', 'tots': 'NOUN', 'tota': 'NOUN', 'totes': 'NOUN',
                    'am': 'VERB', 'cel': 'NOUN', 'cert': 'ADJ', 'certs': 'ADJ', 'certa': 'ADJ', 'certes': 'ADJ',
                    'val': 'VERB', "delit": "NOUN", "delits": "NOUN",
-                   'mon': 'ADP', 'ma': 'ADP', 'ton': 'ADP', 'ta': 'ADP', 'son': 'ADP', 'sa': 'ADP',
+                   'mon': 'ADP', 'ma': 'ADP', 'ton': 'ADP', 'ta': 'ADP', 'son': 'ADP', 'sa': 'ADP', 'llur': 'ADP', 'llurs': 'ADP',
+                   'tal': 'ADP', 'tals': 'ADP', 'mateix': 'PRON', 'mateixs': 'PRON', 'mateixa': 'PRON', 'mateixes': 'PRON', 'mateixos': 'PRON',
+                   'tot': 'PRON', 'tots': 'PRON', 'tota': 'PRON', 'totes': 'PRON',
                    'ses': 'ADP', 'mos': 'ADP', 'sos': 'ADP', 'tes': 'ADP', 'es': 'DET',
                    'cada': 'ADP', 'mes': 'CCONJ', 'sens': 'ADP', 'sense': 'ADP', 'dins': 'ADP', 'fora': 'ADP',
                    'entre': 'ADP', 'contra': 'ADP', 'davant': 'ADP', 'deçà': 'ADP', 'darrera': 'ADP', 'damunt': 'ADP',
@@ -50,7 +52,8 @@ def correct_spacy(doc):
                    'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP',
                    #'sóc': 'AUX', 'soc': 'AUX', 'só': 'AUX', 'som': 'AUX', 'és': 'AUX', "s'és": 'AUX', 'est': 'AUX', 'é': 'AUX',
                    #'fou': 'AUX', 'foi': 'AUX', 'fó': 'AUX', 'ser': 'AUX', 'esser': 'AUX', 'ésser': 'AUX', 'ecer': 'AUX', 'écer': 'AUX', 'cer': 'AUX',
-                   'fe': 'NOUN'
+                   'fe': 'NOUN',
+                   'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ'
 
                    }
 

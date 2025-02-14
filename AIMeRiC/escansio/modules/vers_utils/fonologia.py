@@ -28,12 +28,13 @@ def score(syllable, vers):
             points += 1
         if syllable.fusionada:
             points -= 10
-        if syllable == vers[3] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 4
-            points -= 8
-        elif syllable == vers[4] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 5
-            points -= 4
-        elif syllable == vers[5] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 6
-            points -= 2
+        if len(vers) > 6:
+            if syllable == vers[3] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 4
+                points -= 8
+            elif syllable == vers[4] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 5
+                points -= 4
+            elif syllable == vers[5] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 6
+                points -= 2
     syllable.fusionable = points
     return points
 
