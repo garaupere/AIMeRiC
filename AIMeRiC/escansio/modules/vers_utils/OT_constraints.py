@@ -5,7 +5,7 @@ import re
 def clash(pattern):
     """Compta les violacions de *CLASH, Jiménez (2019)"""
     if pattern is not None:
-        return len(re.findall('SS', pattern)) + len((re.findall('SSS', pattern)))
+        return len(re.findall('11', pattern)) + len((re.findall('111', pattern)))
     else:
         return 0
 
@@ -13,7 +13,7 @@ def clash(pattern):
 def lapse(pattern):
     """Compta les violacions de *LAPSE, Jiménez (2019)"""
     if pattern is not None:
-        return len(re.findall('WWW', pattern)) + len(re.findall('WWWW', pattern))
+        return len(re.findall('000', pattern)) + len(re.findall('0000', pattern))
     else:
         return 0
 
@@ -21,7 +21,7 @@ def lapse(pattern):
 def ws_hl(pattern):
     """Compta les violacions de *WS-HL, Jiménez (2019)"""
     if pattern is not None:
-        return len(re.findall('SS$', pattern))
+        return len(re.findall('11$', pattern))
     else:
         return 0
 
@@ -29,7 +29,7 @@ def ws_hl(pattern):
 def non_initial(pattern):
     """Compta les violacions de *NON-INITIAL, Jiménez (2019)"""
     if pattern is not None:
-        return len(re.findall('^S', pattern))
+        return len(re.findall('^1', pattern))
     else:
         return 0
 

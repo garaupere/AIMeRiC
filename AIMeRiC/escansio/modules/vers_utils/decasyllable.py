@@ -1,7 +1,7 @@
 """Un mòdul per gestionar particularitats mètriques del decasíl·lab"""
 import re
 
-from .fonologia import force_subs
+from .fonologia import split_syllable
 from .tools import seguent
 
 
@@ -9,6 +9,7 @@ def find_tall(self, tall) -> bool:
     """Aquesta funció cerca un tall en un vers donat i en substitueix el pes accentual per un cim màxim (5)."""
     result = False  # Resultat de la cerca
     if int(self.no_words[tall].pes) > 1:  # Si el valor correspon a un accent
+        #print(">> TALL:", tall+1, self.no_words[tall].text, ':', self.no_words[tall].pes) # Debug
         for paraula in self.words:  # Recorre les paraules del vers
             if paraula.stress[-1] == self.no_words[tall]:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
                 paraula.stress[-1].pes = '5'
@@ -62,7 +63,7 @@ def cesura_femenina(self):
                         if seguent(syllable, word.stress) is not None:
                             if re.findall("[:_]", seguent(syllable, word.stress).text):
                                 # Gestiona els casos de sinalefa en la cesura, ex.: *jo som la page<sa_amb> els records honrats
-                                fsubs = force_subs(seguent(syllable, word.stress))
+                                fsubs = split_syllable(seguent(syllable, word.stress))
                                 syl1 = fsubs[0]
                                 syl2 = fsubs[1]
                                 word.stress[syllable.s_index + 1] = syl1

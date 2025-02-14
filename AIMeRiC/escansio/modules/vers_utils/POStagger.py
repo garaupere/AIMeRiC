@@ -8,31 +8,33 @@ from .preprocess import clean_text
 def correct_spacy(doc):
     corrections = {'e': 'CCONJ', 'y': 'CCONJ', 'amb': 'ADP', 'de': 'ADP', 'en': 'ADP', 'per': 'ADP',
                    'á': 'ADP', 'à': 'ADP',
-                   'a': 'ADP', 'dels': 'ADP', 'del': 'ADP', 'als': 'DET', 'al': 'DET',
-                   'hom': 'NOUN', 'om': 'NOUN', "lo": "DET", "des": 'ADP',
+                   'a': 'ADP',
+                   'dels': 'ADP', 'del': 'ADP', 'als': 'ADP', 'al': 'ADP', "des": 'ADP',
+                   'hom': 'NOUN', 'om': 'NOUN',
+                   #"lo": "DET",
                    'tal': 'PRON', 'tals': 'PRON', "cap": "NOUN", "caps": "NOUN", 'així': 'ADV',
                    'cell': 'PRON', "quell": "PRON", "·quell": "PRON", 'ceyl': 'PRON', 'si': 'PRON', 'mi': 'PRON',
                    'que': 'PRON', 'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON', 'quina': 'PRON', 'quines': 'PRON',
                    'yo': 'PRON', 'vós': 'NOUN', 'nós': 'NOUN', 'ne': 'CCONJ', 'ni': 'CCONJ',
-                   'seu': 'ADJ', 'seus': 'ADJ', 'seva': 'ADJ', 'seves': 'ADJ', 'seua': 'ADJ', 'seues': 'ADJ',
-                   'sua': 'ADJ', 'sues': 'ADJ', 'meu': 'ADJ', 'meus': 'ADJ', 'meva': 'ADJ', 'meves': 'ADJ',
-                   'meua': 'ADJ', 'meues': 'ADJ', 'teu': 'ADJ', 'teus': 'ADJ', 'teva': 'ADJ', 'teves': 'ADJ',
-                   'teua': 'ADJ', 'teues': 'ADJ', 'nostre': 'ADJ', 'nostres': 'ADJ', 'nostra': 'ADJ', 'vostre': 'ADJ',
-                   'vostres': 'ADJ', 'vostra': 'ADJ', 'un': 'NUM', 'una': 'NUM', 'uns': 'NUM', 'unes': 'NUM',
+                   'seu': 'PRON', 'seus': 'PRON', 'seva': 'PRON', 'seves': 'PRON', 'seua': 'PRON', 'seues': 'PRON',
+                   'sua': 'PRON', 'sues': 'PRON', 'meu': 'PRON', 'meus': 'PRON', 'meva': 'PRON', 'meves': 'PRON',
+                   'meua': 'PRON', 'meues': 'PRON', 'teu': 'PRON', 'teus': 'PRON', 'teva': 'PRON', 'teves': 'PRON',
+                   'teua': 'PRON', 'teues': 'PRON', 'nostre': 'PRON', 'nostres': 'PRON', 'nostra': 'PRON', 'vostre': 'PRON',
+                   'vostres': 'PRON', 'vostra': 'PRON',
+                   'un': 'NUM', 'una': 'NUM', 'uns': 'NUM', 'unes': 'NUM',
                    'aquests': 'PRON', 'aquestes': 'PRON', 'aquell': 'PRON', 'aquella': 'PRON', 'aquells': 'PRON',
                    'aquelles': 'PRON', 'aquest': 'PRON', 'aquesta': 'PRON', 'aqueix': 'PRON', 'aqueixa': 'PRON',
                    'aqueixos': 'PRON', 'aqueixes': 'PRON', 'este': 'PRON', 'esta': 'PRON', 'estos': 'PRON',
                    'estes': 'PRON', 'eixos': 'PRON', 'eixes': 'PRON', 'eixa': 'PRON', 'eixs': 'PRON', 'eixas': 'PRON',
                    'eix': 'PRON', 'això': 'PRON', 'açò': 'PRON', 'ço': 'PRON', 'so': 'NOUN', 'xo': 'PRON', "xô": 'PRON',
-                   'xò': 'PRON',
-                   "'xo": 'PRON', "'xô": 'PRON', "'xò": 'PRON',
+                   'xò': 'PRON', "'xo": 'PRON', "'xô": 'PRON', "'xò": 'PRON',
                    'més': 'PRON', 'menys': 'PRON', 'molt': 'PRON', 'poc': 'PRON', 'pocs': 'PRON', 'molts': 'PRON',
-                   'me': 'DET', '-me': 'DET', 'te': 'DET', '-te': 'DET', 'se': 'DET', '-se': 'DET', 'li': 'DET',
-                   'los': 'DET', 'ho': 'DET', '-ho': 'DET', 'hi': 'DET', '-hi': 'DET',
-                   '-li': 'DET', '-los': 'DET', '-la': 'DET', '-les': 'DET', '-els': 'DET', '-ne': 'DET', '-en': 'DET',
-                   '-mos': 'DET', '-us': 'DET', 'nos': 'DET', '-nos': 'DET', 'vos': 'DET', '-vos': 'DET', 'us': 'DET',
-                   'el': 'DET', 'els': 'DET', 'la': 'DET', 'les': 'DET',
-                   'ab': 'ADP', 'com': 'ADP', 'quan': 'ADP', 'on': 'ADP', 'perquè': 'ADV', 'perque': 'ADV',
+                   #'me': 'DET', '-me': 'DET', 'te': 'DET', '-te': 'DET', 'se': 'DET', '-se': 'DET', 'li': 'DET',
+                   #'los': 'DET', 'ho': 'DET', '-ho': 'DET', 'hi': 'DET', '-hi': 'DET',
+                   #'-li': 'DET', '-los': 'DET', '-la': 'DET', '-les': 'DET', '-els': 'DET', '-ne': 'DET', '-en': 'DET',
+                   #'-mos': 'DET', '-us': 'DET', 'nos': 'DET', '-nos': 'DET', 'vos': 'DET', '-vos': 'DET', 'us': 'DET',
+                   #'el': 'DET', 'els': 'DET', 'la': 'DET', 'les': 'DET',
+                   'ab': 'ADP', 'com': 'PRON', 'quan': 'ADP', 'on': 'ADP', 'perquè': 'ADV', 'perque': 'ADV',
                    'perqué': 'ADV', 'no': 'ADP', 'sí': 'ADP',
                    'ja': 'ADP', 'encara': 'ADV', 'ans': 'ADV', 'ara': 'ADV', 'ací': 'ADV', 'allà': 'ADV', 'allí': 'ADV',
                    'açà': 'ADV', 'dallà': 'ADV',
@@ -58,6 +60,8 @@ def correct_spacy(doc):
             token[1] = corrections[token[0].lower()]
         if token[1] == "PUNCT" and token[0] in string.punctuation:
             new_doc.pop(new_doc.index(token))
+        if '-' in token[0] and token[1] == 'PRON':
+            token[1] = 'PRONe'
     return new_doc
 
 
@@ -137,6 +141,6 @@ def posTagger(nlp, text: str):
     text = inicials(text)
     doc = nlp(text)
     doc = ocr_errors(doc)
-    doc = correct_spacy(doc)
     doc = spacy_asyllabic(doc)
+    doc = correct_spacy(doc)
     return doc

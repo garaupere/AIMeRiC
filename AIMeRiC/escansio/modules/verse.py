@@ -4,7 +4,8 @@ from copy import deepcopy
 
 from AIMeRiC.escansio.modules.word import Word
 from AIMeRiC.escansio.modules.vers_utils.OT_constraints import analyze_OT
-from AIMeRiC.escansio.modules.vers_utils.fonologia import new_sumvow, cv_get_info
+from AIMeRiC.escansio.modules.vers_utils.fonologia import contactes_vocalics_info, resol_contactes_vocalics, \
+    best_contacte_vocalic
 from AIMeRiC.escansio.modules.vers_utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
     maximal_comparison_pattern
@@ -35,7 +36,7 @@ class Vers:
 
     def __prepara__(self, nlp):
         self.pos = posTagger(nlp, self.text)
-        self.words = [Word(token[0], token[1], self.pos.index(token)) for token in self.pos if token]
+        self.words = [Word(token[0], token[1], self.pos.index(token), len(self.pos)) for token in self.pos if token]
         safe_words(self)
         self.original = deepcopy(self.words)
 
@@ -46,7 +47,7 @@ class Vers:
         safe_words(self)
         self.recompte_sillabes_metriques = recompte_metric(self)
         self.ajustat = metre_ajustat(self)
-        new_sumvow(self)
+        resol_contactes_vocalics(self, best=best_contacte_vocalic(self.no_words))
         self.annotated = anotate_verse(self)
         self.no_words = sum([word.stress for word in self.words], [])
         adjust_pes(self)
@@ -63,6 +64,9 @@ class Vers:
     def __subdivisio__(self):
         self.posicio_tall = tall(self)
         self.subdivision = subdivideix(self)
+        cim_maxim(self)
+        self.comparative_pattern = ''.join([str(x) for x in self.pattern]).rstrip('0')
+        self.maxpattern = maximal_comparison_pattern(self)
 
     def __disposicio__(self):
         self.ajustat = metre_ajustat(self)
@@ -88,7 +92,7 @@ class Vers:
         self.h2_words = quants_mots(self)[1]
 
     def __contactes_vocalics__(self):
-        self.cv_info = cv_get_info(self)
+        self.cv_info = contactes_vocalics_info(self)
 
     def __metronome__(self):
         self.metronome = metronome(self)

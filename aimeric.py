@@ -119,12 +119,13 @@ def main():
             valida()
         elif option == "5":
             print("--" * 40)
-            verse = input("Introdueix un vers a analitzar: ")
-            scan(nlp, verse)
-
+            verse = input("Introdueix el vers a analitzar: ")
+            while verse != "":
+                scan(nlp, verse)
+                print("--" * 40)
+                verse = input("Introdueix el vers a analitzar: ")
         elif option == "6":
             prosa(nlp)
-
         elif option == "7":
             print("--" * 40)
             start = time.time()

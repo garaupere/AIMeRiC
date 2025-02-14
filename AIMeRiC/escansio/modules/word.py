@@ -29,8 +29,9 @@ def bivalents(result):
 class Word:
     """Aquesta classe representa una paraula amb les seves característiques."""
 
-    def __init__(self, word, word_pos, index):
+    def __init__(self, word, word_pos, index, verse_wlength: int= 0):
         self.w_index = index
+        self.verse_wlength = verse_wlength
         self.text = word.lower()
         self.cat = word_pos
         self.syllables = hyphenate_word(self.text)  # Mòdul independent: escansio/utils/syllabes.py
@@ -163,18 +164,27 @@ class Word:
         solution = self.syllables[0]
         response = []
         tonics = "NOUN, VERB, ADJ, ADV, PROPN"
-        semitonics = "AUX, NUM, ADP, PRON, INTJ"
+        secondary = 'ADP'
+        semitonics = "AUX, NUM, PRON, PRONe, INTJ"
         if self.cat is not None:
             if self.cat in tonics:
                 response = [(solution, "4")]
             elif self.cat in semitonics:
-                response = [(solution, "3")]
+                if self.cat == "PRONe":  # Gestiona els casos de pronoms febles a final de vers
+                    if self.w_index == self.verse_wlength - 1:
+                        response = [(solution, "0")]
+                    else:
+                        response = [(solution, "3")]
+                else:
+                    response = [(solution, "3")]
+            elif self.cat in secondary:
+                response = [(solution, "2")]
             else:
                 response = [(solution, "0")]
         return response
 
     def is_bivalent(self):
-        if self.cat in ["AUX", "NUM", "ADP", "PRON", "INTJ"]:
+        if self.cat in ["AUX", "NUM", "ADP", "PRON", "PRONE", "INTJ"]:
             return True
         else:
             return False
@@ -234,8 +244,8 @@ class Word:
 
     def print_metadata(self):
         for attr in ["text", "cat", "word_ment", "syllables", "n_syllables", "print_stress",
-                     "starts_with_vowel",
-                     "ends_with_vowel", "plain_syllables", "is_compost"]:
+                     "vowel_start",
+                     "vowel_end", "plain_syllables", "is_compost"]:
             print(f"\t\t\t\t{attr}:", getattr(self, attr))
         print("\n")
 
@@ -293,7 +303,6 @@ class Word:
                                    0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
 
     def get_stress_index(self):
-        stress_index = None
         for i, syllable in enumerate(self.stress):
             if int(syllable.pes) > 2:
                 stress_index = i

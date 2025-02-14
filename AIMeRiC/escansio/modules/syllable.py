@@ -3,27 +3,32 @@ import re
 
 from AIMeRiC.escansio.modules.sillaba_utils.get_vowel import get as get_vowel
 
+
 class Syllable:
     def __init__(self, index: int, syllable: tuple, len_word: int, fusion_direction=None):
         self.text = syllable[0]
         self.s_index = index
         self.pes = syllable[1]
+        self.tonic = True if int(self.pes) > 3 else False
         self.len_word = len_word
-        self.diftong = self.is_diftong() # Afegir a un mòdul independent: /escansio/utils/phonology.py
+        self.diftong = self.is_diftong()  # Afegir a un mòdul independent: /escansio/utils/phonology.py
         self.fusion_direction = fusion_direction
         self.pes_fusion = None
+        self.fusionable = 0
         self.fusionada = True if fusion_direction is not None else False
         self.triftong = True if re.search("._._", self.text) else False
-        self.starts_with_vowel = self.starts_with_vowel() # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
-        self.ends_with_vowel = self.ends_with_vowel() # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
-        self.fono_info = self.fono() # Afegir a un mòdul independent: /escansio/utils/phonology.py
+        self.starts_with_vowel = self.vowel_start()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
+        self.ends_with_vowel = self.vowel_end()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
+        self.first = True if self.s_index == 0 else False
+        self.last = True if self.s_index == self.len_word - 1 else False
+        self.fono_info = self.fono()  # Afegir a un mòdul independent: /escansio/utils/phonology.py
 
     def save_metadata(self):
         return {attr: getattr(self, attr) for attr in
                 ["s_index", "len_word", "text", "pes", "fusionada", "fusion_direction", "starts_with_vowel",
                  "ends_with_vowel", "fono_info"]}
 
-    def starts_with_vowel(self):
+    def vowel_start(self):
         if re.search("^-?h?[aeoiuàáèéìíòóùúyýÿïüâêîôû]", self.text):
             if not re.search("^[iuy][aeoiuàáèéìíòóùúyýÿïüâêîôû]", self.text):
                 return True
@@ -32,7 +37,7 @@ class Syllable:
         else:
             return False
 
-    def ends_with_vowel(self):
+    def vowel_end(self):
         if self.s_index == self.len_word - 1:
             if re.search(
                     "([^aeoiuàáèéìíòóùúyýÿïüâêîôû]*[aeoiuàáèéìíòóùúyýÿïüâêîôû]|[qg]u[aeoiuàáèéìíòóùúyýÿïüâêîôû]|^y)r?-?$",
@@ -58,8 +63,7 @@ class Syllable:
 
     def print_metadata(self):
         for attr in ["s_index", "len_word", "text", "pes", "fusionada", "fusion_direction", "starts_with_vowel",
-                     "ends_with_vowel",
-                     "fono_info"]:
+                     "ends_with_vowel", "fono_info"]:
             print(f"\t\t\t\t{attr}:", getattr(self, attr))
         print("\n")
 
@@ -85,9 +89,22 @@ class Syllable:
 
     def is_diftong(self):
         if re.search("([iuüy][aeiouàáèéìíòóùúyýâêîôû]|[aeiouàáèéìíòóùúyýâêîôû][iuüy])", self.text):
-            if not re.search("([qg]u[eièéìíï]|[aeiouàáèéìíòóùúyýâêîôû][iy]x|ny[aeiouàáèéìíòóùúyýâêîôû]|igs?$)", self.text):
+            if not re.search("([qg]u[eièéìíï]|[aeiouàáèéìíòóùúyýâêîôû][iy]x|ny[aeiouàáèéìíòóùúyýâêîôû]|igs?$)",
+                             self.text):
                 return True
             else:
                 return False
         else:
             return False
+
+
+if __name__ == '__main__':
+    syl = Syllable(0, ('sóc', '3'), 1)
+    syl.print_metadata()
+    print(syl.fono_info)
+    print(syl.diftong)
+    print(syl.starts_with_vowel)
+    print(syl.ends_with_vowel)
+    print(syl.is_diftong())
+    print(syl.save_metadata())
+    print(syl.fono())
