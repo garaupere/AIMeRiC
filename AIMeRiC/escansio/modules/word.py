@@ -14,11 +14,11 @@ nlp = spacy.load("ca_core_news_md", disable=["ner"])
 def bivalents(result, cat):
     for syllable in result:
         if syllable[1] == "4":
-            if cat in ["AUX", "NUM", "PRON", "PRONE", "INTJ"]:
+            if cat in ["AUX", "NUM", "PRON", "PRONE", "INTJ", "ADP"]:
                 o_syllable = syllable
                 syllable = (syllable[0], "3")
                 result[result.index(o_syllable)] = syllable
-            if cat in ['ADP']:
+            if cat in ['ADPa']:
                 o_syllable = syllable
                 syllable = (syllable[0], "2")
                 result[result.index(o_syllable)] = syllable
@@ -34,11 +34,11 @@ def bivalents(result, cat):
 class Word:
     """Aquesta classe representa una paraula amb les seves característiques."""
 
-    def __init__(self, word, word_pos, index, verse_wlength: int= 0):
+    def __init__(self, word, word_pos, index, verse_wlength: int = 0):
         self.w_index = index
         self.verse_wlength = verse_wlength
         self.text = word.lower()
-        self.cat = word_pos
+        self.upos = word_pos
         self.syllables = hyphenate_word(self.text)  # Mòdul independent: escansio/utils/syllabes.py
         self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?, no ho sé)
         self.word_ment = self.word_ment()  # Crear un mòdul independent: escansio/utils/stress.py
@@ -87,7 +87,7 @@ class Word:
                     return False
 
         if re.search("([^aeiouàáèéíìóòúùïü]*[aeiouàáèéíìóòúùïüy]|[qg]u[aeioàáèéíìóòúùïü]|^y)r?-?$", self.text):
-            if self.text[-1] == "r" and self.cat == "ADP":
+            if self.text[-1] == "r" and self.upos == "ADP":
                 return False
             else:
                 if len(self.text) > 1:
@@ -135,6 +135,7 @@ class Word:
             :param mot: Llista de tuples, on cada tuple conté una síl·laba i el seu pes (ex. [("re", 0), ("cor", 0), ("dar", 4)])
             :return: Llista de tuples amb l'accent secundari assignat (ex. [("re", 2), ("cor", 0), ("dar", 4)])
             """
+
         if not self.is_compost:
             if self.word_ment is not None:  # Si el mot té un sufix -ment, eliminam aquest sufix per a l'assignació de l'accent secundari
                 result = deepcopy(self.stress)[:-1]  # Eliminam l'última síl·laba (el sufix -ment)
@@ -144,22 +145,32 @@ class Word:
                 result_end = None  # No hi ha sufix -ment
 
             index_accent_primari = None  # Índex de la primera síl·laba amb accent primari
-            for i, syl in enumerate(result):  # Buscam la primera síl·laba amb accent primari
+            for i, syl in enumerate(result):  # Cercam la primera síl·laba amb accent primari
                 if int(syl.pes) > 1:  # Si la síl·laba té accent primari
                     index_accent_primari = i  # Guardam la posició de la síl·laba amb accent primari
                     break  # Sortim del bucle
-            # Si no hi ha accent primari o no hi ha suficients síl·labes abans, retornem el mot sense canvis
-            if index_accent_primari is None or index_accent_primari < 2:
+            # Si no hi ha accent primari o no hi ha suficients síl·labes abans, retornam el mot sense canvis
+            if index_accent_primari is None:  # or index_accent_primari < 2:
                 return result + [
                     result_end] if self.word_ment is not None else result  # Retornam el mot sense canvis
 
-            # Assignem accents secundaris a totes les posicions vàlides (x-2, x-4, ...)
+            # Assignam els accents secundaris a totes les posicions vàlides (x-2, x-4, ...)
             posicio_actual = index_accent_primari - 2  # Posició actual
             while posicio_actual >= 0:  # Mentre la posició actual sigui vàlida
                 syll = result[posicio_actual]  # Síl·laba actual
                 result[posicio_actual] = Syllable(posicio_actual, (syll.text, "2"),
                                                   len_word=len(self.stress))  # Assignam l'accent secundari
                 posicio_actual -= 2  # Continuam amb la següent posició vàlida (x-4, x-6...)
+
+            # Assignam l'accent secundari als mots esdrúixols: accents binaris a la dreta de l'accent primari (Oliva, 1992: 74)
+            if len(self.stress) > 2 and index_accent_primari < 3:  # Si el mot és esdrúixol
+                posicio_actual = index_accent_primari + 2  # Posició actual
+                while posicio_actual < len(result):  # Mentre la posició actual sigui vàlida
+                    syll = result[posicio_actual]
+                    if int(syll.pes) < 2:
+                        result[posicio_actual] = Syllable(posicio_actual, (syll.text, "2"),
+                                                      len_word=len(self.stress))  # Assignam l'accent secundari (+dèbil)
+                    posicio_actual += 2  # Continuam amb la següent posició vàlida (x+4, x+6...)
 
             self.stress = result + [
                 result_end] if self.word_ment is not None else result  # Actualitzam el mot amb els accents secundaris assignats (i el sufix -ment si n'hi ha)
@@ -168,28 +179,28 @@ class Word:
         """Aquesta funció retorna l'accentuació de monosíl·labs"""
         solution = self.syllables[0]
         response = []
-        tonics = "NOUN, VERB, ADJ, ADV, PROPN"
-        secondary = 'ADP'
-        semitonics = "AUX, NUM, PRON, PRONe, INTJ"
-        if self.cat is not None:
-            if self.cat in tonics:
+        tonics = ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]
+        secondary = ["ADPa", "DET"]
+        semitonics = ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]
+        if self.upos is not None:
+            if self.upos in tonics:
                 response = [(solution, "4")]
-            elif self.cat in semitonics:
-                if self.cat == "PRONe":  # Gestiona els casos de pronoms febles a final de vers
+            elif self.upos in semitonics:
+                if self.upos == "PRONe":  # Gestiona els casos de pronoms febles enclítics a final de vers
                     if self.w_index == self.verse_wlength - 1:
                         response = [(solution, "0")]
                     else:
                         response = [(solution, "3")]
                 else:
                     response = [(solution, "3")]
-            elif self.cat in secondary:
+            elif self.upos in secondary:
                 response = [(solution, "2")]
             else:
                 response = [(solution, "0")]
         return response
 
     def is_bivalent(self):
-        if self.cat in ["AUX", "NUM", "ADP", "PRON", "PRONE", "INTJ"]:
+        if self.upos in ["AUX", "NUM", "ADP", "ADPa", "PRON", "PRONE", "INTJ"]:
             return True
         else:
             return False
@@ -205,10 +216,9 @@ class Word:
             r"[^qg]?[aouïü][^aeouïü][^aouïüs]|"  # Vocals (a, o, u) + consonants  + consonant (tipus: rebost).
             r"[eiy]([^'aeiuons]|[^'aeiuo]+[^'aeiuo]))"  # Vocals (e, i) + consonants, excepte <s> i  <en>, <in>.
             r"s?(?:$|-)"  # s opcional + final o guionet.
-        )
+            )
 
         accents = re.compile("[àáèéíìóòúù]")
-
 
         if self.word_ment is not None:
             stressed = self.word_ment
@@ -218,7 +228,7 @@ class Word:
             """Si el mot conté accents gràfics"""
             result = [(syllable, "4") if re.findall(accents, syllable) else (syllable, "0") for syllable in stressed]
             if self.is_bivalent():
-                result = bivalents(result, self.cat)
+                result = bivalents(result, self.upos)
 
         else:
             """Si el mot no conté accents gràfics"""
@@ -234,7 +244,7 @@ class Word:
                     result = [(stressed[-2], "4"), (stressed[-1], "0")]  # Paraula plana
                 result = [(syllable, "0") for syllable in stressed[:-2]] + result  # La resta de síl·labes àtones
                 if self.is_bivalent():
-                    result = bivalents(result, self.cat)
+                    result = bivalents(result, self.upos)
         if self.word_ment is not None:
             result = [(syllable[0], "2") if syllable[1] == "4" else (syllable[0], "0") for syllable in result]
             result = result + [("ment", "4")]
@@ -248,7 +258,7 @@ class Word:
             return hyphenate_word(self.text.replace("ment", ""))
 
     def print_metadata(self):
-        for attr in ["text", "cat", "word_ment", "syllables", "n_syllables", "print_stress",
+        for attr in ["text", "upos", "word_ment", "syllables", "n_syllables", "print_stress",
                      "starts_with_vowel",
                      "ends_with_vowel", "plain_syllables", "is_compost"]:
             print(f"\t\t\t\t{attr}:", getattr(self, attr))
@@ -316,7 +326,7 @@ class Word:
 
 if __name__ == "__main__":
     start = time.time()
-    sentence = ("deliquis")
+    sentence = ("història")
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     doc = nlp(sentence)
     doc = [tok.pos_ for tok in doc]

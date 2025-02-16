@@ -15,8 +15,8 @@ class Syllable:
         self.fusion_direction = fusion_direction
         self.pes_fusion = None
         self.fusionable = 0
-        self.fusionada = True if fusion_direction is not None else False
         self.triftong = True if re.search("._._", self.text) else False
+        self.fusionada = True if fusion_direction is not None else False or True if self.triftong else False
         self.starts_with_vowel = self.vowel_start()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
         self.ends_with_vowel = self.vowel_end()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
         self.first = True if self.s_index == 0 else False

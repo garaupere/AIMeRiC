@@ -8,15 +8,15 @@ from .tools import seguent
 def find_tall(self, tall) -> bool:
     """Aquesta funció cerca un tall en un vers donat i en substitueix el pes accentual per un cim màxim (5)."""
     result = False  # Resultat de la cerca
-    if int(self.no_words[tall].pes) > 1:  # Si el valor correspon a un accent
+    if int(self.nomes_sillabes[tall].pes) > 2:  # Si el valor correspon a un accent
         #print(">> TALL:", tall+1, self.no_words[tall].text, ':', self.no_words[tall].pes) # Debug
         for paraula in self.words:  # Recorre les paraules del vers
-            if paraula.stress[-1] == self.no_words[tall]:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
+            if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
                 paraula.stress[-1].pes = '5'
-                self.annotated[
+                self.anotat[
                     self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
-                self.no_words[tall].pes = '5'  # Actualitza la llista de mots
-                self.pattern[tall] = 5  # Actualitza el patró abstracte
+                self.nomes_sillabes[tall].pes = '5'  # Actualitza la llista de mots
+                self.patro[tall] = 5  # Actualitza el patró abstracte
                 self.words[
                     self.words.index(paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
                 self.words[self.words.index(paraula)] = paraula  # Actualitza la paraula
@@ -33,7 +33,7 @@ def tall(self) -> int or None:
         cerca = find_tall(self, tall)  # Cerca el primer tall
         hist = [cerca]  # Històric de cerques
         i = 0  # Índex de tall
-        while cerca is not True and i < len(talls) - 1:  # Mentre no s'hagi trobat cap tall i no s'hagin provat tots
+        while cerca is not True and i < len(talls) - 1:  # Mentre no s'hagi trobat cap tall i no s'hagin provat tots els candidats
             i += 1  # Següent tall
             tall = talls[i]  # Següent tall
             hist.append(cerca)  # Històric de cerques
@@ -56,10 +56,10 @@ def cesura_femenina(self):
     """Aquesta funció aplica la cesura femenina al vers."""
     if len(self.sillables_metriques) == 11:
         # if len(re.findall("[_:]", ''.join([x.text for x in self.no_words[4:6]]))) < 0:
-        if int(self.no_words[4].pes) >= 4:
+        if int(self.nomes_sillabes[4].pes) >= 4:
             for word in self.words:
                 for syllable in word.stress:
-                    if syllable == self.no_words[4]:
+                    if syllable == self.nomes_sillabes[4]:
                         if seguent(syllable, word.stress) is not None:
                             if re.findall("[:_]", seguent(syllable, word.stress).text):
                                 # Gestiona els casos de sinalefa en la cesura, ex.: *jo som la page<sa_amb> els records honrats
@@ -70,18 +70,18 @@ def cesura_femenina(self):
                                 self.words[word.w_index + 1].stress.insert(0, syl2)
                                 break
                             syllable.pes = '5'
-                            self.no_words[4].pes = '5'
-                            self.pattern[4] = 5
+                            self.nomes_sillabes[4].pes = '5'
+                            self.patro[4] = 5
                             ignore_syll = word.stress[word.stress.index(syllable) + 1]
                             del word.stress[word.stress.index(syllable) + 1:]
                             self.actualitza()
-                            self.subdivision = "5'+5"
+                            self.subdivisio = "5'+5"
                             self.string = '#'.join(
                                 ['.'.join([syllable.text for syllable in word.stress]) for word in
                                  self.words[:word.w_index + 1]]) + ".<" + ignore_syll.text + '>#' + '#'.join(
                                 ['.'.join([syllable.text for syllable in word.stress]) for word in
                                  self.words[word.w_index + 1:]])
-                            self.string_stress = '#'.join(
+                            self.escansio_text = '#'.join(
                                 [word.plain() for word in
                                  self.words[:word.w_index + 1]]) + ".<" + ignore_syll.text + '>#' + '#'.join(
                                 [word.plain() for word in self.words[word.w_index + 1:]])

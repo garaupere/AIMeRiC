@@ -10,108 +10,60 @@ from .tools import seguent
 
 
 def llicencies(self) -> str:
-    """Aquesta funció aplica les llicències mètriques a un vers donat."""
+    """
+    Applies metrical licenses to a given verse.
+
+    This function adjusts the syllable count of a verse to match a target number of syllables (self.objectiu) by applying various metrical licenses such as sinalefa, dialefa, and sineresi.
+
+    Returns:
+        str: A string indicating the last applied metrical license and the difference in syllable count.
+    """
     result = None
-    diff = self.recompte_sillabes_metriques - self.goal
-    max_iterations = self.goal  # Limita el nombre d'iteracions
+    diff = self.recompte_sillabes_metriques - self.objectiu
+    max_iterations = self.objectiu
     iterations = 0
-    while diff > 0 and iterations < max_iterations:
-        resol_contactes_vocalics(self, best=best_sinalefa(self.no_words))
-        result = f'sinalefa {diff}'
+
+    while diff != 0 and iterations < max_iterations:
+        if diff > 0:
+            resol_contactes_vocalics(self, best_mode='sinalefa')
+            result = f'sinalefa {diff}'
+        else:
+            dialefa(self, abs(diff))
+            result = f'dialefa {abs(diff)}'
+
         self.__actualitza__()
-        diff = self.recompte_sillabes_metriques - self.goal
+        diff = self.recompte_sillabes_metriques - self.objectiu
+
         if diff > 0:
             sineresi(self)
             result = f'sineresis {diff}'
             self.__actualitza__()
-            diff = self.recompte_sillabes_metriques - self.goal
-        iterations += 1
-    while diff < 0 and iterations < max_iterations:
-        dialefa(self, abs(diff))
-        result = f'dialefa {abs(diff)}'
-        self.__actualitza__()
-        diff = self.recompte_sillabes_metriques - self.goal
-        if diff < 0:
-            dialefa(self, abs(diff))
-            result = f'dialefa {abs(diff)}'
-            self.__actualitza__()
-            diff = self.recompte_sillabes_metriques - self.goal
-        iterations += 1
-    return result
+            diff = self.recompte_sillabes_metriques - self.objectiu
 
+        iterations += 1
 
-def aplica_llicencies(self) -> str:
-    """Aquesta funció aplica les llicències mètriques a un vers donat."""
-    result = None
-    if self.goal == 10 and len(self.no_words) > 2:
-        self.recompte_sillabes_metriques = recompte_metric(self)
-        diferencia = self.recompte_sillabes_metriques - self.goal
-        if diferencia > 0:
-            resol_contactes_vocalics(self, best=best_sinalefa(self.no_words))
-            result = f'sinalefa {diferencia}'
-            self.__actualitza__()
-            diferencia = self.recompte_sillabes_metriques - self.goal
-            if diferencia < 0:
-                """aplica el hiat"""
-                dialefa(self, abs(diferencia))
-                result = f'dialefa {abs(diferencia)}'
-                self.__actualitza__()
-                diferencia = self.recompte_sillabes_metriques - self.goal
-            elif diferencia > 0:
-                sineresi(self)
-                result = f'sineresis {diferencia}'
-                self.__actualitza__()
-        elif diferencia < 0:
-            dialefa(self, abs(diferencia))
-            result = f'dialefa {abs(diferencia)}'
-            self.__actualitza__()
-            diferencia = self.recompte_sillabes_metriques - self.goal
-            if diferencia > 0:
-                resol_contactes_vocalics(self, best=best_sinalefa(self.no_words))
-                result = f'sinalefa {diferencia}'
-                self.__actualitza__()
-                diferencia = self.recompte_sillabes_metriques - self.goal
-                if diferencia > 0:
-                    sineresi(self)
-                    result = f'sineresis {diferencia}'
-                    self.__actualitza__()
-            diferencia = self.recompte_sillabes_metriques - self.goal
-            if diferencia > 0:
-                sineresi(self)
-                result = f'sineresis {diferencia}'
-                self.__actualitza__()
-            # if diferencia < 0:
-            #     self.dieresi(abs(diferencia))
-            #     result = f'dieresi {abs(diferencia)}'
-            #     self.__actualitza__()
-            #     diferencia = self.recompte_sillabes_metriques - self.goal
     return result
 
 
 def sineresi(self):
-    """Una funció per a aplicar la sinèresi a un vers donat. La sineresi consisteix a unir dues síl·labes en una sola síl·laba en interior de mot. Ex.: his.tò.ri.a > his.tò.ria"""
-    best = best_sineresi(self.no_words)
-    if best is not None:
-        diff = self.recompte_sillabes_metriques - self.goal  # Calcula la diferència
-        while diff > 0 and best:  # Mentre hi hagi diferència i hi hagi contactes vocals candidats
-            change = best.pop(0)  # Treu el primer contacte vocal candidat
-            wi = 0
-            while wi < len(self.words) - 1:
-                word = self.words[wi]
+    """
+    Applies synaeresis to a given verse. Synaeresis combines two syllables into one within a word.
+    Example: his.tò.ri.a -> his.tò.ria
+    """
+    best = best_sineresi(self)
+    if best:
+        diff = self.recompte_sillabes_metriques - self.objectiu
+        while diff > 0 and best:
+            change = best.pop(0)
+            for word in self.words:
                 if change[0] in word.stress:
                     result = join_syllables(change[0], change[1])
                     if result:
-                        syllable = change[0]
-                        next_syllable = change[1]
-                        if syllable in word.stress and next_syllable in word.stress:
-                            word.stress.pop(word.stress.index(next_syllable))
-                            word.stress_index = word.get_stress_index()
-                            word.secondary_stress()
-                wi += 1
-            diff = self.recompte_sillabes_metriques - self.goal  # Recalcula la diferència
-            self.no_words = sum([word.stress for word in self.words], [])  # Actualitza la llista de síl·labes
-
-
+                        word.stress.remove(change[1])
+                        word.stress_index = word.get_stress_index()
+                        word.secondary_stress()
+            diff = self.recompte_sillabes_metriques - self.objectiu
+            self.nomes_sillabes = sum((word.stress for word in self.words), [])
 def dieresi(self, times):
     """Aquesta funció aplica el fenomen de la dièresi a un vers donat. D'un diftong en interior de mot, en crea un hiat. Per exemple: aire > a.i.re; ai.gua > a.i.gu.a, etc."""
     counter = 0  # Comptador de vegades que s'ha aplicat el fenomen
@@ -159,7 +111,7 @@ def dieresi(self, times):
 def dialefa(self, diferencia):
     # print("Dialefa")
     counter = 0
-    self.words.append(Word("mpt", self.words[-1].cat, len(self.words), len(self.words)))
+    self.words.append(Word("mpt", self.words[-1].upos, len(self.words), len(self.words)))
     # print([word.plain() for word in self.words])
     len_words = len(self.words)
     i = 0
@@ -190,7 +142,7 @@ def dialefa(self, diferencia):
             # print("Dialefa Mètode 1: dos mots monosil·làbics")
             word1_syll = self.words[i].stress[-1]
             result = split_syllable(word1_syll)
-            self.words.insert(j, Word("empt", self.words[i].cat, j, len(self.words)))
+            self.words.insert(j, Word("empt", self.words[i].upos, j, len(self.words)))
             self.words[i].stress[-1] = result[0]
             self.words[j].stress[0] = result[1]
 
@@ -208,7 +160,7 @@ def dialefa(self, diferencia):
             # print("Dialefa Mètode 2: monosil·lab i polisil·lab")
             word1_syll = self.words[i].stress[0]
             result = split_syllable(word1_syll)
-            self.words.insert(i, Word("empt", self.words[i].cat, i - 1, len(self.words)))
+            self.words.insert(i, Word("empt", self.words[i].upos, i - 1, len(self.words)))
             self.words[i].stress[-1] = result[0]
             self.words[j].stress[0] = result[1]
 
@@ -225,7 +177,7 @@ def dialefa(self, diferencia):
             word1_syll = self.words[i].stress[-1]
             result = split_syllable(word1_syll)
             # print("Dialefa Mètode 3: polisil·lab i monosil·lab")
-            self.words.insert(j, Word("empt", self.words[i].cat, j - 1, len(self.words)))
+            self.words.insert(j, Word("empt", self.words[i].upos, j - 1, len(self.words)))
             self.words[i].stress[-1] = result[0]
             self.words[j].stress[0] = result[1]
             len_words += 1
@@ -242,7 +194,7 @@ def dialefa(self, diferencia):
             word1_syll = self.words[i].stress[0]
             result = split_syllable(word1_syll)
             if word1_syll.triftong:
-                self.words.insert(i, Word("mpt", self.words[i].cat, i, len(self.words)))
+                self.words.insert(i, Word("mpt", self.words[i].upos, i, len(self.words)))
                 self.words[i].stress.append(result[0])
             else:
                 self.words[i - 1].stress.append(result[0])
