@@ -42,7 +42,7 @@ def etiq(corpus):
 
 
 def explota(corpus):
-    """Explotació estadística del corpus"""
+    """Exploració estadística del corpus"""
     usb = getUSB()
     root = f"{usb}/corpora/"
     results_path = f"{root}{corpus}/etiquetat/"
@@ -72,7 +72,7 @@ def main():
         print("Opcions disponibles:")
         print("\t1. Compilar un corpus")
         print("\t2. Etiquetar un corpus")
-        print("\t3. Explotació estadística del corpus")
+        print("\t3. Exploració estadística del corpus")
         print("\t4. Validar les dades __test")
         print("\t5. Analitzar un vers")
         print("\t6. Analitza un corpus de prosa")
@@ -106,14 +106,14 @@ def main():
                 print("No s'ha seleccionat cap corpus per etiquetar.")
         elif option == "3":
             print("--" * 40)
-            print("Corpus disponibles per explotació estadística:")
+            print("Corpus disponibles per l'exploració estadística:")
             for folder in os.listdir(root):
                 print(f"\t• {folder}")
             enter = input("Quin corpus voleu explotar?\t")
             if enter:
                 explota(enter)
             else:
-                print("No s'ha seleccionat cap corpus per explotació estadística.")
+                print("No s'ha seleccionat cap corpus per l'exploració estadística.")
         elif option == "4":
             print("--" * 40)
             print("Validant les dades __test...")
@@ -151,10 +151,11 @@ def main():
 
 
 if __name__ == "__main__":
-    from cfonts import render, say
+    from cfonts import render
+    versio = "0.4.1"
     text = render("AIMeRiC", font='chrome', colors=['system', 'gray', 'system'], align='center')
     print(text)
-    print(render("Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs", font='console', colors=['system'], align='center'))
+    print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {versio}", font='console', colors=['system'], align='center'))
 
     # Carrega el model de Spacy en català
     print("--" * 40)
@@ -169,5 +170,5 @@ if __name__ == "__main__":
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
     print(text)
-    print(render("Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs", font='console', colors=['system'], align='center'))
+    print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {versio}", font='console', colors=['system'], align='center'))
     print("--" * 40)

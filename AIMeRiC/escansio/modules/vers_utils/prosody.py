@@ -43,7 +43,7 @@ def accents_prosodics(self):
                 change_pes(next if int(curr.pes) > int(next.pes) else curr, '0')
         # If the current syllable is the last one and there is a previous syllable
         elif next is None and prev is not None:
-            if 0 < int(curr.pes) < 5:
+            if 1 < int(curr.pes) < 5:
                 # Change the weight of the syllable with the higher weight to '0'
                 change_pes(curr if int(prev.pes) > int(curr.pes) else prev, '0')
         # If the current syllable is between two other syllables
@@ -78,12 +78,26 @@ def cim_maxim(self):
     """Substitutes maximum peaks (>=2) with superior peaks (5) in the last strong syllable of each colon."""
     sense_mots = sum([word.stress for word in self.words], [])
     try:
-        if int(sense_mots[self.objectiu - 1].pes) > 1:
+        if int(sense_mots[self.objectiu - 1].pes) > 2:
             for word in self.words:
                 if sense_mots[self.objectiu - 1] in word.stress:
                     word.stress[word.stress.index(sense_mots[self.objectiu - 1])].pes = '5'
                     self.nomes_sillabes[self.objectiu - 1].pes = '5'
                     self.patro[self.objectiu - 1] = 5
+                    if len(sense_mots[self.objectiu - 1].pes) > 1 and self.words.index(word) + 1 == len(self.words) - 1:
+                        self.words[self.words.index(word) + 1].stress[0].pes = '0'
+                        self.nomes_sillabes[self.objectiu].pes = '0'
+                        self.patro[self.objectiu] = 0
+            self.recompte_sillabes_metriques = recompte_metric(self)
+            self.recompte_sillabes_extrametriques = len(self.patro) - self.recompte_sillabes_metriques
+            self.posicio_tall = tall(self)
+            self.subdivisio = f"{self.posicio_tall}+{self.recompte_sillabes_metriques - self.posicio_tall}" if self.posicio_tall is not None else None
+        elif int(sense_mots[self.objectiu-1].pes) == 1:
+            for word in self.words:
+                if sense_mots[self.objectiu - 1] in word.stress:
+                    word.stress[word.stress.index(sense_mots[self.objectiu - 1])].pes = '0'
+                    self.nomes_sillabes[self.objectiu - 1].pes = '0'
+                    self.patro[self.objectiu - 1] = 0
                     if len(sense_mots[self.objectiu - 1].pes) > 1 and self.words.index(word) + 1 == len(self.words) - 1:
                         self.words[self.words.index(word) + 1].stress[0].pes = '0'
                         self.nomes_sillabes[self.objectiu].pes = '0'

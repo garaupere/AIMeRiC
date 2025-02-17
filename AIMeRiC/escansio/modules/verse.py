@@ -6,8 +6,7 @@ from colorama import Fore
 
 from AIMeRiC.escansio.modules.word import Word
 from AIMeRiC.escansio.modules.vers_utils.OT_constraints import analyze_OT
-from AIMeRiC.escansio.modules.vers_utils.fonologia import contactes_vocalics_info, resol_contactes_vocalics, \
-    best_contacte_vocalic
+from AIMeRiC.escansio.modules.vers_utils.fonologia import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.vers_utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
     maximal_comparison_pattern
@@ -122,6 +121,7 @@ class Vers:
 
     def mostra(self):
         def color_tonic(pattern):
+            print(pattern)
             return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
 
         def color_tonic_text(pattern_text):
@@ -243,6 +243,6 @@ if __name__ == "__main__":
 
     start = time.time()
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "Sol, i de dol, i amb vetusta gonella", 10)
+    vers = Vers(nlp, "Que ara sou la meva ànima", 10)
     vers.mostra()
     print(time.time() - start)

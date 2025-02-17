@@ -23,7 +23,6 @@ def abstract_pattern(words):
     for word in words:  # Recorre les paraules del vers
         pattern.extend(
             [int(syllable.pes) for syllable in word.stress])  # Afegeix l'abstracció de cada síl·laba
-
     return pattern  # Retorna el patró abstracte
 
 
@@ -37,7 +36,7 @@ def words_abstract_pattern(words):
 
 
 def maximal_comparison_pattern(self):
-    if self.objectiu == 10:
+    if self.objectiu == 10 and self.recompte_sillabes_metriques == self.objectiu:
         if self.recompte_sillabes_metriques == self.objectiu:
             result = self.contorn_cru
             dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
@@ -52,7 +51,7 @@ def maximal_comparison_pattern(self):
         dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
                       r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
                       r"0[23]0": "040", r"4[23]": "40",
-                      r"0$": "4", r"[01]": "W", r"[432]": "S"}
+                      r"0$": "4", r"[01]": "0", r"[432]": "1"}
         for pattern, solution in dictionary.items():
             result = re.sub(pattern, solution, result)
         return result

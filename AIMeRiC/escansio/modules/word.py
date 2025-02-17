@@ -168,7 +168,7 @@ class Word:
                 while posicio_actual < len(result):  # Mentre la posició actual sigui vàlida
                     syll = result[posicio_actual]
                     if int(syll.pes) < 2:
-                        result[posicio_actual] = Syllable(posicio_actual, (syll.text, "2"),
+                        result[posicio_actual] = Syllable(posicio_actual, (syll.text, "1"),
                                                       len_word=len(self.stress))  # Assignam l'accent secundari (+dèbil)
                     posicio_actual += 2  # Continuam amb la següent posició vàlida (x+4, x+6...)
 
@@ -326,7 +326,7 @@ class Word:
 
 if __name__ == "__main__":
     start = time.time()
-    sentence = ("història")
+    sentence = ("i")
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     doc = nlp(sentence)
     doc = [tok.pos_ for tok in doc]

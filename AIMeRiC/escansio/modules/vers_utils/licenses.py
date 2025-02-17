@@ -56,8 +56,9 @@ def sineresi(self):
         while diff > 0 and best:
             change = best.pop(0)
             for word in self.words:
-                if change[0] in word.stress:
+                if change[0] in word.stress and change[1] in word.stress:
                     result = join_syllables(change[0], change[1])
+                    result.text = re.sub(r"_", "", result.text)
                     if result:
                         word.stress.remove(change[1])
                         word.stress_index = word.get_stress_index()
