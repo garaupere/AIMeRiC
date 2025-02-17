@@ -1,6 +1,8 @@
 """Un mòdul per a la gestió mètrica dels versos"""
+import re
 import time
 from copy import deepcopy
+from colorama import Fore
 
 from AIMeRiC.escansio.modules.word import Word
 from AIMeRiC.escansio.modules.vers_utils.OT_constraints import analyze_OT
@@ -9,90 +11,95 @@ from AIMeRiC.escansio.modules.vers_utils.fonologia import contactes_vocalics_inf
 from AIMeRiC.escansio.modules.vers_utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
     maximal_comparison_pattern
-from AIMeRiC.escansio.modules.vers_utils.prosody import adjust_pes, cim_maxim
+from AIMeRiC.escansio.modules.vers_utils.prosody import accents_prosodics, cim_maxim
 from AIMeRiC.escansio.modules.vers_utils.decasyllable import tall, subdivideix
-from AIMeRiC.escansio.modules.vers_utils.display import anotate_verse, escansio_plana, escansio_accentual, metronome
+from AIMeRiC.escansio.modules.vers_utils.display import anota_vers, escansio_plana, escansio_accentual, metronome
 from AIMeRiC.escansio.modules.vers_utils.licenses import llicencies
 from AIMeRiC.escansio.modules.vers_utils.word_info import quants_mots, safe_words
 
 
 class Vers:
-    def __init__(self, nlp, text, goal):
-        self.goal = goal
+    def __init__(self, nlp, text: str, objectiu: int):
+        self.objectiu = objectiu
         self.text = text
         self.__prepara__(nlp)
-        self.__uneix_mots__()
-        self.__anota__()
-        self.__patrons__()
-        self.__subdivisio__()
-        self.__disposicio__()
-        self.llicencies = llicencies(self)
-        self.__prosodia__()
-        self.__ot_analisi__()
-        self.__mot_info__()
-        self.__contactes_vocalics__()
-        self.__metronome__()
-        self.__rima__()
+
+        resol_contactes_vocalics(self, best_mode='natural')
+        self.ajustat = metre_ajustat(self)
+
+        if self.ajustat:
+            self.__subdivisio__()
+            self.__disposicio__()
+
+            self.__prosodia__()
+            self.__patrons__()
+            self.__anota__()
+
+            self.__ot_analisi__()
+            self.__mot_info__()
+            self.__contactes_vocalics__()
+            self.__metronome__()
+            self.__rima__()
+            self.llicencies = None
+        else:
+            self.llicencies = llicencies(self)
 
     def __prepara__(self, nlp):
         self.pos = posTagger(nlp, self.text)
         self.words = [Word(token[0], token[1], self.pos.index(token), len(self.pos)) for token in self.pos if token]
         safe_words(self)
         self.original = deepcopy(self.words)
+        self.__uneix_mots__()
+        self.__patrons__()
+        self.__anota__()
+
 
     def __uneix_mots__(self):
-        self.no_words = sum([word.stress for word in self.words], [])
-
-    def __anota__(self):
-        safe_words(self)
-        self.recompte_sillabes_metriques = recompte_metric(self)
-        self.ajustat = metre_ajustat(self)
-        resol_contactes_vocalics(self, best=best_contacte_vocalic(self.no_words))
-        self.annotated = anotate_verse(self)
-        self.no_words = sum([word.stress for word in self.words], [])
-        adjust_pes(self)
-        self.no_words = sum([word.stress for word in self.words], [])
+        self.nomes_sillabes = sum([word.stress for word in self.words], [])
 
     def __patrons__(self):
-        self.pattern = abstract_pattern(self.words)
-        self.comparative_pattern = ''.join([str(x) for x in self.pattern]).rstrip('0')
+        self.patro = abstract_pattern(self.words)
+        self.contorn_cru = ''.join([str(x) for x in self.patro]).rstrip('0')
         self.recompte_sillabes_metriques = recompte_metric(self)
-        self.maxpattern = maximal_comparison_pattern(self)
-        self.recompte_sillabes_extrametriques = len(self.pattern) - self.recompte_sillabes_metriques
-        self.sillables_metriques = self.pattern[:self.recompte_sillabes_metriques]
+        self.contorn_accentual = maximal_comparison_pattern(self)
+        self.recompte_sillabes_extrametriques = len(self.patro) - self.recompte_sillabes_metriques
+        self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
 
     def __subdivisio__(self):
         self.posicio_tall = tall(self)
-        self.subdivision = subdivideix(self)
+        self.subdivisio = subdivideix(self)
         cim_maxim(self)
-        self.comparative_pattern = ''.join([str(x) for x in self.pattern]).rstrip('0')
-        self.maxpattern = maximal_comparison_pattern(self)
+        self.contorn_cru = ''.join([str(x) for x in self.patro]).rstrip('0')
+        self.contorn_accentual = maximal_comparison_pattern(self)
+
+    def __anota__(self):
+        self.anotat = anota_vers(self)
+        self.__uneix_mots__()
 
     def __disposicio__(self):
         self.ajustat = metre_ajustat(self)
         self.string = escansio_plana(self)
-        self.string_stress = escansio_accentual(self)
+        self.escansio_text = escansio_accentual(self)
 
     def __rima__(self):
         self.rima = self.words[-1].plain()
 
     def __prosodia__(self):
         cim_maxim(self)
-        adjust_pes(self)
-        self.annotated = [
-            [(syllable.save_metadata()["text"], syllable.save_metadata()["pes"]) for syllable in word.stress] for word
-            in self.words]
+        accents_prosodics(self)
+        self.anotat = anota_vers(self)
+        self.escansio_text = escansio_accentual(self)
 
     def __ot_analisi__(self):
-        self._clash, self._lapse, self._ws_hl, self._non_initial, self._symetry = analyze_OT(self.maxpattern)
+        self._clash, self._lapse, self._ws_hl, self._non_initial, self._symetry = analyze_OT(self.contorn_accentual)
 
     def __mot_info__(self):
-        self.n_words = len(self.words)
-        self.h1_words = quants_mots(self)[0]
-        self.h2_words = quants_mots(self)[1]
+        self.n_mots = len(self.words)
+        self.mots_colon1 = quants_mots(self)[0]
+        self.mots_colon2 = quants_mots(self)[1]
 
     def __contactes_vocalics__(self):
-        self.cv_info = contactes_vocalics_info(self)
+        self.contactes_vocalics = contactes_vocalics_info(self)
 
     def __metronome__(self):
         self.metronome = metronome(self)
@@ -101,45 +108,75 @@ class Vers:
         """Aquesta funció actualitza el vers després d'aplicar-hi llicències."""
         safe_words(self)
         self.__uneix_mots__()
-        self.__prosodia__()
         self.__patrons__()
         self.__subdivisio__()
         self.__disposicio__()
-        self.__mot_info__()
         self.__prosodia__()
+        self.__patrons__()
+        self.__anota__()
+        self.__mot_info__()
         self.__ot_analisi__()
         self.__mot_info__()
         self.__contactes_vocalics__()
         self.__metronome__()
 
     def mostra(self):
-        if self.subdivision is None:
-            self.subdivision = 'Cap'
-        for attr in ["ajustat", "text", "string", "string_stress", "pos", "annotated", "pattern",
-                     "comparative_pattern",
-                     "maxpattern",
-                     "n_words",
-                     "recompte_sillabes_metriques", "posicio_tall", "subdivision", "recompte_sillabes_extrametriques",
-                     "llicencies", "_clash", "_lapse", "_ws_hl", "_non_initial", "_symetry", "h1_words", "h2_words",
-                     "cv_info", "metronome"]:
-            print(f"\t\t\t\t{attr}: {getattr(self, attr)}")
+        def color_tonic(pattern):
+            return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
+
+        def color_tonic_text(pattern_text):
+            pattern = re.split(r'[.#]', pattern_text)
+            return '.'.join([Fore.CYAN + x + Fore.RESET if x.isupper() else x for x in pattern]).replace('_', '‿')
+
+        if self.subdivisio is None:
+            self.subdivisio = 'Cap'
+        for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
+                     "recompte_sillabes_extrametriques",
+                     "ajustat", "subdivisio",
+                     "anotat", "n_mots", "mots_colon1", "mots_colon2",
+                     "llicencies"]:
+            if attr == "escansio_text":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Escansió: {color_tonic_text(getattr(self, attr))}")
+            elif attr == "contorn_accentual":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Contorn accentual:", f"{color_tonic(getattr(self, attr))}")
+            elif attr == "recompte_sillabes_metriques":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes mètriques:", Fore.CYAN, f"{getattr(self, attr)}",
+                      Fore.RESET)
+            elif attr == "recompte_sillabes_extrametriques":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes extramètriques:", Fore.CYAN, f"{getattr(self, attr)}",
+                      Fore.RESET)
+            elif attr == "subdivisio":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Subdivisió:",
+                      f"{getattr(self, attr) if getattr(self, attr) is not None else 'Cap'}")
+            elif attr == "n_mots":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Número de mots:", f"{getattr(self, attr)}")
+            elif attr == "mots_colon1":
+                print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Mots al primer colon:", f"{getattr(self, attr)}")
+            elif attr == "mots_colon2":
+                print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Mots al segon colon:", f"{getattr(self, attr)}")
+            elif attr == "llicencies":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Llicències:",
+                      f"{getattr(self, attr) if getattr(self, attr) is not None else 'Cap'}")
+            else:
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"{attr[0].upper() + attr.replace('_', ' ')[1:]}:",
+                      f"{getattr(self, attr)}")
 
     @property
     def save(self):
-        if self.subdivision is None:
-            self.subdivision = 'Cap'
+        if self.subdivisio is None:
+            self.subdivisio = 'Cap'
         return {self.text:
                     {"ajustat": self.ajustat,
                      "string": self.string,
-                     "string_stress": self.string_stress,
+                     "string_stress": self.escansio_text,
                      "pos": self.pos,
-                     "annotated": self.annotated,
-                     "no_words": [syllable.save_metadata() for syllable in self.no_words],
-                     "pattern": self.pattern,
-                     "n_words": self.n_words,
+                     "annotated": self.anotat,
+                     "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
+                     "pattern": self.patro,
+                     "n_words": self.n_mots,
                      "recompte_sillabes_metriques": self.recompte_sillabes_metriques,
                      "posicio_tall": self.posicio_tall,
-                     "subdivision": self.subdivision,
+                     "subdivision": self.subdivisio,
                      "recompte_sillabes_extrametriques": self.recompte_sillabes_extrametriques,
                      "llicencies": self.llicencies,
                      "*CLASH": self._clash,
@@ -147,56 +184,57 @@ class Vers:
                      "*WS_HL": self._ws_hl,
                      "*NON_INITIAL": self._non_initial,
                      "*SYMETRY": self._symetry,
-                     "h1_words": self.h1_words,
-                     "h2_words": self.h2_words,
-                     "comparative_pattern": self.comparative_pattern,
-                     "cv_info": self.cv_info,
+                     "h1_words": self.mots_colon1,
+                     "h2_words": self.mots_colon2,
+                     "comparative_pattern": self.contorn_cru,
+                     "cv_info": self.contactes_vocalics,
                      "metronome": self.metronome
                      }
                 }
 
     def to_csv(self):
-        if self.subdivision is None:
-            self.subdivision = 'Cap'
+        if self.subdivisio is None:
+            self.subdivisio = 'Cap'
 
-        if len(self.pattern) < self.goal:
-            sc_col = self.pattern + [0] * (self.goal - len(self.pattern))
-        elif len(self.pattern) > self.goal:
-            sc_col = self.pattern[:self.goal]
+        if len(self.patro) < self.objectiu:
+            sc_col = self.patro + [0] * (self.objectiu - len(self.patro))
+        elif len(self.patro) > self.objectiu:
+            sc_col = self.patro[:self.objectiu]
         else:
-            sc_col = self.pattern
+            sc_col = self.patro
 
-        return [self.text, self.string_stress] + sc_col + [self.recompte_sillabes_metriques,
+        return [self.text, self.escansio_text] + sc_col + [self.recompte_sillabes_metriques,
                                                            self.recompte_sillabes_extrametriques,
-                                                           self.subdivision,
+                                                           self.subdivisio,
                                                            self.llicencies,
                                                            self._clash, self._lapse, self._ws_hl, self._non_initial,
                                                            self._symetry,
-                                                           self.h1_words, self.h2_words, self.maxpattern,
+                                                           self.mots_colon1, self.mots_colon2, self.contorn_accentual,
                                                            self.metronome]
 
     def desa_prosa(self):
         return {self.text:
                     {"string": self.string,
-                     "string_stress": self.string_stress,
+                     "string_stress": self.escansio_text,
                      "pos": self.pos,
-                     "annotated": self.annotated,
-                     "no_words": [syllable.save_metadata() for syllable in self.no_words],
-                     "pattern": self.pattern,
-                     "n_words": self.n_words,
+                     "annotated": self.anotat,
+                     "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
+                     "pattern": self.patro,
+                     "n_words": self.n_mots,
                      "*CLASH": self._clash,
                      "*LAPSE": self._lapse,
                      "*WS_HL": self._ws_hl,
                      "*NON_INITIAL": self._non_initial,
                      "*SYMETRY": self._symetry,
-                     "comparative_pattern": self.comparative_pattern,
-                     "cv_info": self.cv_info,
+                     "comparative_pattern": self.contorn_cru,
+                     "cv_info": self.contactes_vocalics,
                      "metronome": self.metronome
                      }
                 }
 
     def prosa_to_csv(self):
-        return [self.text, self.string_stress, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques, self.pattern, self.maxpattern, self._clash, self._lapse, self._ws_hl,
+        return [self.text, self.escansio_text, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques,
+                self.patro, self.contorn_accentual, self._clash, self._lapse, self._ws_hl,
                 self._non_initial, self._symetry, self.metronome]
 
 
@@ -205,6 +243,6 @@ if __name__ == "__main__":
 
     start = time.time()
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "Crec que hi sóc.", 10)
+    vers = Vers(nlp, "Sol, i de dol, i amb vetusta gonella", 10)
     vers.mostra()
     print(time.time() - start)

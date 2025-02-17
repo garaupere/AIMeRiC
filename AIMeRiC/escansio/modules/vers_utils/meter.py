@@ -5,7 +5,7 @@ import re
 def recompte_metric(self):
     """Retorna la longitud de la llista fins a l'últim element més fort, que pot ser >=2."""
     count = 0
-    llista = [int(value.pes) for value in self.no_words]
+    llista = [int(value.pes) for value in self.nomes_sillabes]
     for value in reversed(llista):
         if value > 2:
             break
@@ -14,7 +14,7 @@ def recompte_metric(self):
 
 
 def metre_ajustat(self):
-    return True if self.recompte_sillabes_metriques == self.goal else False
+    return True if self.recompte_sillabes_metriques == self.objectiu else False
 
 
 def abstract_pattern(words):
@@ -37,9 +37,9 @@ def words_abstract_pattern(words):
 
 
 def maximal_comparison_pattern(self):
-    if self.goal == 10:
-        if self.recompte_sillabes_metriques == self.goal:
-            result = self.comparative_pattern
+    if self.objectiu == 10:
+        if self.recompte_sillabes_metriques == self.objectiu:
+            result = self.contorn_cru
             dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
                           r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
                           r"0[23]0": "040", r"4[23]": "40",
@@ -48,7 +48,7 @@ def maximal_comparison_pattern(self):
                 result = re.sub(pattern, solution, result)
             return result[0:10]
     else:
-        result = self.comparative_pattern
+        result = self.contorn_cru
         dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
                       r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
                       r"0[23]0": "040", r"4[23]": "40",

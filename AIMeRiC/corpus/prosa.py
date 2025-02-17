@@ -90,7 +90,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 def dades_prosa(vers: Vers):
     """Retorna dades sobre el ritme del fragment en prosa."""
     # Normalitza els valors accentuals del pattern: lambda x: 1 if x > 1 else 0
-    vers.pattern = [1 if x > 1 else 0 for x in vers.pattern]
+    vers.patro = [1 if x > 1 else 0 for x in vers.patro]
 
     def group_syllables(syllables):
         iambes = []
@@ -123,13 +123,13 @@ def dades_prosa(vers: Vers):
 
         return iambes, troqueus, anapests, dactyls, ordered_groups
 
-    iambes, troqueus, anapests, dactyls, ordered_groups = group_syllables(vers.pattern)
+    iambes, troqueus, anapests, dactyls, ordered_groups = group_syllables(vers.patro)
 
-    iambes = len(iambes) / len(vers.pattern) * 100
-    troqueus = len(troqueus) / len(vers.pattern) * 100
-    anapests = len(anapests) / len(vers.pattern) * 100
-    dactyls = len(dactyls) / len(vers.pattern) * 100
-    ordered_groups = sum(len(x) for x in ordered_groups) == len(vers.pattern)
+    iambes = len(iambes) / len(vers.patro) * 100
+    troqueus = len(troqueus) / len(vers.patro) * 100
+    anapests = len(anapests) / len(vers.patro) * 100
+    dactyls = len(dactyls) / len(vers.patro) * 100
+    ordered_groups = sum(len(x) for x in ordered_groups) == len(vers.patro)
 
     return [iambes, troqueus, anapests, dactyls, ordered_groups]
 

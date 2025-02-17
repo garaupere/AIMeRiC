@@ -23,11 +23,11 @@ def score(syllable, vers):
         if syllable.triftong:
             points -= 20
         if not syllable.tonic:
-            points += 0.5
+            points += 2
         if not syllable.fono_info['rotica']:
             points += 1
         if syllable.fusionada:
-            points -= 10
+            points -= 20
         if len(vers) > 6:
             if syllable == vers[3] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 4
                 points -= 8
@@ -39,7 +39,9 @@ def score(syllable, vers):
     return points
 
 
-def best_contacte_vocalic(vers):
+def best_contacte_vocalic(self):
+    """Aquesta funció retorna els candidats de contacte vocàlic ordenats per l'índex de fusió"""
+    vers = sum([x.stress for x in self.words], [])
     candidats = []
     for syllable in vers:
         next_syllable = vers[vers.index(syllable) + 1] if vers.index(syllable) < len(vers) - 1 else None
@@ -188,12 +190,26 @@ def split_syllable(syllable) -> (Syllable, Syllable):
             return syllabe1, syllabe2
 
 
-def resol_contactes_vocalics(self, best):
+def resol_contactes_vocalics(self, best_mode):
     """Resolves vowel contacts in the verse according to Catalan phonology"""
-    if best is not None and self.recompte_sillabes_metriques > self.goal: # Si hi ha contactes vocals i el recompte mètric no coincideix amb l'objectiu
-        diff = self.recompte_sillabes_metriques - self.goal # Calcula la diferència
+
+    def get_best(mode):
+        if mode == 'natural':
+            return best_contacte_vocalic(self)
+        elif mode == 'sinalefa':
+            return best_sinalefa(self)
+
+
+    best = get_best(best_mode)
+
+    if best is not None and self.recompte_sillabes_metriques > self.objectiu: # Si hi ha contactes vocals i el recompte mètric no coincideix amb l'objectiu
+        diff = self.recompte_sillabes_metriques - self.objectiu # Calcula la diferència
         while diff > 0 and best: # Mentre hi hagi diferència i hi hagi contactes vocals candidats
-            change = best.pop(0) # Treu el primer contacte vocal candidat
+            #change = best.pop(0) # Treu el primer contacte vocal candidat
+            if get_best(best_mode):
+                change = get_best(best_mode).pop(0)
+            else:
+                break
             wi = 0
             while wi < len(self.words) - 1:
                 word = self.words[wi]
@@ -235,15 +251,15 @@ def resol_contactes_vocalics(self, best):
                                 del self.words[wi]
                                 wi -= 1
                                 continue
-                        self.no_words = sum([w.stress for w in self.words], []) # Actualitza la llista de síl·labes
+                        self.nomes_sillabes = sum([w.stress for w in self.words], []) # Actualitza la llista de síl·labes
                         self.recompte_sillabes_metriques = recompte_metric(self) # Actualitza el recompte de síl·labes mètriques
-                        diff = self.recompte_sillabes_metriques - self.goal # Actualitza la diferència
+                        diff = self.recompte_sillabes_metriques - self.objectiu # Actualitza la diferència
                 wi += 1 # Incrementa el comptador de paraules
         #print(f'Len(best): {len(best)}, Diff: {diff}')  # Debug
 
 
 def contactes_vocalics_info(self):
-    clean = deepcopy(self.string_stress)
+    clean = deepcopy(self.escansio_text)
     dic_clean = {"[aàáâ]": "a", "[eèéê]": "e", "[iíìïyýÿî]": "i", "[oòóô]": "o", "[uúùüû]": "u", "[AÀÁÂ]": "A",
                  "[EÈÉÊ]": "E", "[IÍÌÏYÝŸÎ]": "I", "[OÒÓÔ]": "O", "[UÚÙÜÛ]": "U"}
     for key, value in dic_clean.items():
@@ -275,8 +291,9 @@ def contactes_vocalics_info(self):
             "triftong_t_fm": [x.lower() for x in triftong_t_fm], "triftong_t_m": [x.lower() for x in triftong_t_m]}
 
 
-def best_sinalefa(vers):
+def best_sinalefa(self):
     candidats = []
+    vers = sum([x.stress for x in self.words], [])
     for syllable in vers:
         next_syllable = vers[vers.index(syllable) + 1] if vers.index(syllable) < len(vers) - 1 else None
         if next_syllable is not None:
@@ -290,7 +307,8 @@ def best_sinalefa(vers):
     return candidats
 
 
-def best_sineresi(vers):
+def best_sineresi(self):
+    vers = sum([x.stress for x in self.words], [])
     candidats = []
     for syllable in vers:
         next_syllable = vers[vers.index(syllable) + 1] if vers.index(syllable) < len(vers) - 1 else None

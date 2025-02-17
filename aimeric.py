@@ -2,6 +2,7 @@ import os
 import time
 import spacy
 from datetime import datetime
+from colorama import Fore
 
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
@@ -119,11 +120,15 @@ def main():
             valida()
         elif option == "5":
             print("--" * 40)
-            verse = input("Introdueix el vers a analitzar: ")
+            print("\nIntroduïu un vers per analitzar-lo: ", Fore.GREEN, end=" ")
+            verse = input()
+            print(Fore.RESET)
             while verse != "":
                 scan(nlp, verse)
                 print("--" * 40)
-                verse = input("Introdueix el vers a analitzar: ")
+                print("\nIntroduïu un vers per analitzar-lo: ", Fore.GREEN,end=" ")
+                verse = input()
+                print(Fore.RESET)
         elif option == "6":
             prosa(nlp)
         elif option == "7":
