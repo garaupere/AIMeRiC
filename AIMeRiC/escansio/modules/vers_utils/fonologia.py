@@ -16,7 +16,7 @@ def score(syllable, vers):
     points = 0
     if not syllable.ends_with_vowel:
         if not syllable.starts_with_vowel:
-            return points
+            return -100
     else:
         if syllable.fono_info['alta'] or syllable.fono_info['neutra']:
             points += 1
@@ -50,12 +50,13 @@ def best_contacte_vocalic(vers):
                     syll1_points = score(syllable, vers)
                     syll2_points = score(next_syllable, vers)
                     points = syll1_points + syll2_points
-                    points = points + vallverdu_score(syllable, next_syllable)
+                    print(f'Punts: {syllable.text}, {next_syllable.text}: {points}; Vallverdú: {vallverdu_score(syllable, next_syllable)}; Final: {points*vallverdu_score(syllable, next_syllable)}')  # Debug
+                    points = points * vallverdu_score(syllable, next_syllable)
                     syllable.fusionable = points
                 candidats.append((syllable, next_syllable, points)) if points > 0 else None
     # Ordena els candidats per puntuació de major a menor:
     candidats = sorted(candidats, key=lambda x: x[2], reverse=True)
-    #print('> Candidats contacte:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
+    print('> Candidats contacte:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
     return candidats
 
 
@@ -66,9 +67,9 @@ def vallverdu_score(syllable1, syllable2):
     # un cas concret meu: infinitiu + pronoms febles
     if syllable1.ends_with_vowel and syllable1.fono_info['rotica']:
         if syllable2.text[0] == '-':
-            score -= 2
+            score += 0
 
-    if syllable1.ends_with_vowel and syllable2.starts_with_vowel:
+    elif syllable1.ends_with_vowel and syllable2.starts_with_vowel:
         vocal1 = syllable1.fono_info
         vocal2 = syllable2.fono_info
 
@@ -76,20 +77,20 @@ def vallverdu_score(syllable1, syllable2):
         if syllable1.tonic and syllable2.tonic:
             # 1.1.	V́1≠V́2 → hiat (voler homes)
             if vocal1['vocal'] != vocal2['vocal']:
-                score -= 1
+                score += 0
             # 1.2.	V́1=V́2 → hiat (menjar algues)
             elif vocal1['vocal'] == vocal2['vocal']:
-                score -= 1
+                score += 0
         elif syllable1.tonic and not syllable2.tonic:
             # 1.3.	V1i/u+V́2 → hiat (canti himnes)
             if vocal1['alta']:
-                score -= 1
+                score += 0
             # 1.4.	V1e/o+V́2 → hiat (l’ego omple)
             elif not vocal1['alta']:
-                score -= 1
+                score += 0
             # 1.5.	V1ə+V́2i/u → hiat (terra útil)
             elif vocal1['neutra'] and vocal2['alta']:
-                score -= 1
+                score += 0
 
         # -------- Diftongs (score > 0) -------
 
@@ -119,26 +120,27 @@ def vallverdu_score(syllable1, syllable2):
             elif not vocal1['alta'] and vocal2['alta']:
                 score += 1
 
-            # -------- Elisions (score > 3) --------
+            # -------- Elisions (score > 2) --------
             # 3.1.	V1i/u=V2i/u → elisió (vegi insectes)
             if vocal1['alta'] and vocal2['alta'] and vocal1['vocal'] == vocal2['vocal']:
-                score += 3
+                score += 2
             # 3.2.	ə+ə → elisió (compta estrelles)
             elif vocal1['neutra'] and vocal2['neutra']:
-                score += 3
+                score += 2
             # 3.3.	V1+ə → elisió o diftong (dormi aviat)
             elif vocal2['neutra']:
-                score += 3
+                score += 2
             # 3.5.	ə+V2i/u → diftong o elisió (casa inhòspita)
             elif vocal1['neutra'] and vocal2['alta']:
-                score += 3
+                score += 2
 
         # 3.4.	ə+V́2(no-tancada) → elisió (casa alta)
         elif not syllable1.tonica and syllable2.tonica:
             if vocal1['neutra'] and not vocal2['alta']:
-                score += 3
+                score += 2
             elif vocal2['neutra']:
-                score += 3
+                score += 2
+    print(f'Punts: {syllable1.text}, {syllable2.text}: {score}')  # Debug
     return score
 
 
