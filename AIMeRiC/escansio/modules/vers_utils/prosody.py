@@ -18,8 +18,9 @@ def accents_prosodics(self):
         for i in range(len(self.nomes_sillabes)):
             current_value = self.nomes_sillabes[i]
             previous_value = self.nomes_sillabes[i - 1] if i > 0 else None
+            previous_previous_value = self.nomes_sillabes[i - 2] if i > 1 else None
             next_value = self.nomes_sillabes[i + 1] if i < len(self.nomes_sillabes) - 1 else None
-            yield previous_value, current_value, next_value
+            yield previous_value, current_value, next_value, previous_previous_value
 
     def change_pes(current_value, pes: str):
         """
@@ -34,24 +35,26 @@ def accents_prosodics(self):
             if current_value in word.stress:
                 word.stress[word.stress.index(current_value)].pes = pes
 
-    # Iterate through the syllables without words
-    for prev, curr, next in iterate_no_words(self):
+    # Iterate through the syllables without words (1)
+    for prev, curr, next, prevprev in iterate_no_words(self):
         # If the current syllable is the first one and there is a next syllable
         if prev is None and next is not None:
-            if 0 < int(curr.pes) < 5:
+            if int(curr.pes) == 2:
+                change_pes(curr, '0')
+            if 1 < int(curr.pes) < 5:
                 # Change the weight of the syllable with the higher weight to '0'
-                change_pes(next if int(curr.pes) > int(next.pes) else curr, '0')
+                change_pes(next if int(curr.pes) > int(next.pes) else curr, '1')
         # If the current syllable is the last one and there is a previous syllable
         elif next is None and prev is not None:
             if 1 < int(curr.pes) < 5:
                 # Change the weight of the syllable with the higher weight to '0'
-                change_pes(curr if int(prev.pes) > int(curr.pes) else prev, '0')
+                change_pes(curr if int(prev.pes) > int(curr.pes) else prev, '1')
         # If the current syllable is between two other syllables
         elif prev is not None and next is not None:
-            if 0 < int(curr.pes) < 4:
+            if 1 < int(curr.pes) < 4:
                 if int(curr.pes) == int(next.pes):
                     # Change the weight of the current syllable to '0' if it equals the next syllable's weight
-                    change_pes(curr, '0')
+                    change_pes(curr, '1')
                 elif int(curr.pes) > int(next.pes):
                     # Change the weight of the next syllable to '0' if the current syllable's weight is higher
                     change_pes(next, '0')
@@ -72,6 +75,21 @@ def accents_prosodics(self):
                 elif int(prev.pes) < 4:
                     # Change the weight of the previous syllable to '0' if it is lower than 4
                     change_pes(prev, '0')
+
+    # Iterate through the syllables without words (2) [Resol els casos de síl·labes desaccentuades]
+    for prev, curr, next, prevprev in iterate_no_words(self):
+        if prevprev is not None and next is not None:
+            if int(prevprev.pes) < 2 and int(prev.pes) < 2 and int(curr.pes) == 1:
+                # Change the weight of the current syllable to '2' if the previous syllable and the previous of the previous is unstressed
+                change_pes(curr, '2')
+                if int(curr.pes) > int(next.pes):
+                    change_pes(curr, '0')
+        if prev is not None and next is not None:
+            #print(f'prev: {prev.text} ({prev.pes}), curr: {curr.text} ({curr.pes}), next: {next.text} ({next.pes})') # Debug
+            if int(prev.pes) < 2 and int(curr.pes) == 1 and int(next.pes) < 1:
+                # Change the weight of the current syllable to '2' if the previous and next syllables are unstressed
+                change_pes(curr, '2')
+
 
 
 def cim_maxim(self):

@@ -74,7 +74,7 @@ class Word:
             return False
 
     def ends_with_vowel(self):
-        list = ['per']
+        list = ['per', 'llur']
         if self.text in list:
             self.stress[0].ends_with_vowel = False
             return False
@@ -180,7 +180,7 @@ class Word:
         solution = self.syllables[0]
         response = []
         tonics = ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]
-        secondary = ["ADPa", "DET"]
+        secondary = ["ADPa", "DET", 'CCONJ', 'SCONJ']
         semitonics = ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]
         if self.upos is not None:
             if self.upos in tonics:
@@ -200,7 +200,7 @@ class Word:
         return response
 
     def is_bivalent(self):
-        if self.upos in ["AUX", "NUM", "ADP", "ADPa", "PRON", "PRONE", "INTJ"]:
+        if self.upos in ["AUX", "NUM", "ADP", "ADPa", "PRON", "PRONE", "INTJ", "CCONJ", "SCONJ"]:
             return True
         else:
             return False
@@ -322,6 +322,8 @@ class Word:
             if int(syllable.pes) > 2:
                 stress_index = i
                 return stress_index
+            elif self.monosyllabic():
+                return 0
 
 
 if __name__ == "__main__":

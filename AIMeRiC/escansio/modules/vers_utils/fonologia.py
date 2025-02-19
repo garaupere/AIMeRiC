@@ -36,6 +36,7 @@ def score(syllable, vers):
             elif syllable == vers[5] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 6
                 points -= 2
     syllable.fusionable = points
+    #print(f'Punts: {syllable.text}: {points}')  # Debug
     return points
 
 
@@ -77,48 +78,48 @@ def vallverdu_score(syllable1, syllable2):
         # ------ Hiats (score < 0) ------
         if syllable1.tonic and syllable2.tonic:
             # 1.1. V́1≠V́2 → hiat (voler homes)
-            if vocal1['vocal'] != vocal2['vocal'] or vocal1['vocal'] == vocal2['vocal']:
-                return score
 
-        if syllable1.tonic and not syllable2.tonic:
+            if vocal1['vocal'] != vocal2['vocal'] or vocal1['vocal'] == vocal2['vocal']:
+                return 0
+
+        if not syllable1.tonic and syllable2.tonic:
             # 1.3. V1i/u+V́2 → hiat (canti himnes)
+
             if vocal1['alta'] or not vocal1['alta'] or (vocal1['neutra'] and vocal2['alta']):
-                return score
+                return 0
 
         # -------- Diftongs (score > 0) -------
         if syllable1.tonic and syllable2.tonic:
             # 2.1.1. V́1i/u+V́2i/u → diftong (sentir una cançó)
             if vocal1['alta'] and vocal2['alta'] or not vocal1['alta'] and not vocal2['alta'] or not vocal1['alta'] and vocal2['alta']:
-                score += 1
+                return 1
 
         if syllable1.tonic and not syllable2.tonic and not vocal1['alta'] and vocal2['alta']:
             # 2.1.2. V́1+V2i/u → diftong (va explicar idees)
-            score += 1
+            return 1
 
         if not syllable1.tonic and syllable2.tonic and vocal1['alta'] and not vocal2['alta']:
             # 2.1.3. V1i/u+ V́2 → diftong (que vingui ara mateix)
-            score += 1
+            return 1
 
         if not syllable1.tonic and not syllable2.tonic:
             # 2.1.4. V1(i/u)+V2 → diftong (compri-ho)
             if vocal1['alta'] and not vocal2['alta'] or not vocal1['alta'] and vocal2['alta']:
-                score += 1
+                return 1
 
-        # -------- Elisions (score > 2) --------
+        # -------- Elisions (score > 1) --------
         # 3.1. V1i/u=V2i/u → elisió (vegi insectes)
         if vocal1['alta'] and vocal2['alta'] and vocal1['vocal'] == vocal2['vocal']:
-            score += 2
+            return 2
 
         # 3.2. ə+ə → elisió (compta estrelles)
         if vocal1['neutra'] and vocal2['neutra'] or vocal2['neutra'] or (vocal1['neutra'] and vocal2['alta']):
-            score += 2
+            return 2
 
         # 3.4. ə+V́2(no-tancada) → elisió (casa alta)
         if not syllable1.tonic and syllable2.tonic:
             if vocal1['neutra'] and not vocal2['alta'] or vocal2['neutra']:
-                score += 2
-
-    #print(f'Punts: {syllable1.text}, {syllable2.text}: {score}')  # Debug
+                return 2
     return score
 
 

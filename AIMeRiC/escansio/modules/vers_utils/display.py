@@ -30,9 +30,11 @@ def escansio_accentual(self):
     Returns:
         str: A string representation of the scansion where each word is represented by its syllables in uppercase for stressed and lowercase for unstressed, and words are joined by hashes.
     """
-    return '#'.join(
-        ['.'.join([syllable.text.upper() if int(syllable.pes) > 1 else syllable.text.lower() for syllable in word.stress]) for
-         word in self.words])
+
+    return '.'.join(
+        ['.'.join(
+            [syllable.text.upper() if int(syllable.pes) > 1 else syllable.text.lower() for syllable in word.stress]) for
+         word in self.words]).replace('_', '‿')
 
 
 def metronome(self):

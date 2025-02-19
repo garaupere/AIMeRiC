@@ -16,11 +16,11 @@ def correct_spacy(doc):
             list: A corrected list of tokens with updated POS tags.
                 """
     corrections = {
-        'e': 'CCONJ', 'y': 'CCONJ', 'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
+        'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',  'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
         'á': 'ADPa', 'à': 'ADPa', 'a': 'ADPa', 'dels': 'ADPa', 'del': 'ADPa', 'als': 'ADPa', 'al': 'ADPa',
         'des': 'ADPa',
-        'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON', 'ceyl': 'PRON',
-        'si': 'PRON', 'mi': 'PRON', 'que': 'PRON', 'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
+        'res': 'NOUN', 'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON', 'ceyl': 'PRON',
+         'mi': 'PRON',  'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
         'quina': 'PRON', 'quines': 'PRON', 'yo': 'PRON', 'vós': 'NOUN', 'nós': 'NOUN', 'ne': 'CCONJ', 'ni': 'CCONJ',
         'seu': 'PRON', 'seus': 'PRON', 'seva': 'PRON', 'seves': 'PRON', 'seua': 'PRON', 'seues': 'PRON', 'sua': 'PRON',
         'sues': 'PRON', 'meu': 'PRON', 'meus': 'PRON', 'meva': 'PRON', 'meves': 'PRON', 'meua': 'PRON', 'meues': 'PRON',
@@ -29,6 +29,7 @@ def correct_spacy(doc):
         'nostres': 'PRON', 'nostra': 'PRON', 'vostre': 'PRON', 'vostres': 'PRON', 'vostra': 'PRON', 'un': 'NUM',
         'una': 'NUM',
         'uns': 'NUM', 'unes': 'NUM', 'aquests': 'PRON', 'aquestes': 'PRON', 'aquell': 'PRON', 'aquella': 'PRON',
+        'tant': 'PRON', 'tants': 'PRON', 'tanta': 'PRON', 'tantes': 'PRON',
         'aquells': 'PRON', 'aquelles': 'PRON', 'aquest': 'PRON', 'aquesta': 'PRON', 'aqueix': 'PRON', 'aqueixa': 'PRON',
         'aqueixos': 'PRON', 'aqueixes': 'PRON', 'este': 'PRON', 'esta': 'PRON', 'estos': 'PRON', 'estes': 'PRON',
         'eixos': 'PRON', 'eixes': 'PRON', 'eixa': 'PRON', 'eixs': 'PRON', 'eixas': 'PRON', 'eix': 'PRON',

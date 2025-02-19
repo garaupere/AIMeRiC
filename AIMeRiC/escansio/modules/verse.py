@@ -121,7 +121,6 @@ class Vers:
 
     def mostra(self):
         def color_tonic(pattern):
-            print(pattern)
             return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
 
         def color_tonic_text(pattern_text):
@@ -169,7 +168,6 @@ class Vers:
                     {"ajustat": self.ajustat,
                      "string": self.string,
                      "string_stress": self.escansio_text,
-                     "pos": self.pos,
                      "annotated": self.anotat,
                      "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
                      "pattern": self.patro,
@@ -216,7 +214,6 @@ class Vers:
         return {self.text:
                     {"string": self.string,
                      "string_stress": self.escansio_text,
-                     "pos": self.pos,
                      "annotated": self.anotat,
                      "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
                      "pattern": self.patro,
