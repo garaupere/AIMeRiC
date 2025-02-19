@@ -4,6 +4,7 @@ import Levenshtein as leven
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.metrics import f1_score
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
 
