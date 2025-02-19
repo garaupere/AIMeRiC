@@ -89,52 +89,54 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                                 else:
                                     outsiders.append(verse)
 
-        os.makedirs(f"{results_path}json/", exist_ok=True)
-        with open(f"{results_path}json/{author.id}.json", 'w',
-                  encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
-            json.dump(results_dict, f, indent=4, ensure_ascii=False)
+        if len(rows) > 99:
 
-        os.makedirs(f"{results_path}csv/", exist_ok=True)
-        with open(f"{results_path}csv/{author.id}.csv", 'w',
-                  encoding='utf-8') as f:
-            df = pd.DataFrame(rows, columns=head)
-            df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True)
+            os.makedirs(f"{results_path}json/", exist_ok=True)
+            with open(f"{results_path}json/{author.id}.json", 'w',
+                      encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
+                json.dump(results_dict, f, indent=4, ensure_ascii=False)
 
-        os.makedirs(f"{results_path}log/", exist_ok=True)
-        with open(f"{results_path}log/{author.id}_outsiders.log", 'w', encoding='utf-8') as f:
-            for verse in outsiders:
-                f.write(verse + '\n')
-        os.makedirs(f"{results_path}svg/", exist_ok=True)
-        os.makedirs(f"{results_path}xlsx/", exist_ok=True)
+            os.makedirs(f"{results_path}csv/", exist_ok=True)
+            with open(f"{results_path}csv/{author.id}.csv", 'w',
+                      encoding='utf-8') as f:
+                df = pd.DataFrame(rows, columns=head)
+                df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True)
 
-        counts = {}
-        for value in df['subdivisió']:
-            counts[value] = counts.get(value, 0) + 1
-        #print(counts)
-        if '4+6' not in counts:
-            counts['4+6'] = 0
-        if '5+5' not in counts:
-            counts['5+5'] = 0
-        if "5'+5'" not in counts:
-            counts["5'+5"] = 0
-        if '6+4' not in counts:
-            counts['6+4'] = 0
-        if None not in counts:
-            counts[None] = 0
+            os.makedirs(f"{results_path}log/", exist_ok=True)
+            with open(f"{results_path}log/{author.id}_outsiders.log", 'w', encoding='utf-8') as f:
+                for verse in outsiders:
+                    f.write(verse + '\n')
+            os.makedirs(f"{results_path}svg/", exist_ok=True)
+            os.makedirs(f"{results_path}xlsx/", exist_ok=True)
 
-        now = datetime.now()
+            counts = {}
+            for value in df['subdivisió']:
+                counts[value] = counts.get(value, 0) + 1
+            #print(counts)
+            if '4+6' not in counts:
+                counts['4+6'] = 0
+            if '5+5' not in counts:
+                counts['5+5'] = 0
+            if "5'+5'" not in counts:
+                counts["5'+5"] = 0
+            if '6+4' not in counts:
+                counts['6+4'] = 0
+            if None not in counts:
+                counts[None] = 0
 
-        with open(f"{results_path}sumari.sum", 'a', encoding='utf-8') as sumari:
-            sumari.write(
-                f"{now.strftime('%d/%m/%Y %H:%M:%S')};{versio};{author.id};{len(rows)};{counts['4+6']};{counts['5+5']};{counts['6+4']};{counts[None]};{len(outsiders)}\n")
+            now = datetime.now()
 
-        with open(f'{results_path}dades_autors.csv', 'a', encoding='utf-8') as dades_autors:
-            dades_autors.write(
-                f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.fast_tagg};{author.mov};{len(rows)}\n")
+            with open(f"{results_path}sumari.sum", 'a', encoding='utf-8') as sumari:
+                sumari.write(
+                    f"{now.strftime('%d/%m/%Y %H:%M:%S')};{versio};{author.id};{len(rows)};{counts['4+6']};{counts['5+5']};{counts['6+4']};{counts[None]};{len(outsiders)}\n")
 
-        #print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
-        #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
-        #print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
+            with open(f'{results_path}dades_autors.csv', 'a', encoding='utf-8') as dades_autors:
+                dades_autors.write(
+                    f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.fast_tagg};{author.mov};{len(rows)}\n")
+
+            #print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
+            #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
+            #print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
 
     corpus_name = corpus_path.split('/')[2]
     merge_tables(results_path, corpus_name)
