@@ -18,7 +18,7 @@ def correct_spacy(doc):
     corrections = {
         'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',  'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
         'á': 'ADPa', 'à': 'ADPa', 'a': 'ADPa', 'dels': 'ADPa', 'del': 'ADPa', 'als': 'ADPa', 'al': 'ADPa',
-        'des': 'ADPa',
+        'des': 'ADPa', "me'ls": "PRON", "me": "PRON", "-me'ls": "PRON", "-me": "PRON",
         'res': 'NOUN', 'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON', 'ceyl': 'PRON',
          'mi': 'PRON',  'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
         'quina': 'PRON', 'quines': 'PRON', 'yo': 'PRON', 'vós': 'NOUN', 'nós': 'NOUN', 'ne': 'CCONJ', 'ni': 'CCONJ',
@@ -29,7 +29,7 @@ def correct_spacy(doc):
         'nostres': 'PRON', 'nostra': 'PRON', 'vostre': 'PRON', 'vostres': 'PRON', 'vostra': 'PRON', 'un': 'NUM',
         'una': 'NUM',
         'uns': 'NUM', 'unes': 'NUM', 'aquests': 'PRON', 'aquestes': 'PRON', 'aquell': 'PRON', 'aquella': 'PRON',
-        'tant': 'PRON', 'tants': 'PRON', 'tanta': 'PRON', 'tantes': 'PRON',
+        'tan': 'PRON', 'tant': 'PRON', 'tants': 'PRON', 'tanta': 'PRON', 'tantes': 'PRON', 'tu': 'PRON',
         'aquells': 'PRON', 'aquelles': 'PRON', 'aquest': 'PRON', 'aquesta': 'PRON', 'aqueix': 'PRON', 'aqueixa': 'PRON',
         'aqueixos': 'PRON', 'aqueixes': 'PRON', 'este': 'PRON', 'esta': 'PRON', 'estos': 'PRON', 'estes': 'PRON',
         'eixos': 'PRON', 'eixes': 'PRON', 'eixa': 'PRON', 'eixs': 'PRON', 'eixas': 'PRON', 'eix': 'PRON',
@@ -49,7 +49,8 @@ def correct_spacy(doc):
         'dins': 'ADP', 'fora': 'ADP', 'entre': 'ADP', 'contra': 'ADP', 'davant': 'ADP', 'deçà': 'ADP', 'darrera': 'ADP',
         'damunt': 'ADP', 'envers': 'ADP', 'malgrat': 'ADP', 'mitjançant': 'ADP', 'prop': 'ADP', 'sota': 'ADP',
         'sobre': 'ADP', 'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP', 'fe': 'NOUN',
-        'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ'
+        'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
+        'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ'
         }
 
     new_doc = [[text, pos_, dep_] for text, pos_, dep_ in doc]
@@ -61,6 +62,28 @@ def correct_spacy(doc):
             new_doc.remove(token)
         if '-' in token[0] and token[1] == 'PRON':
             token[1] = 'PRONe'
+        if token[1] == 'PRON' and token[0] == 'que':
+            token[1] = 'ADPa'
+        if token[1] not in ["PRON", "PRONe", "VERB"] and '-' in token[0]: # Mosts compostos / ordinals
+            while '-' in token[0]:
+                split = re.split('-', token[0], 1)
+                left = split[0]
+                right = split[1]
+                index = new_doc.index(token)
+                new_doc.remove(token)
+
+                left = [left, token[1], token[2]]
+                right = [right, token[1], token[2]]
+
+                if left[0] in corrections:
+                    left = [left[0], corrections[left[0]], token[2]]
+                if right[0] in corrections:
+                    right = [right[0], corrections[right[0]], token[2]]
+
+                new_doc.insert(index, left)
+                new_doc.insert(index + 1, right)
+
+                token = new_doc[index + 1]
     return new_doc
 
 

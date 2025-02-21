@@ -17,7 +17,7 @@ def valida():
     """Una funció per validar les dades __test."""
     usb = getUSB()
     automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
-    manual = read_csv('AIMeRiC/corpus/validacio/__test_manual.csv')
+    manual = normalitza(read_csv('AIMeRiC/corpus/validacio/__test_manual.csv'))
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)
@@ -70,10 +70,14 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> (pd.DataFrame, lis
             accuracy.append(''.join(str(x) for x in sill_autom) == ''.join(str(x) for x in sill_manual))
             accuracy_leven.append(leven.distance(''.join(str(x) for x in sill_autom), ''.join(str(x) for x in sill_manual)))
 
-    accuracy = sum(accuracy) / len(accuracy) * 100
-    accuracy_leven = sum(accuracy_leven) / len(accuracy_leven) * 100
-    print(f'\t > Freqüència d\'encerts per vers: {accuracy:.2f}%')
-    print(f'\t > Precisió de l\'etiquetatge (Levenshtein): {100 - accuracy_leven:.2f}%')
+    accuracy_f = sum(accuracy) / len(accuracy) * 100
+    accuracy_leven_f = sum(accuracy_leven) / len(accuracy_leven) * 100
+    print(f'\t > Freqüència d\'encerts per vers: {accuracy_f:.2f}% ({sum(accuracy)}/{len(accuracy)})')
+    print(f'\t > Precisió de l\'etiquetatge (Levenshtein): {100 - accuracy_leven_f:.2f}%')
+
+    # Genera un df amb els versos no coincidents marcats amb un booleà
+    df_comp['match'] = accuracy
+    df_comp.to_csv('AIMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
 
     return df_comp
 
@@ -126,7 +130,7 @@ if __name__ == '__main__':
     print('Validació de les dades __test.')
     usb = getUSB()
     automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
-    manual = read_csv('AIMeRiC/corpus/validacio/__test_manual.csv')
+    manual = normalitza(read_csv('AIMeRiC/corpus/validacio/__test_manual.csv'))
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)

@@ -1,7 +1,10 @@
 """A module for the Syllable class."""
 import re
+from copy import deepcopy
 
 from AIMeRiC.escansio.modules.sillaba_utils.get_vowel import get as get_vowel
+
+
 
 
 class Syllable:
@@ -9,6 +12,7 @@ class Syllable:
         self.text = syllable[0]
         self.s_index = index
         self.pes = syllable[1]
+        self.old_pes = deepcopy(self.pes)
         self.tonic = True if int(self.pes) > 3 else False
         self.len_word = len_word
         self.diftong = self.is_diftong()  # Afegir a un mòdul independent: /escansio/utils/phonology.py
@@ -75,6 +79,8 @@ class Syllable:
         vocal = get_vowel(self.text)
         altes = "iu"
         if vocal in altes:
+            alta = True
+        elif vocal == "o" and not self.tonic and self.s_index == 0:
             alta = True
 
         cand_neutra = "ae"

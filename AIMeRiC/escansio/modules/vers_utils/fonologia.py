@@ -19,13 +19,16 @@ def score(syllable, vers):
             return -100
     else:
         if syllable.fono_info['alta'] or syllable.fono_info['neutra']:
-            points += 1
+            if syllable.fono_info['vocal'] == 'i':
+                points += 2
+            else:
+                points +=1
         if syllable.triftong:
             points -= 20
         if not syllable.tonic:
             points += 2
-        if not syllable.fono_info['rotica']:
-            points += 1
+        if syllable.fono_info['rotica']:
+            points -= 3
         if syllable.fusionada:
             points -= 20
         if len(vers) > 6:
@@ -38,6 +41,16 @@ def score(syllable, vers):
     syllable.fusionable = points
     #print(f'Punts: {syllable.text}: {points}')  # Debug
     return points
+
+
+def score_diftong(syll1, syll2):
+    if not syll1.fusionada and not syll2.fusionada and syll1.fono_info['alta']:
+        # Creixent
+        return 10
+    if not syll1.fusionada and not syll2.fusionada and syll1.fono_info['neutra'] and syll2.fono_info['neutra']:
+        return 12
+    else:
+        return 0
 
 
 def best_contacte_vocalic(self):
@@ -53,8 +66,11 @@ def best_contacte_vocalic(self):
                     syll1_points = score(syllable, vers)
                     syll2_points = score(next_syllable, vers)
                     points = syll1_points + syll2_points
-                    #print(f'Punts: {syllable.text}, {next_syllable.text}: {points}; Vallverdú: {vallverdu_score(syllable, next_syllable)}; Final: {points*vallverdu_score(syllable, next_syllable)}')  # Debug
-                    points = points * vallverdu_score(syllable, next_syllable)
+                    #print(f'Punts: [{syllable.text}: {syll1_points}], [{next_syllable.text}: {syll2_points}]: {points}; Vallverdú: {vallverdu_score(syllable, next_syllable)} + score_diftong ({score_diftong(syllable, next_syllable)}); Final: {points*vallverdu_score(syllable, next_syllable)+score_diftong(syllable, next_syllable)}')  # Debug
+                    points = points * vallverdu_score(syllable, next_syllable) + score_diftong(syllable, next_syllable)
+                    # Factor de correcció per a síl·labes fusionades
+                    if syllable.fusionada or next_syllable.fusionada:
+                        points -= 4
                     syllable.fusionable = points
                 candidats.append((syllable, next_syllable, points)) if points > 0 else None
     # Ordena els candidats per puntuació de major a menor:
@@ -75,51 +91,41 @@ def vallverdu_score(syllable1, syllable2):
         vocal1 = syllable1.fono_info
         vocal2 = syllable2.fono_info
 
-        # ------ Hiats (score < 0) ------
-        if syllable1.tonic and syllable2.tonic:
-            # 1.1. V́1≠V́2 → hiat (voler homes)
+        #print(f'({syllable1.text}, {syllable1.pes}) + ({syllable2.text}, {syllable2.pes})')  # Debug
 
-            if vocal1['vocal'] != vocal2['vocal'] or vocal1['vocal'] == vocal2['vocal']:
-                return 0
-
-        if not syllable1.tonic and syllable2.tonic:
-            # 1.3. V1i/u+V́2 → hiat (canti himnes)
-
-            if vocal1['alta'] or not vocal1['alta'] or (vocal1['neutra'] and vocal2['alta']):
-                return 0
-
-        # -------- Diftongs (score > 0) -------
-        if syllable1.tonic and syllable2.tonic:
-            # 2.1.1. V́1i/u+V́2i/u → diftong (sentir una cançó)
-            if vocal1['alta'] and vocal2['alta'] or not vocal1['alta'] and not vocal2['alta'] or not vocal1['alta'] and vocal2['alta']:
+        if int(syllable1.pes) >= 3 and int(syllable2.pes) >= 3:  # Dues síl·labes tòniques
+            return 0
+        elif int(syllable1.pes) >= 3 and int(syllable2.pes) < 3:  # Tònica + àtona
+            if vocal2['neutra']:  # 1.2. V́1+ə → elisió (arribaré el dia, arribaré avui) [GARAU]
+                return 2  # Elisió
+        elif int(syllable1.pes) < 3 and int(syllable2.pes) >= 3: # Àtona + tònica
+            if int(syllable2.pes) == 3:
+                if vocal2['alta']:
+                    #[GARAU] V1+V́2i/u → diftong (casa una)
+                    return 1
+            elif vocal1['alta'] and not vocal2['alta']:
                 return 1
-
-        if syllable1.tonic and not syllable2.tonic and not vocal1['alta'] and vocal2['alta']:
-            # 2.1.2. V́1+V2i/u → diftong (va explicar idees)
-            return 1
-
-        if not syllable1.tonic and syllable2.tonic and vocal1['alta'] and not vocal2['alta']:
-            # 2.1.3. V1i/u+ V́2 → diftong (que vingui ara mateix)
-            return 1
-
-        if not syllable1.tonic and not syllable2.tonic:
-            # 2.1.4. V1(i/u)+V2 → diftong (compri-ho)
-            if vocal1['alta'] and not vocal2['alta'] or not vocal1['alta'] and vocal2['alta']:
+            # [GARAU] V1i/u+V́2i/u → hiat (i una), si les vocals no són idèntiques
+            elif vocal1['alta'] and vocal2['vocal'] != vocal1['vocal']:
                 return 1
-
-        # -------- Elisions (score > 1) --------
-        # 3.1. V1i/u=V2i/u → elisió (vegi insectes)
-        if vocal1['alta'] and vocal2['alta'] and vocal1['vocal'] == vocal2['vocal']:
-            return 2
-
-        # 3.2. ə+ə → elisió (compta estrelles)
-        if vocal1['neutra'] and vocal2['neutra'] or vocal2['neutra'] or (vocal1['neutra'] and vocal2['alta']):
-            return 2
-
-        # 3.4. ə+V́2(no-tancada) → elisió (casa alta)
-        if not syllable1.tonic and syllable2.tonic:
-            if vocal1['neutra'] and not vocal2['alta'] or vocal2['neutra']:
+            # 3.4. ə+V́2(no-tancada) → elisió (casa alta)
+            elif vocal1['neutra'] and not vocal2['alta'] or vocal2['neutra']:
                 return 2
+            # 1.3. V1i/u+V́2 → hiat (canti himnes)
+            elif vocal1['alta'] or not vocal1['alta'] or (vocal1['neutra'] and vocal2['alta']):
+                return 0
+
+        elif int(syllable1.pes) < 3 and int(syllable2.pes) < 3:  # Àtones
+            # 3.2. ə+ə → elisió (compta estrelles)
+            print(">>>>>>>>>>>>>>>>>>>>", vocal1, vocal2)
+            if vocal1['neutra'] and vocal2['neutra'] or vocal2['neutra'] or (vocal1['neutra'] and vocal2['alta']):
+                return 2
+            # 3.1. V1i/u=V2i/u → elisió (vegi insectes)
+            elif vocal1['alta'] and vocal2['alta'] and vocal1['vocal'] == vocal2['vocal']:
+                return 2
+            # 2.1.4. V1(i/u)+V2 → diftong (compri-ho)
+            elif vocal1['alta'] and not vocal2['alta'] or not vocal1['alta'] and vocal2['alta']:
+                return 1
     return score
 
 
@@ -176,14 +182,13 @@ def resol_contactes_vocalics(self, best_mode):
         elif mode == 'sinalefa':
             return best_sinalefa(self)
 
-
     best = get_best(best_mode)
 
-    if best is not None and self.recompte_sillabes_metriques > self.objectiu: # Si hi ha contactes vocals i el recompte mètric no coincideix amb l'objectiu
-        diff = self.recompte_sillabes_metriques - self.objectiu # Calcula la diferència
-        safety = 0 # Comptador de seguretat
-        while diff > 0 and safety < 10: # Mentre hi hagi diferència i hi hagi contactes vocals candidats (comptador de seguretat)
-            #change = best.pop(0) # Treu el primer contacte vocal candidat
+    if best is not None and self.recompte_sillabes_metriques > self.objectiu:  # Si hi ha contactes vocals i el recompte mètric no coincideix amb l'objectiu
+        diff = self.recompte_sillabes_metriques - self.objectiu  # Calcula la diferència
+        safety = 0  # Comptador de seguretat
+        while diff > 0 and safety < 10:  # Mentre hi hagi diferència i hi hagi contactes vocals candidats (comptador de seguretat)
+            # change = best.pop(0) # Treu el primer contacte vocal candidat
             if get_best(best_mode):
                 change = get_best(best_mode).pop(0)
             else:
@@ -197,26 +202,26 @@ def resol_contactes_vocalics(self, best_mode):
                         next_word = self.words[wi + 1]
                         if word.n_syllables == 1 and next_word.n_syllables == 1:
                             """Mètode 1: dos monosíl·labs"""
-                            #print(f'Mètode 1: {word.text} + {next_word.text}')  # Debug
+                            # print(f'Mètode 1: {word.text} + {next_word.text}')  # Debug
                             next_word.stress[0] = result
                             del self.words[wi]
                         elif word.n_syllables == 1 and next_word.n_syllables > 1:
                             """Mètode 2: un monosíl·lab i un polisíl·lab"""
-                            #print(f'Mètode 2: {word.text} + {next_word.text}')  # Debug
+                            # print(f'Mètode 2: {word.text} + {next_word.text}')  # Debug
                             next_word.stress[0] = result
                             next_word.stress_index = next_word.get_stress_index()
                             next_word.n_syllables = len(next_word.stress)
                             del self.words[wi]
                         elif word.n_syllables > 1 and next_word.n_syllables == 1:
                             """Mètode 3: un polisíl·lab i un monosíl·lab"""
-                            #print(f'Mètode 3: {word.text} + {next_word.text}')  # Debug
+                            # print(f'Mètode 3: {word.text} + {next_word.text}')  # Debug
                             word.stress[-1] = result
                             word.stress_index = word.get_stress_index()
                             word.n_syllables = len(word.stress)
                             del self.words[wi + 1]
                         elif word.n_syllables > 1 and next_word.n_syllables > 1:
                             """Mètode 4: dos polisíl·labs"""
-                            #print(f'Mètode 4: {word.text} + {next_word.text}')  # Debug
+                            # print(f'Mètode 4: {word.text} + {next_word.text}')  # Debug
                             word.stress[-1] = result
                             word.stress[-1].ends_with_vowel = word.stress[-1].vowel_end()
                             word.n_syllables = len(word.stress)
@@ -225,16 +230,18 @@ def resol_contactes_vocalics(self, best_mode):
                             next_word.stress_index = next_word.get_stress_index()
                             next_word.stress[0].starts_with_vowel = next_word.stress[0].vowel_start()
                             next_word.n_syllables = len(next_word.stress)
-                            if not word.stress: # Si la paraula no té síl·labes, s'elimina
+                            if not word.stress:  # Si la paraula no té síl·labes, s'elimina
                                 del self.words[wi]
                                 wi -= 1
                                 continue
-                        self.nomes_sillabes = sum([w.stress for w in self.words], []) # Actualitza la llista de síl·labes
-                        self.recompte_sillabes_metriques = recompte_metric(self) # Actualitza el recompte de síl·labes mètriques
-                        diff = self.recompte_sillabes_metriques - self.objectiu # Actualitza la diferència
-                wi += 1 # Incrementa el comptador de paraules
-            safety += 1 # Incrementa el comptador de seguretat
-        #print(f'Len(best): {len(best)}, Diff: {diff}')  # Debug
+                        self.nomes_sillabes = sum([w.stress for w in self.words],
+                                                  [])  # Actualitza la llista de síl·labes
+                        self.recompte_sillabes_metriques = recompte_metric(
+                            self)  # Actualitza el recompte de síl·labes mètriques
+                        diff = self.recompte_sillabes_metriques - self.objectiu  # Actualitza la diferència
+                wi += 1  # Incrementa el comptador de paraules
+            safety += 1  # Incrementa el comptador de seguretat
+        # print(f'Len(best): {len(best)}, Diff: {diff}')  # Debug
 
 
 def contactes_vocalics_info(self):
@@ -292,10 +299,10 @@ def best_sineresi(self):
     for syllable in vers:
         next_syllable = vers[vers.index(syllable) + 1] if vers.index(syllable) < len(vers) - 1 else None
         if next_syllable is not None:
-                if syllable.ends_with_vowel and next_syllable.starts_with_vowel:
-                    punts = score(syllable, vers) + score(next_syllable, vers)
-                    candidats.append((syllable, next_syllable, punts))
+            if syllable.ends_with_vowel and next_syllable.starts_with_vowel:
+                punts = score(syllable, vers) + score(next_syllable, vers)
+                candidats.append((syllable, next_syllable, punts))
 
     candidats = sorted(candidats, key=lambda x: x[2], reverse=True)
-    #print('> Candidats sineresi:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
+    # print('> Candidats sineresi:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
     return candidats

@@ -90,6 +90,19 @@ def accents_prosodics(self):
                 # Change the weight of the current syllable to '2' if the previous and next syllables are unstressed
                 change_pes(curr, '2')
 
+            if int(prev.pes) < 1 and int(curr.pes) < 1 and int(next.pes) < 1: # Resol valls accentuals que es poden resoldre amb un accent secundari
+                for word in self.words:
+                    if curr in word.stress:
+                        if word.bivalent:
+                            if word.stress_index == curr.s_index:
+                                change_pes(curr, '2')
+                                break
+
+    # Iterate through the syllables without words (3) [Resol els casos residuals]
+    for prev, curr, next, prevprev in iterate_no_words(self):
+        if prev is not None and next is not None:
+            if int(curr.pes) == 1 and int(prev.pes) == 0 and int(next.pes) == 0:
+                change_pes(curr, '2')
 
 
 def cim_maxim(self):

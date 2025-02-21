@@ -152,7 +152,7 @@ def main():
 
 if __name__ == "__main__":
     from cfonts import render
-    versio = "0.4.1"
+    versio = "0.4.2"
     text = render("AIMeRiC", font='chrome', colors=['system', 'gray', 'system'], align='center')
     print(text)
     print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {versio}", font='console', colors=['system'], align='center'))
