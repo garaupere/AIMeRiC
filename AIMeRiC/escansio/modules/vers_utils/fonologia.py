@@ -14,30 +14,29 @@ def max_pes(syllable1, syllable2) -> int:
 
 def score(syllable, vers):
     points = 0
-    if not syllable.ends_with_vowel:
-        if not syllable.starts_with_vowel:
-            return -100
-    else:
-        if syllable.fono_info['alta'] or syllable.fono_info['neutra']:
-            if syllable.fono_info['vocal'] == 'i':
-                points += 2
-            else:
-                points +=1
-        if syllable.triftong:
-            points -= 20
-        if not syllable.tonic:
+    if syllable.fono_info['alta']:
+        if syllable.fono_info['vocal'] == 'i':
             points += 2
-        if syllable.fono_info['rotica']:
-            points -= 3
-        if syllable.fusionada:
-            points -= 20
-        if len(vers) > 6:
-            if syllable == vers[3] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 4
-                points -= 8
-            elif syllable == vers[4] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 5
-                points -= 4
-            elif syllable == vers[5] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 6
-                points -= 2
+        else:
+            points +=1
+    if not syllable.tonic and syllable.fono_info['neutra']:
+        points += 3
+    if syllable.triftong:
+        points -= 20
+    if not syllable.tonic:
+        points += 2
+    if syllable.fono_info['rotica']:
+        points -= 3
+    if syllable.fusionada:
+        points -= 20
+    #print(f'Punts: {syllable.text}: {points}')  # Debug
+    if len(vers) > 6:
+        if syllable == vers[3] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 4
+            points -= 8
+        elif syllable == vers[4] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 5
+            points -= 4
+        elif syllable == vers[5] and int(syllable.pes) > 2:  # Si és la síl·laba del tall 6
+            points -= 2
     syllable.fusionable = points
     #print(f'Punts: {syllable.text}: {points}')  # Debug
     return points
@@ -49,6 +48,8 @@ def score_diftong(syll1, syll2):
         return 10
     if not syll1.fusionada and not syll2.fusionada and syll1.fono_info['neutra'] and syll2.fono_info['neutra']:
         return 12
+    elif not syll1.fusionada and not syll2.fusionada and syll1.fono_info['neutra'] or syll2.fono_info['alta']:
+        return 1
     else:
         return 0
 
@@ -82,7 +83,6 @@ def best_contacte_vocalic(self):
 def vallverdu_score(syllable1, syllable2):
     """Aquesta funció resol els casos de contacte vocàlic segons Vallverdú"""
     score = 0
-
     # un cas concret meu: infinitiu + pronoms febles
     if syllable1.ends_with_vowel and syllable1.fono_info['rotica'] and syllable2.text[0] == '-':
         return score
@@ -117,7 +117,6 @@ def vallverdu_score(syllable1, syllable2):
 
         elif int(syllable1.pes) < 3 and int(syllable2.pes) < 3:  # Àtones
             # 3.2. ə+ə → elisió (compta estrelles)
-            print(">>>>>>>>>>>>>>>>>>>>", vocal1, vocal2)
             if vocal1['neutra'] and vocal2['neutra'] or vocal2['neutra'] or (vocal1['neutra'] and vocal2['alta']):
                 return 2
             # 3.1. V1i/u=V2i/u → elisió (vegi insectes)

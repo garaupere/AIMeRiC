@@ -229,11 +229,8 @@ class Word:
         clean = identify_pronom_assillabic(stressed)
         if clean:
             stressed, pronoun = clean
-            print(stressed)
-            print(pronoun)
         else:
             pronoun = ""
-        print(stressed)
 
         result = []
         oxytone_ending = re.compile(

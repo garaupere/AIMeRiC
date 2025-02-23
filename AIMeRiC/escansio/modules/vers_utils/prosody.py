@@ -42,7 +42,7 @@ def accents_prosodics(self):
             if int(curr.pes) == 2:
                 change_pes(curr, '0')
             if 1 < int(curr.pes) < 5:
-                # Change the weight of the syllable with the higher weight to '0'
+                # Change the weight of the syllable with the higher weight to '1'
                 change_pes(next if int(curr.pes) > int(next.pes) else curr, '1')
         # If the current syllable is the last one and there is a previous syllable
         elif next is None and prev is not None:

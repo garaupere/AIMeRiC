@@ -41,16 +41,16 @@ def correct_spacy(doc):
         'no': 'ADP', 'sí': 'ADP', 'ja': 'ADP', 'encara': 'ADV', 'ans': 'ADV', 'ara': 'ADV', 'ací': 'ADV', 'allà': 'ADV',
         'allí': 'ADV', 'açà': 'ADV', 'dallà': 'ADV', 'dallí': 'ADV', 'pus': 'ADV', 'am': 'VERB', 'cel': 'NOUN',
         'cert': 'ADJ', 'certs': 'ADJ', 'certa': 'ADJ', 'certes': 'ADJ', 'val': 'VERB', 'delit': 'NOUN',
-        'delits': 'NOUN',
-        'mon': 'ADP', 'ma': 'ADP', 'ton': 'ADP', 'ta': 'ADP', 'son': 'ADP', 'sa': 'ADP', 'llur': 'ADP', 'llurs': 'ADP',
-        'tal': 'ADP', 'tals': 'ADP', 'mateix': 'PRON', 'mateixs': 'PRON', 'mateixa': 'PRON', 'mateixes': 'PRON',
+        'delits': 'NOUN', 'las': 'PRON',
+        'mon': 'PRON', 'ma': 'PRON', 'ton': 'PRON', 'ta': 'PRON', 'son': 'PRON', 'sa': 'DET', 'tos': 'PRON', 'llur': 'PRON', 'llurs': 'PRON',
+        'tal': 'ADPa', 'tals': 'ADPa', 'mateix': 'PRON', 'mateixs': 'PRON', 'mateixa': 'PRON', 'mateixes': 'PRON',
         'mateixos': 'PRON', 'tot': 'PRON', 'tots': 'PRON', 'tota': 'PRON', 'totes': 'PRON', 'ses': 'ADP', 'mos': 'ADP',
         'sos': 'ADP', 'tes': 'ADP', 'es': 'DET', 'cada': 'ADP', 'mes': 'CCONJ', 'sens': 'ADP', 'sense': 'ADP',
         'dins': 'ADP', 'fora': 'ADP', 'entre': 'ADP', 'contra': 'ADP', 'davant': 'ADP', 'deçà': 'ADP', 'darrera': 'ADP',
         'damunt': 'ADP', 'envers': 'ADP', 'malgrat': 'ADP', 'mitjançant': 'ADP', 'prop': 'ADP', 'sota': 'ADP',
         'sobre': 'ADP', 'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP', 'fe': 'NOUN',
         'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
-        'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ'
+        'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP', "d'ex": 'ADP', 'pro': 'ADP'
         }
 
     new_doc = [[text, pos_, dep_] for text, pos_, dep_ in doc]
