@@ -16,16 +16,21 @@ def correct_spacy(doc):
             list: A corrected list of tokens with updated POS tags.
                 """
     corrections = {
-        'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',  'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
+        'el': 'DET', 'la': 'DET', 'els': 'DET', 'les': 'DET', 'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',
+        'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
         'á': 'ADPa', 'à': 'ADPa', 'a': 'ADPa', 'dels': 'ADPa', 'del': 'ADPa', 'als': 'ADPa', 'al': 'ADPa',
-        'des': 'ADPa', "me'ls": "PRON", "me": "PRON", "-me'ls": "PRON", "-me": "PRON",
-        'res': 'NOUN', 'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON', 'ceyl': 'PRON',
-         'mi': 'PRON',  'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
+        'des': 'ADPa',
+        'res': 'NOUN', 'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON',
+        'ceyl': 'PRON',
+        'mi': 'PRON', 'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
         'quina': 'PRON', 'quines': 'PRON', 'yo': 'PRON', 'vós': 'NOUN', 'nós': 'NOUN', 'ne': 'CCONJ', 'ni': 'CCONJ',
         'seu': 'PRON', 'seus': 'PRON', 'seva': 'PRON', 'seves': 'PRON', 'seua': 'PRON', 'seues': 'PRON', 'sua': 'PRON',
         'sues': 'PRON', 'meu': 'PRON', 'meus': 'PRON', 'meva': 'PRON', 'meves': 'PRON', 'meua': 'PRON', 'meues': 'PRON',
         'teu': 'PRON', 'teus': 'PRON', 'teva': 'PRON', 'teves': 'PRON', 'teua': 'PRON', 'teues': 'PRON',
-        'nostre': 'PRON',
+        'nostre': 'PRON', 'em': 'PRON', 'et': 'PRON', 'te': 'PRON', 'me': 'PRON', '-me': 'PRON', '-te': 'PRON',
+        'li': 'PRON', '-li': 'PRON', '-lo': 'PRON', '-la': 'PRON', '-los': 'PRON', '-les': 'PRON', '-nos': 'PRON',
+        '-vos': 'PRON', '-mos': 'PRON',
+        'se': 'PRON', 'los': 'DET', 'lo': 'DET', 'mos': 'PRON', 'vos': 'PRON',
         'nostres': 'PRON', 'nostra': 'PRON', 'vostre': 'PRON', 'vostres': 'PRON', 'vostra': 'PRON', 'un': 'NUM',
         'una': 'NUM',
         'uns': 'NUM', 'unes': 'NUM', 'aquests': 'PRON', 'aquestes': 'PRON', 'aquell': 'PRON', 'aquella': 'PRON',
@@ -42,16 +47,18 @@ def correct_spacy(doc):
         'allí': 'ADV', 'açà': 'ADV', 'dallà': 'ADV', 'dallí': 'ADV', 'pus': 'ADV', 'am': 'VERB', 'cel': 'NOUN',
         'cert': 'ADJ', 'certs': 'ADJ', 'certa': 'ADJ', 'certes': 'ADJ', 'val': 'VERB', 'delit': 'NOUN',
         'delits': 'NOUN', 'las': 'PRON',
-        'mon': 'PRON', 'ma': 'PRON', 'ton': 'PRON', 'ta': 'PRON', 'son': 'PRON', 'sa': 'DET', 'tos': 'PRON', 'llur': 'PRON', 'llurs': 'PRON',
-        'tal': 'ADPa', 'tals': 'ADPa', 'mateix': 'PRON', 'mateixs': 'PRON', 'mateixa': 'PRON', 'mateixes': 'PRON',
-        'mateixos': 'PRON', 'tot': 'PRON', 'tots': 'PRON', 'tota': 'PRON', 'totes': 'PRON', 'ses': 'ADP', 'mos': 'ADP',
+        'mon': 'PRON', 'ma': 'PRON', 'ton': 'PRON', 'ta': 'PRON', 'son': 'PRON', 'sa': 'DET', 'tos': 'PRON',
+        'llur': 'PRON', 'llurs': 'PRON',
+        'tal': 'ADP', 'tals': 'ADP', 'mateix': 'PRON', 'mateixs': 'PRON', 'mateixa': 'PRON', 'mateixes': 'PRON',
+        'mateixos': 'PRON', 'tot': 'PRON', 'tots': 'PRON', 'tota': 'PRON', 'totes': 'PRON',
         'sos': 'ADP', 'tes': 'ADP', 'es': 'DET', 'cada': 'ADP', 'mes': 'CCONJ', 'sens': 'ADP', 'sense': 'ADP',
         'dins': 'ADP', 'fora': 'ADP', 'entre': 'ADP', 'contra': 'ADP', 'davant': 'ADP', 'deçà': 'ADP', 'darrera': 'ADP',
         'damunt': 'ADP', 'envers': 'ADP', 'malgrat': 'ADP', 'mitjançant': 'ADP', 'prop': 'ADP', 'sota': 'ADP',
         'sobre': 'ADP', 'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP', 'fe': 'NOUN',
         'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
-        'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP', "d'ex": 'ADP', 'pro': 'ADP'
-        }
+        'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP',
+        "d'ex": 'ADP', 'pro': 'ADP'
+    }
 
     new_doc = [[text, pos_, dep_] for text, pos_, dep_ in doc]
     for token in new_doc:
@@ -64,26 +71,27 @@ def correct_spacy(doc):
             token[1] = 'PRONe'
         if token[1] == 'PRON' and token[0] == 'que':
             token[1] = 'ADPa'
-        if token[1] not in ["PRON", "PRONe", "VERB"] and '-' in token[0]: # Mosts compostos / ordinals
-            while '-' in token[0]:
-                split = re.split('-', token[0], 1)
-                left = split[0]
-                right = split[1]
-                index = new_doc.index(token)
-                new_doc.remove(token)
+        if token[1] not in ["PRON", "PRONe", "VERB", 'PUNCT'] and '-' in token[0]:  # Mosts compostos / ordinals
+            if '-' not in token[0][0]:
+                while '-' in token[0]:
+                    split = re.split('-', token[0], 1)
+                    left = split[0]
+                    right = split[1]
+                    index = new_doc.index(token)
+                    new_doc.remove(token)
 
-                left = [left, token[1], token[2]]
-                right = [right, token[1], token[2]]
+                    left = [left, token[1], token[2]]
+                    right = [right, token[1], token[2]]
 
-                if left[0] in corrections:
-                    left = [left[0], corrections[left[0]], token[2]]
-                if right[0] in corrections:
-                    right = [right[0], corrections[right[0]], token[2]]
+                    if left[0] in corrections:
+                        left = [left[0], corrections[left[0]], token[2]]
+                    if right[0] in corrections:
+                        right = [right[0], corrections[right[0]], token[2]]
 
-                new_doc.insert(index, left)
-                new_doc.insert(index + 1, right)
+                    new_doc.insert(index, left)
+                    new_doc.insert(index + 1, right)
 
-                token = new_doc[index + 1]
+                    token = new_doc[index + 1]
     return new_doc
 
 
@@ -103,7 +111,7 @@ def ortho_repair(text: str):
         r"qu'": r"qu·", r"\B([qg]u)'([aeiouàéèéìíòóúù])": r"\1\2 \2", r" +": r" ", r"(.') (.)": r"\1\2",
         r"([aeiouàéèéìíòóúù])·\1": r"\1 \1", r"([aeiouàéèéìíòóúù]) *· *([aeiouàéèéìíòóúù])": r"\1 \2", r"·": r"'",
         r"\b([sS][^aeiouàéèéìíòóúùyýÿhs]\B)": r"e\1", r"([aeiouy])h([iy]r)": r"\1\2", r"\Bch$": r"c", r"^ff": r"f"
-        }
+    }
     for pattern, replacement in regex_patterns.items():
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
     return text
@@ -122,7 +130,7 @@ def ocr_errors(doc):
     errors = {
         'cm': 'em', 'ct': 'et', 'cn': 'en', 'cl': 'el',
         'juhý': 'juí', 'juhi': 'juí', 'juhy': 'juí'
-        }
+    }
 
     new_doc = [[token.text, token.pos_, token.dep_] for token in doc]
     for token in new_doc:
@@ -164,6 +172,26 @@ def spacy_asyllabic(doc):
     return new_doc
 
 
+def inicials(text: str):
+    """
+    Replaces initials and abbreviations in the text with their full forms.
+
+    Args:
+        text (str): The input text.
+
+    Returns:
+        str: The text with initials and abbreviations replaced.
+    """
+    replacements = {
+        "B.": "be", "C.": "ce", "D.": "de", "F.": "efa", "G.": "ge", "H.": "hac", "J.": "jota", "K.": "ka", "L.": "ela",
+        "M.": "ema", "N.": "ena", "P.": "pe", "Q.": "cu", "R.": "erra", "S.": "essa", "T.": "te", "V.": "ve",
+        "W.": "ve-doble", "X.": "ics", "Y.": "i", "Z.": "zeta", "Sr.": "senyor", "Dr.": "doctor", "Sra.": "senyora",
+        "Dra.": "doctora", "Srta.": "senyoreta", "Mr.": 'míster', "Mrs.": "missis", "Ms.": "miss", "Mme.": "madame",
+    }
+
+    return ' '.join([replacements[word] if word in replacements else word for word in text.split()])
+
+
 def posTagger(nlp, text: str):
     """
     Tags the words in a given text with their grammatical categories.
@@ -176,27 +204,9 @@ def posTagger(nlp, text: str):
         doc: The SpaCy document with POS tags.
     """
 
-    def inicials(text):
-        """
-        Replaces initials and abbreviations in the text with their full forms.
-
-        Args:
-            text (str): The input text.
-
-        Returns:
-            str: The text with initials and abbreviations replaced.
-        """
-        replacements = {
-            "B": "be", "C": "ce", "D": "de", "F": "efa", "G": "ge", "H": "hac", "J": "jota", "K": "ka", "L": "ela",
-            "M": "ema", "N": "ena", "P": "pe", "Q": "cu", "R": "erra", "S": "essa", "T": "te", "V": "ve",
-            "W": "ve-doble", "X": "ics", "Y": "i", "Z": "zeta", "Sr.": "senyor", "Dr.": "doctor", "Sra.": "senyora",
-            "Dra.": "doctora", "Srta.": "senyoreta"
-            }
-        return " ".join(replacements.get(word, word) for word in text.split())
-
     text = clean_text(text)
     text = ortho_repair(text)
-    text = inicials(text)
+    #text = inicials(text)
     doc = nlp(text)
     doc = ocr_errors(doc)
     doc = spacy_asyllabic(doc)

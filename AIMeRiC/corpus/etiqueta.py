@@ -34,11 +34,42 @@ def merge_tables(results_path, file_name):
     print(f"Corpus '{file_name}' etiquetat i compilat!")
 
 
+def clean_results_folders(results_path):
+    if os.path.exists(f"{results_path}/json/"):
+        files = glob.glob(f"{results_path}/json/*")
+        for f in files:
+            if f.endswith(".json"):
+                os.remove(f)
+    if os.path.exists(f"{results_path}/csv/"):
+        files = glob.glob(f"{results_path}/csv/*")
+        for f in files:
+            if f.endswith(".csv"):
+                os.remove(f)
+    if os.path.exists(f"{results_path}/log/"):
+        files = glob.glob(f"{results_path}/log/*")
+        for f in files:
+            if f.endswith(".log"):
+                os.remove(f)
+    if os.path.exists(f"{results_path}/svg/"):
+        files = glob.glob(f"{results_path}/svg/*")
+        for f in files:
+            if f.endswith(".svg"):
+                os.remove(f)
+    if os.path.exists(f"{results_path}/xlsx/"):
+        files = glob.glob(f"{results_path}/xlsx/*")
+        for f in files:
+            if f.endswith(".xlsx"):
+                os.remove(f)
+
+
 def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
 
 
     global rows
     os.makedirs(f"{results_path}", exist_ok=True)
+
+    clean_results_folders(results_path)
+
 
     with open(f"{results_path}sumari.sum", 'w', encoding='utf-8') as sumari:
         sumari.write("Data;Versió;Autor;Versos;4+6;5+5;6+4;No classificats;Outsiders\n")
@@ -79,18 +110,23 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
                             vers = escaneja(nlp, verse, goal=mode)  # Crea un objecte Vers
                             if verse is not None:
-                                if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
-                                    #vers.mostra()  # Imprimeix la metadata del vers
-                                    results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
-                                        vers.save)  # Guarda la metadata del vers
-                                    rows.append([author.id, author.fast_tagg, author.mov, author.born_date, book_title,
-                                                 poem_title, i + 1] + vers.to_csv())
-                                    i += 1
-                                else:
+                                try:
+                                    if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
+                                        #vers.mostra()  # Imprimeix la metadata del vers
+                                        results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
+                                            vers.save)  # Guarda la metadata del vers
+                                        rows.append([author.id, author.fast_tagg, author.mov, author.born_date, book_title,
+                                                     poem_title, i + 1] + vers.to_csv())
+                                        i += 1
+                                    else:
+                                        outsiders.append(verse)
+                                except Exception as e:
+                                    print(f"Error: {e}")
                                     outsiders.append(verse)
+                                    i += 1
 
+        #print(author.id, len(rows)) # Debug
         if len(rows) > 99:
-
             os.makedirs(f"{results_path}json/", exist_ok=True)
             with open(f"{results_path}json/{author.id}.json", 'w',
                       encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON

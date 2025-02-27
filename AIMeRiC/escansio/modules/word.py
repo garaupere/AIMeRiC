@@ -70,6 +70,7 @@ class Word:
         self.monosyllable = [True if self.n_syllables == 1 else False][0]
         self.paraula_tall = False
         self.bivalent = self.is_bivalent() if not self.monosyllable else True if int(self.stress[0].pes) > 1 else False
+        self.safe_syllables()
         self.print_stress = self.print_stress()  # Mantenir dins el mòdul de la classe.
 
     def correct_DET(self):

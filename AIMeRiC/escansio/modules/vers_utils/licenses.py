@@ -65,6 +65,8 @@ def sineresi(self):
                         word.secondary_stress()
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])
+
+
 def dieresi(self, times):
     """Aquesta funció aplica el fenomen de la dièresi a un vers donat. D'un diftong en interior de mot, en crea un hiat. Per exemple: aire > a.i.re; ai.gua > a.i.gu.a, etc."""
     counter = 0  # Comptador de vegades que s'ha aplicat el fenomen
@@ -124,6 +126,7 @@ def dialefa(self, diferencia):
             j = i
         trif_in = next(
             (self.words[j].stress.index(syllable) for syllable in self.words[j].stress if syllable.triftong), None)
+
         if trif_in is not None:
             """Mètode 0: un triftong"""
             # print("Dialefa Mètode 0: un triftong")
@@ -138,9 +141,8 @@ def dialefa(self, diferencia):
                 del self.words[-1]
                 return True
 
-        elif self.words[i].stress[-1].fusion_direction == "1":
+        elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "1":
             """Mètode 1: dos mots monosil·làbics"""
-            # print("Dialefa Mètode 1: dos mots monosil·làbics")
             word1_syll = self.words[i].stress[-1]
             result = split_syllable(word1_syll)
             self.words.insert(j, Word("empt", self.words[i].upos, j, len(self.words)))
@@ -156,7 +158,7 @@ def dialefa(self, diferencia):
                 return True
 
 
-        elif self.words[i].stress[0].fusion_direction == "2":
+        elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "2":
             """Mètode 2: monosil·lab i polisil·lab"""
             # print("Dialefa Mètode 2: monosil·lab i polisil·lab")
             word1_syll = self.words[i].stress[0]
@@ -173,7 +175,7 @@ def dialefa(self, diferencia):
                 del self.words[-1]
                 return True
 
-        elif self.words[i].stress[-1].fusion_direction == "3":
+        elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "3":
             """Mètode 3: polisil·lab i monosil·lab"""
             word1_syll = self.words[i].stress[-1]
             result = split_syllable(word1_syll)
@@ -189,7 +191,7 @@ def dialefa(self, diferencia):
                 del self.words[-1]
                 return True
 
-        elif self.words[i].stress[0].fusion_direction == "4":
+        elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "4":
             """Mètode 4: dos polisil·labs"""
             # print("Dialefa Mètode 4: dos polisil·labs")
             word1_syll = self.words[i].stress[0]

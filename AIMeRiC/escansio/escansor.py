@@ -1,11 +1,16 @@
+__author__ = "Pere Garau Borràs"
+__copyright__ = "Copyright © 2025, Pere Garau Borràs"
+__version__ = "0.4.3"
+
 import spacy
 from AIMeRiC.escansio.modules.verse import Vers
 
-
-def escaneja(nlp, verse: str, goal: int) -> Vers:
+def escaneja(nlp, verse: str, goal: int):
     """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse."""
-    from AIMeRiC.escansio.modules.verse import Vers
-    return Vers(nlp, verse, goal)
+    try:
+        return Vers(nlp, verse, goal)
+    except Exception as e:
+        return None
 
 
 if __name__ == "__main__":

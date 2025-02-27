@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from tabulate import tabulate
 from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
@@ -349,6 +350,39 @@ def cmap_subdivisions(data, name):
 
     # Desa les dades en un full de càlcul
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/cmap_subdivisions.xlsx')
+
+
+def print_desctiptives(data_set, name):
+    """Un mòdul per mostrar informacions descriptives de les dades"""
+    # 1. Imprimeix en un df el nombre d'autors de les dades, amb el nombre de versos i síl·labes per a cada autor
+    # El df ha de tenir les columnes= ['Autor', 'Versos', 'Síl·labes']
+    print("--" * 20, "Nombre d'autors", "--" * 20)
+    versos = data_set.groupby('autor')['1'].count()
+    silabes = data_set.groupby('autor')['síl·labes mètriques'].sum()
+    silabes_extra = data_set.groupby('autor')['síl·labes extramètriques'].sum()
+    silabes = silabes + silabes_extra
+    df = pd.DataFrame({'Versos': versos, 'Síl·labes': silabes})
+    # Compta quants de llibres hi ha per autor
+    df['Llibres'] = data_set.groupby('autor')['obra'].nunique()
+    # Compta quants de poemes hi ha per autor
+    df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
+    # Afegeix el valor total del corpus
+    df.loc['Total'] = df.sum()
+    df = df.reset_index()
+    df = df.rename(columns={'index': 'Autor'})
+
+    print(tabulate(df, headers='keys', tablefmt='fancy_grid'))
+    print("--" * 40)
+    # Desa les dades en un full de càlcul
+    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
+
+
+
+
+
+def descriu(corpus):
+    data = read_csv(f'{usb}/corpora/{corpus}/etiquetat/{corpus}.csv')
+    print_desctiptives(data, corpus)
 
 
 if __name__ == '__main__':

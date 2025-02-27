@@ -1,17 +1,20 @@
-import os
-import time
-import spacy
-from datetime import datetime
 from colorama import Fore
-
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.etiqueta import etiqueta
-from AIMeRiC.corpus.obten_dades import analitza_corpus
+from AIMeRiC.corpus.obten_dades import analitza_corpus, descriu
 from AIMeRiC.corpus.prosa import prosa
 from AIMeRiC.corpus.valida import valida
-from AIMeRiC.escansio.escansor import escaneja
+from AIMeRiC.escansio.escansor import escaneja, __version__
+
+__author__ = "Pere Garau Borràs"
+__copyright__ = "Copyright © 2025, Pere Garau Borràs"
+__version__ = __version__
+
+import os
+import time
+import spacy
 
 
 def compile(raw_files_path, corpus):
@@ -33,12 +36,11 @@ def compile(raw_files_path, corpus):
 
 def etiq(corpus):
     """Etiquetar un corpus"""
-    versio = datetime.now().strftime('%Y.%m.%d')
     usb = getUSB()
     root = f"{usb}/corpora/"
     corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
     results_path = f"{root}{corpus}/etiquetat/"
-    etiqueta(corpus_path, results_path, versio, nlp, mode=10)
+    etiqueta(corpus_path, results_path, __version__, nlp, mode=10)
 
 
 def explota(corpus):
@@ -72,14 +74,15 @@ def main():
         print("Opcions disponibles:")
         print("\t1. Compilar un corpus")
         print("\t2. Etiquetar un corpus")
-        print("\t3. Exploració estadística del corpus")
-        print("\t4. Validar les dades __test")
-        print("\t5. Analitzar un vers")
-        print("\t6. Analitza un corpus de prosa")
-        print("\t7. Còpia de seguretat del corpus\n")
+        print("\t3. Descripció estadística del corpus")
+        print("\t4. Exploració estadística del corpus")
+        print("\t5. Validar les dades __test")
+        print("\t6. Analitzar un vers")
+        print("\t7. Analitza un corpus de prosa")
+        print("\t8. Còpia de seguretat del corpus\n")
         print("\tPer accedir al menú d'ajuda, premeu 'h'.")
         print("\tPer tancar el programa, premeu Intro.\n")
-        option = input("Seleccionau una opció (1/2/3/4/5/6): ")
+        option = input("Seleccionau una opció (1/2/3/4/5/6/7/8): ")
 
         if option == "1":
             print("--" * 40)
@@ -101,10 +104,26 @@ def main():
                 print(f"\t• {folder}")
             enter = input("Quin corpus voleu etiquetar?\t")
             if enter:
+                start = time.time()
                 etiq(enter)
+                elapsed_time = time.time() - start
+                minutes = int(elapsed_time // 60)
+                seconds = int(elapsed_time % 60)
+                print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
             else:
                 print("No s'ha seleccionat cap corpus per etiquetar.")
+
         elif option == "3":
+            print("--" * 40)
+            print("Corpus disponibles per la descripció estadística:")
+            for folder in os.listdir(root):
+                print(f"\t• {folder}")
+            enter = input("Quin corpus voleu descriure?\t")
+            if enter:
+                descriu(enter)
+            else:
+                print("No s'ha seleccionat cap corpus per descriure.")
+        elif option == "4":
             print("--" * 40)
             print("Corpus disponibles per l'exploració estadística:")
             for folder in os.listdir(root):
@@ -114,11 +133,11 @@ def main():
                 explota(enter)
             else:
                 print("No s'ha seleccionat cap corpus per l'exploració estadística.")
-        elif option == "4":
+        elif option == "5":
             print("--" * 40)
             print("Validant les dades __test...")
             valida()
-        elif option == "5":
+        elif option == "6":
             print("--" * 40)
             print("\nIntroduïu un vers per analitzar-lo: ", Fore.GREEN, end=" ")
             verse = input()
@@ -129,9 +148,9 @@ def main():
                 print("\nIntroduïu un vers per analitzar-lo: ", Fore.GREEN,end=" ")
                 verse = input()
                 print(Fore.RESET)
-        elif option == "6":
-            prosa(nlp)
         elif option == "7":
+            prosa(nlp)
+        elif option == "8":
             print("--" * 40)
             start = time.time()
             backup_path = "C:\\Users\\pere\\OneDrive - Universitat de les Illes Balears\\Documents\\UIB\\Estudis oficials\\Doctorat en Filologia i Filosofia\\Tesi\\TESI ESPAI DE TREBALL NET\\DADES\\.backup\\"
@@ -152,10 +171,9 @@ def main():
 
 if __name__ == "__main__":
     from cfonts import render
-    versio = "0.4.2"
     text = render("AIMeRiC", font='chrome', colors=['system', 'gray', 'system'], align='center')
     print(text)
-    print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {versio}", font='console', colors=['system'], align='center'))
+    print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}", font='console', colors=['system'], align='center'))
 
     # Carrega el model de Spacy en català
     print("--" * 40)
@@ -170,5 +188,5 @@ if __name__ == "__main__":
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
     print(text)
-    print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {versio}", font='console', colors=['system'], align='center'))
+    print(render(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}", font='console', colors=['system'], align='center'))
     print("--" * 40)

@@ -85,7 +85,7 @@ class Syllable:
 
         cand_neutra = "ae"
         neutra = False
-        if vocal in cand_neutra and int(self.pes) < 3:
+        if vocal in cand_neutra and int(self.pes) <= 3:
             neutra = True
 
         rotica = False
