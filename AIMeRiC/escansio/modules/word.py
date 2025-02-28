@@ -15,24 +15,6 @@ nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
 
 
-def bivalents(result, cat):
-    for syllable in result:
-        if syllable[1] == "4":
-            if cat in ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]:
-                o_syllable = syllable
-                syllable = (syllable[0], "3")
-                result[result.index(o_syllable)] = syllable
-            if cat in ['ADPa', 'DET', 'CCONJ', 'SCONJ']:
-                o_syllable = syllable
-                syllable = (syllable[0], "2")
-                result[result.index(o_syllable)] = syllable
-        else:
-            o_syllable = syllable
-            syllable = (syllable[0], "0")
-            result[result.index(o_syllable)] = syllable
-    return result
-
-
 class Word:
     """Aquesta classe representa una paraula amb les seves característiques."""
 

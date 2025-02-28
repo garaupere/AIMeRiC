@@ -5,6 +5,7 @@ from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.word import Word
 from .fonetica_sintactica import join_syllables, split_syllable, best_sinalefa, resol_contactes_vocalics, best_contacte_vocalic, \
     best_sineresi
+from .stress import get_stress_index, secondary_stress
 
 
 def llicencies(self) -> str:
@@ -59,8 +60,8 @@ def sineresi(self):
                     result.text = re.sub(r"_", "", result.text)
                     if result:
                         word.stress.remove(change[1])
-                        word.stress_index = word.get_stress_index()
-                        word.secondary_stress()
+                        word.stress_index = get_stress_index(word)
+                        secondary_stress(word)
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])
 

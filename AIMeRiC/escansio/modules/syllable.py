@@ -5,8 +5,6 @@ from copy import deepcopy
 from .utils.fonologia import get_vowel
 
 
-
-
 class Syllable:
     def __init__(self, index: int, syllable: tuple, len_word: int, fusion_direction=None):
         self.text = syllable[0]

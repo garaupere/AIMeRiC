@@ -5,6 +5,24 @@ from copy import deepcopy
 from AIMeRiC.escansio.modules.syllable import Syllable
 
 
+def bivalents(result, cat):
+    for syllable in result:
+        if syllable[1] == "4":
+            if cat in ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]:
+                o_syllable = syllable
+                syllable = (syllable[0], "3")
+                result[result.index(o_syllable)] = syllable
+            if cat in ['ADPa', 'DET', 'CCONJ', 'SCONJ']:
+                o_syllable = syllable
+                syllable = (syllable[0], "2")
+                result[result.index(o_syllable)] = syllable
+        else:
+            o_syllable = syllable
+            syllable = (syllable[0], "0")
+            result[result.index(o_syllable)] = syllable
+    return result
+
+
 def identify_pronom_assillabic(syllables):
     if syllables and "'" in syllables[-1]:
         for pronoun in ["'t", "'s", "'m", "'n", "'l", "'ls", "'ns"]:
@@ -53,7 +71,7 @@ def get_stress(self):
             result = self.monosyllabic()
             if self.word_ment is not None:
                 w_ment = result + [("ment", "4")]
-                w_ment = self.forced_rhythmic_alternation(w_ment)
+                w_ment = forced_rhythmic_alternation(self, w_ment)
                 return [Syllable(0, w_ment[0], 1), Syllable(1, w_ment[1], 4)]
             return [Syllable(0, result[0], 1)]
 
@@ -69,7 +87,7 @@ def get_stress(self):
     if self.word_ment is not None:
         result = [(syllable[0], "2") if syllable[1] == "4" else (syllable[0], "0") for syllable in result]
         result = result + [("ment", "4")]
-        result = self.forced_rhythmic_alternation(result)
+        result = forced_rhythmic_alternation(self, result)
     result = [Syllable(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
 
     if clean:

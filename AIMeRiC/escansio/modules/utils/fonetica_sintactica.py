@@ -3,6 +3,7 @@ from copy import deepcopy
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.utils.meter import recompte_metric
+from AIMeRiC.escansio.modules.utils.stress import get_stress_index
 
 
 def max_pes(syllable1, syllable2) -> int:
@@ -208,14 +209,14 @@ def resol_contactes_vocalics(self, best_mode):
                             """Mètode 2: un monosíl·lab i un polisíl·lab"""
                             # print(f'Mètode 2: {word.text} + {next_word.text}')  # Debug
                             next_word.stress[0] = result
-                            next_word.stress_index = next_word.get_stress_index()
+                            next_word.stress_index = get_stress_index(next_word)
                             next_word.n_syllables = len(next_word.stress)
                             del self.words[wi]
                         elif word.n_syllables > 1 and next_word.n_syllables == 1:
                             """Mètode 3: un polisíl·lab i un monosíl·lab"""
                             # print(f'Mètode 3: {word.text} + {next_word.text}')  # Debug
                             word.stress[-1] = result
-                            word.stress_index = word.get_stress_index()
+                            word.stress_index = get_stress_index(word)
                             word.n_syllables = len(word.stress)
                             del self.words[wi + 1]
                         elif word.n_syllables > 1 and next_word.n_syllables > 1:
@@ -225,8 +226,8 @@ def resol_contactes_vocalics(self, best_mode):
                             word.stress[-1].ends_with_vowel = word.stress[-1].vowel_end()
                             word.n_syllables = len(word.stress)
                             del next_word.stress[0]
-                            word.stress_index = word.get_stress_index()
-                            next_word.stress_index = next_word.get_stress_index()
+                            word.stress_index = get_stress_index(word)
+                            next_word.stress_index = get_stress_index(next_word)
                             next_word.stress[0].starts_with_vowel = next_word.stress[0].vowel_start()
                             next_word.n_syllables = len(next_word.stress)
                             if not word.stress:  # Si la paraula no té síl·labes, s'elimina

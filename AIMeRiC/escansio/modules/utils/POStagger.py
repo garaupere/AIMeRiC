@@ -19,7 +19,7 @@ def correct_spacy(doc):
         'el': 'DET', 'la': 'DET', 'els': 'DET', 'les': 'DET', 'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',
         'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
         'á': 'ADPa', 'à': 'ADPa', 'a': 'ADPa', 'dels': 'ADPa', 'del': 'ADPa', 'als': 'ADPa', 'al': 'ADPa',
-        'des': 'ADPa',
+        'des': 'ADPa', "me'ls": 'DET',
         'res': 'NOUN', 'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON',
         'ceyl': 'PRON',
         'mi': 'PRON', 'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
