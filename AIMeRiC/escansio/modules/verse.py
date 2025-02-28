@@ -5,16 +5,16 @@ from copy import deepcopy
 from colorama import Fore
 
 from AIMeRiC.escansio.modules.word import Word
-from AIMeRiC.escansio.modules.vers_utils.OT_constraints import analyze_OT
-from AIMeRiC.escansio.modules.vers_utils.fonologia import contactes_vocalics_info, resol_contactes_vocalics
-from AIMeRiC.escansio.modules.vers_utils.POStagger import posTagger
-from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
+from AIMeRiC.escansio.modules.utils.OT_constraints import analyze_OT
+from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
+from AIMeRiC.escansio.modules.utils.POStagger import posTagger
+from AIMeRiC.escansio.modules.utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
     maximal_comparison_pattern
-from AIMeRiC.escansio.modules.vers_utils.prosody import accents_prosodics, cim_maxim
-from AIMeRiC.escansio.modules.vers_utils.decasyllable import tall, subdivideix
-from AIMeRiC.escansio.modules.vers_utils.display import anota_vers, escansio_plana, escansio_accentual, metronome
-from AIMeRiC.escansio.modules.vers_utils.licenses import llicencies
-from AIMeRiC.escansio.modules.vers_utils.word_info import quants_mots, safe_words
+from AIMeRiC.escansio.modules.utils.prosody import accents_prosodics, cim_maxim
+from AIMeRiC.escansio.modules.utils.decasyllable import tall, subdivideix
+from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, escansio_accentual, metronome
+from AIMeRiC.escansio.modules.utils.licenses import llicencies
+from AIMeRiC.escansio.modules.utils.word_info import quants_mots, safe_words
 
 
 class Vers:
@@ -240,6 +240,6 @@ if __name__ == "__main__":
 
     start = time.time()
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "Que ara sou la meva ànima", 10)
+    vers = Vers(nlp, "Sol, i de dol, i amb vetusta gonella", 10)
     vers.mostra()
     print(time.time() - start)

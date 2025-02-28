@@ -3,10 +3,8 @@ import re
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.word import Word
-from .fonologia import join_syllables, split_syllable, best_sinalefa, resol_contactes_vocalics, best_contacte_vocalic, \
+from .fonetica_sintactica import join_syllables, split_syllable, best_sinalefa, resol_contactes_vocalics, best_contacte_vocalic, \
     best_sineresi
-from .meter import recompte_metric
-from .tools import seguent
 
 
 def llicencies(self) -> str:

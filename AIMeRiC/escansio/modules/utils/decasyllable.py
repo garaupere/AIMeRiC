@@ -1,7 +1,7 @@
 """Un mòdul per gestionar particularitats mètriques del decasíl·lab"""
 import re
 
-from .fonologia import split_syllable
+from .fonetica_sintactica import split_syllable
 from .tools import seguent
 
 

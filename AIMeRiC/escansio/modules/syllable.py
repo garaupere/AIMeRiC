@@ -2,7 +2,7 @@
 import re
 from copy import deepcopy
 
-from AIMeRiC.escansio.modules.sillaba_utils.get_vowel import get as get_vowel
+from .utils.fonologia import get_vowel
 
 
 

@@ -2,7 +2,7 @@ import re
 from copy import deepcopy
 
 from AIMeRiC.escansio.modules.syllable import Syllable
-from AIMeRiC.escansio.modules.vers_utils.meter import recompte_metric
+from AIMeRiC.escansio.modules.utils.meter import recompte_metric
 
 
 def max_pes(syllable1, syllable2) -> int:

@@ -26,15 +26,6 @@ def abstract_pattern(words):
     return pattern  # Retorna el patró abstracte
 
 
-def words_abstract_pattern(words):
-    """Retorna el patró abstracte del vers amb les fronteres de mot."""
-    pattern = []  # Patró abstracte
-    for word in words:  # Recorre les paraules del vers
-        word = [int(syllable.pes) for syllable in word.stress]
-        pattern.append(word)
-    return pattern  # Retorna el patró abstracte
-
-
 def maximal_comparison_pattern(self):
     if self.objectiu == 10 and self.recompte_sillabes_metriques == self.objectiu:
         if self.recompte_sillabes_metriques == self.objectiu:
