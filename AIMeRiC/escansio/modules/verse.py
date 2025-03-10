@@ -207,7 +207,7 @@ class Vers:
                                                            self.llicencies,
                                                            self._clash, self._lapse, self._ws_hl, self._non_initial,
                                                            self._symetry,
-                                                           self.mots_colon1, self.mots_colon2, self.contorn_accentual,
+                                                           self.mots_colon1, self.mots_colon2, str(self.contorn_accentual),
                                                            self.metronome]
 
     def desa_prosa(self):

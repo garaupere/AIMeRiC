@@ -43,7 +43,6 @@ def analitza_corpus(corpus):
     p_bar.update(1)
 
 
-
 def read_csv(path):
     """Carrega un fitxer csv a un DataFrame"""
     data = pd.read_csv(path, sep=';', encoding='utf-8', lineterminator='\n', header=0)
@@ -166,7 +165,6 @@ def index_binarietat(data, name):
     model = [0, 100, 0, 100, 0, 100, 0, 100, 0, 100]
     df.loc['Iàmbic'] = model
 
-
     # Aplicar la funció a cada fila del DataFrame
     df['binarietat'] = df.apply(calc_bin_index, axis=1)
 
@@ -278,6 +276,7 @@ def dendrograma_lang(data, name):
     # Desa les dades del dendrograma en un fitxer xlsx
     pd.DataFrame(Z).to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/dendrograma_lang.xlsx')
 
+
 def mitjana(data, name):
     """Calcula la mitjana de cada síl·laba del contorn accentual per al conjunt d'autors"""
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -375,9 +374,6 @@ def print_desctiptives(data_set, name):
     print("--" * 40)
     # Desa les dades en un full de càlcul
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
-
-
-
 
 
 def descriu(corpus):

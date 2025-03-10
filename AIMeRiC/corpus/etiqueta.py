@@ -144,6 +144,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                     f.write(verse + '\n')
             os.makedirs(f"{results_path}svg/", exist_ok=True)
             os.makedirs(f"{results_path}xlsx/", exist_ok=True)
+            os.makedirs(f"{results_path}ot/", exist_ok=True)
 
             counts = {}
             for value in df['subdivisió']:
