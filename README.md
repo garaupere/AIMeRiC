@@ -58,15 +58,15 @@ Pel que fa a l'estructura dels fitxers `.info`, han de presentar aquesta estruct
 #### autor.info
 ```json
 {
-    "author_id": "Jacint Verdaguer", # Nom i primer llinatge
+    "author_id": "Jacint Verdaguer",
     "name": "Verdaguer i Santaló, Jacint",
     "gender": 0,  # H: 0, D: 1, A: 2
     "born_date": 1845,
     "death_date": 1902,
     "city": "Folgueroles",
     "dialect": "central",
-    "viaf": "9841818",    # Identificador VIAF.
-    "wiki_id": "Q379290" # Identificador de WikiData.
+    "viaf": "9841818", 
+    "wiki_id": "Q379290"
 }
 ```
 
@@ -74,8 +74,8 @@ Pel que fa a l'estructura dels fitxers `.info`, han de presentar aquesta estruct
 ```json
 {
     "title": "L'Atlàntida",
-    "year": 1877,            # Any de la primera publicació.
-    "publisher": "Edicions 62"   # Editor de l'edició usada.
+    "year": 1877,
+    "publisher": "Edicions 62"
 }
 ```
 
