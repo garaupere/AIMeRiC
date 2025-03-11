@@ -60,8 +60,26 @@ def scan(nlp, verse, goal: int = 10):
 def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles", Fore.GREEN, "(-list)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus", Fore.GREEN, "(-comp", Fore.RED, "corpus)",
+          Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus", Fore.GREEN, "(-etiq", Fore.RED, "corpus)",
+          Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Descripció estadística del corpus", Fore.GREEN, "(-desc", Fore.RED,
+          "corpus)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Exploració estadística del corpus", Fore.GREEN, "(-expl", Fore.RED,
+          "corpus)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Avaluació de les restriccions OT", Fore.GREEN, "(-ot", Fore.RED,
+          "corpus)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test", Fore.GREEN, "(-test)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers", Fore.GREEN, "(-scan", Fore.RED, "vers)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa", Fore.GREEN, "(-prosa)", Fore.RESET)
+    print(Fore.CYAN, f"\t➥", Fore.RESET, " Còpia de seguretat del corpus", Fore.GREEN, "(-bkp)", Fore.RESET, "\n")
+    print("Per accedir al menú d'ajuda, usau '-help'.")
+    print("Per tancar el programa, premeu Intro.\n")
+    print("--" * 40)
     print(
-        "Si necessitau ajuda, podeu consultar la web de l'aplicació: https://github.com/garaupere/escancat, o contactar amb l'autor a p.garau@uib.cat.")
+        "Si necessitau més ajuda, podeu consultar el web de l'aplicació: https://github.com/garaupere/escancat, o contactar amb l'autor a p.garau@uib.cat.")
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
 
@@ -79,20 +97,7 @@ def main():
             for folder in os.listdir(raw_files_path):
                 print(f"\t• {folder}")
         elif option == "-help":
-            print("--" * 40)
-            print("Opcions disponibles:")
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles", Fore.GREEN, "(-list)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus", Fore.GREEN, "(-comp", Fore.RED, "corpus)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus", Fore.GREEN, "(-etiq", Fore.RED, "corpus)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Descripció estadística del corpus", Fore.GREEN, "(-desc", Fore.RED, "corpus)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Exploració estadística del corpus", Fore.GREEN, "(-expl", Fore.RED, "corpus)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Avaluació de les restriccions OT", Fore.GREEN, "(-ot", Fore.RED, "corpus)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test", Fore.GREEN, "(-test)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers", Fore.GREEN, "(-scan", Fore.RED, "vers)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa", Fore.GREEN, "(-prosa)", Fore.RESET)
-            print(Fore.CYAN, f"\t➥", Fore.RESET, " Còpia de seguretat del corpus", Fore.GREEN, "(-bkp)", Fore.RESET, "\n")
-            print("Per accedir al menú d'ajuda, usau '-help'.")
-            print("Per tancar el programa, premeu Intro.\n")
+            help()
 
         elif option == "-test":
             print("--" * 40)
