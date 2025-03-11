@@ -60,7 +60,7 @@ Pel que fa a l'estructura dels fitxers `.info`, han de presentar aquesta estruct
 {
     "author_id": "Jacint Verdaguer",
     "name": "Verdaguer i Santaló, Jacint",
-    "gender": 0,  # H: 0, D: 1, A: 2
+    "gender": 0,
     "born_date": 1845,
     "death_date": 1902,
     "city": "Folgueroles",
