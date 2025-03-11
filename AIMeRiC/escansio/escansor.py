@@ -8,8 +8,10 @@ from AIMeRiC.escansio.modules.verse import Vers
 
 def escaneja(nlp, verse: str, goal: int):
     """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse."""
-    return Vers(nlp, verse, goal)
-
+    try:
+        return Vers(nlp, verse, goal)
+    except ValueError:
+        print(f"Error: {ValueError}, en el vers: {verse}")
 
 
 if __name__ == "__main__":

@@ -4,14 +4,14 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
-from AIMeRiC.corpus.modules.OT_constraints import OT_constraints
+from AIMeRiC.corpus.modules.OT_constraints import OT_constraints, enjambment
 from AIMeRiC.corpus.modules.getUSB import getUSB
 
 
 def ot_analysis(corpus):
-
     rankings = []
-    for author in tqdm(os.listdir(fr'{getUSB()}\corpora\{corpus}\etiquetat\csv\\'), desc='Avaluant les dades del corpus'):
+    for author in tqdm(os.listdir(fr'{getUSB()}\corpora\{corpus}\etiquetat\csv\\'),
+                       desc='Avaluant les dades del corpus'):
         data = read_csv(fr'{getUSB()}\corpora\{corpus}\etiquetat\csv\\' + author)
         data = normalitza(data)
         patrons = patterns(data)
@@ -37,7 +37,7 @@ def ot_analysis(corpus):
     glob_data.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ot.{corpus}.xlsx', index=False)
 
     # Calcula el ranking global
-    ranking_global = ranking(glob_data)
+    ranking_global = ranking(glob_data, fr'{getUSB()}\corpora\{corpus}\etiquetat\{corpus}.csv')
     # Desa el ranking global en un fitxer de text
     with open(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ranking_global.txt', 'w') as file:
         file.write(ranking_global)
@@ -111,19 +111,24 @@ def OT_eval(data):
     return data
 
 
-def ranking(data):
+def ranking(data, path= None):
     """Aquesta funció genera un ranking de les restriccions OT: les restriccions ordenades de menys violada a més violada"""
     # Calcula el ranking de cada patró
 
     ranking = {}
-    rankings = {'clash': 0, 'extra-clash': 0, 'lapse': 0, 'extra-lapse': 0, 'ws-hl': 0, 'non-initial': 0, 'symetry': 0}
+    rankings = {k: 0 for k in OT_constraints('').list_constraints()}
     for pattern, fq in data[['patró', 'freqüència']].values:
         ot = OT_constraints(pattern)
         ranking[pattern] = ot.weigth(fq)
-        rankings = {k: v + ranking[pattern][k] for k, v in rankings.items()}
+        rankings = rankings = {k: v + ranking[pattern].get(k, 0) for k, v in rankings.items()}
 
     # Suma les violacions de cada restricció
     ranking = {k: v for k, v in sorted(rankings.items(), key=lambda item: item[1])}
+
+    # Afegeix alignL al ranking global
+    if path:
+        ranking['alignL'] = alignL(path)[0]
+
 
     # Ordena el ranking de restricció menys violada a més violada
     ranking = {k: v for k, v in sorted(ranking.items(), key=lambda item: item[1])}
@@ -134,5 +139,16 @@ def ranking(data):
     return ranking
 
 
+def alignL(path):
+    data = read_csv(path)
+    data = normalitza(data)
+
+    enjambments = []
+    for row in data['encavalcament']:
+        enjambments.append(enjambment(row))
+    return sum(enjambments), sum(enjambments) / len(enjambments) * 100
+
+
 if __name__ == '__main__':
-    ot_analysis('actual')
+    ot_analysis('__test')
+    print(alignL(fr'{getUSB()}\corpora\__test\etiquetat\__test.csv'))

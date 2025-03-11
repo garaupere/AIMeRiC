@@ -85,8 +85,8 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         head = (['autor', 'fast_tag', 'mov', 'any', 'obra', 'poema', 'núm. de vers', 'text del vers',
                  'escansió plana'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
-                 '*Clash', '*Lapse', '*WS-HL', '*NonInitial', '*Symetry', 'mots al còlon 1', 'mots al còlon 2',
-                 'patró comparatiu', 'metronome'])
+                 'mots al còlon 1', 'mots al còlon 2',
+                 'patró comparatiu', 'encavalcament', 'metronome'])
 
         rows = []
         for book_title in author.books: # Per a cada llibre de l'autor

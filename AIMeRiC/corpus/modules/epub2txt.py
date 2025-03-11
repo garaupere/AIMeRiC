@@ -39,6 +39,28 @@ def convert_epub_to_txt(path, file):
                 txt_file.write(clean_text)
 
 
+def epub2txt_ctilc(path, file):
+    # Obrir el fitxer EPUB
+    file_path = os.path.join(path, file)
+    book = epub.read_epub(file_path)
+    # Crear un directori per a guardar els fitxers de text si no existeix
+    path_txt = f"{usb}/epub_files/txt/"
+    name = file.replace(".epub", "")
+    txt_file_path = f"{path_txt}{name}/"
+    if not os.path.exists(txt_file_path):
+        os.makedirs(txt_file_path)
+
+    # Iterar sobre cada pàgina del llibre
+    with open(name.replace('epub', 'txt'), 'w', encoding='utf-8') as txt_file:
+        for i, item in enumerate(book.get_items()):
+            # Només processar els elements de tipus XHTML (pàgines de text)
+            if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                # Extreure el text net del contingut HTML
+                clean_text = clean_html(item.get_body_content().decode('utf-8'))
+                # Escriure el text net al fitxer de text
+                txt_file.write(clean_text)
+
+
 if __name__ == "__main__":
     usb = getUSB()
     path = f"{usb}/epub_files/epub/"

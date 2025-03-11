@@ -1,20 +1,46 @@
+```markdown
+                                 ╔═╗ ╦ ╔╦╗ ╔═╗ ╦═╗ ╦ ╔═╗ 
+                                 ╠═╣ ║ ║║║ ║╣  ╠╦╝ ║ ║   
+                                 ╩ ╩ ╩ ╩ ╩ ╚═╝ ╩╚═ ╩ ╚═╝ 
+                 Anàlisi Informatitzada del Metre i el Ritme del Català
+                              ©2025, Pere Garau Borràs
 
-
-                                ╔═╗ ╦ ╔╦╗ ╔═╗ ╦═╗ ╦ ╔═╗ 
-                                ╠═╣ ║ ║║║ ║╣  ╠╦╝ ║ ║   
-                                ╩ ╩ ╩ ╩ ╩ ╚═╝ ╩╚═ ╩ ╚═╝ 
-                Anàlisi Informatitzada del Metre i el Ritme del Català
-                             ©2025, Pere Garau Borràs
+````
 ---
-Aquest repositori conté l'aplicatiu _**AIMeRiC**: **A**nàlisi **I**nformatitzada del **Me**tre i el **Ri**tme del **C**atalà_ confeccionat en el marc la tesi <i>La variabilitat rítmica del decasíl·lab català</i> de Pere Garau Borràs (ORCID: <a href="https://orcid.org/0000-0002-0222-0096">0000-0002-022-0096</a>) a la Universitat de les Illes Balears (UIB) (ROR: <a href="https://ror.org/03e10x626">o3e10x626</a>).
-Les eines aplegades sota aquest aplicatiu permeten l'escansió (i.e. anàlisi mètrica i rítmca) automatitzada de textos en català. Principalment, el programa ha estat desevolupat per a l'anàlisi poètica, sobretot del vers decasil·làbic, i està optimitzat per a aquestes funcions. No obstant aixo, el programa permet l'anàlisi de qualsevol vers que no contengui cesura femenina.
+Aquest repositori conté l'aplicatiu _**AIMeRiC**: **A**nàlisi **I**nformatitzada del **Me**tre i el **Ri**tme del **C**atalà_ confeccionat en el marc la tesi **<i>La variabilitat rítmica del decasíl·lab català</i>** de Pere Garau Borràs a la Universitat de les Illes Balears.
+Les eines aplegades sota aquest aplicatiu permeten l'escansió (i.e. anàlisi mètrica i rítmica) automatitzada de textos en català. Principalment, el programa ha estat desevolupat per a l'anàlisi de poesia catalana.
 
-# Funcions
-L'aplicatiu **AIMeRiC** necessita una memòria externa per funcionar. Aquesta memòria ha de contenir una carpeta `compile_files` amb els fitxers de text que conformen el corpus, segons l'estructura que es descriu a continuació.
+## Requeriments
 
-## Compilau un corpus 
-Aquesta funció permet compilar un corpus a partir d'un conjunt de fitxers de text pla (`.txt`) que segueixen una estructura determinada. L'estructura dels fitxers de text pla ha de ser la següent:
- ```
+- Python 3.x
+- [colorama](https://pypi.org/project/colorama/)
+- [spacy](https://spacy.io/)
+- [cfonts](https://pypi.org/project/cfonts/)
+- [AIMeRiC](https://github.com/garaupere/AIMeRiC)
+
+## Instal·lació
+
+1. Clonar el repositori.
+2. Instal·lar les dependències:
+
+
+```bash
+pip install colorama spacy cfonts
+```
+
+3. Descarregar el model de Spacy per a català:
+
+```bash
+python -m spacy download ca_core_news_md
+```
+
+## Ús
+
+### Funcions
+
+L'aplicatiu **AIMeRiC** necessita una memòria externa per funcionar. Aquesta memòria ha de contenir una carpeta `compile_files` amb els fitxers de text que conformen el corpus, segons l'estructura següent:
+
+```filesystem
  compile_files
     └── corpus
         └── subcorpus
@@ -25,11 +51,13 @@ Aquesta funció permet compilar un corpus a partir d'un conjunt de fitxers de te
                     ├── book.info
                     ├── fitxer_1.txt
                     └── fitxer_2.txt 
- ```
+```
+
 Pel que fa a l'estructura dels fitxers `.info`, han de presentar aquesta estructura:
-  #### autor.info
- ````
- {
+
+#### autor.info
+```json
+{
     "author_id": "Jacint Verdaguer", # Nom i primer llinatge
     "name": "Verdaguer i Santaló, Jacint",
     "gender": 0,  # H: 0, D: 1, A: 2
@@ -39,113 +67,108 @@ Pel que fa a l'estructura dels fitxers `.info`, han de presentar aquesta estruct
     "dialect": "central",
     "viaf": "9841818",    # Identificador VIAF.
     "wiki_id": "Q379290" # Identificador de WikiData.
- }
- ```` 
- #### book.info
- ```
+}
+```
+
+#### book.info
+```json
 {
     "title": "L'Atlàntida",
     "year": 1877,            # Any de la primera publicació.
     "publisher": "Edicions 62"   # Editor de l'edició usada.
- }
- ```
-Pel que fa al format dels fitxers `.txt`, cal que incloguin els versos separats per un salt de línia `\n`.\
-El resultat del corpus compilat i sense etiquetar és un fitxer `.json`, que es desa dins una carpeta anomenada `corpora`. L'estuctura del corpus compilat és sempre:
-````
+}
+```
+
+Pel que fa al format dels fitxers `.txt`, cal que incloguin els versos separats per un salt de línia `\n`.
+El resultat del corpus compilat i sense etiquetar és un fitxer `.json`, que es desa dins una carpeta anomenada `corpora`. L'estructura del corpus compilat és sempre:
+
+```filesystem
  corpora
  └── corpus
      └── sense etiquetat
          └── json
              ├── corpus_autor_1.json
              └── corpus_autor_2.json
- ````
- 
+```
 
- ## Etiquetau un corpus
-Aquesta funció permet executar l'etiquetatge mètric del corpus, un cop ja ha estat compilat. L'etiquetatge actua sobre el corpus compilat (`.json`). Un cop acabi l'etiquetatge, el resultat és visible en la carpeta corpora, que pren aquesta estructura:
- ````
- corpora
- └── corpus
-     ├── sense etiquetat
-     │   └── json
-     │       ├── corpus_autor_1.json
-     │       └── corpus_autor_2.json
-     └── etiquetat
-             ├── csv
-             │    ├── corpus_autor_1.csv
-             │    └── corpus_autor_2.csv
-             ├── json
-             │    ├── corpus_autor_1.json
-             │    └── corpus_autor_2.json
-             └── log
-                  ├── corpus_autor_1.log
-                  └── corpus_autor_2.log
- ````
-La carpeta `csv` conté el corpus en format de fitxer delimitat per comes, exportable a qualsevol programa d'anàlisi de dades.
-La carpeta `json` conté el corpus en format json, que és el format que nativament maneja l'aplicació. La carpeta `log` conté en un fitxer de text pla els vesos que no compleixen amb l'objectiu de l'etiquetatge i que, per tant, no formen part del corpus resultant.
+### Compilar un Corpus
 
- ## Explorau estadísticament un corpus
-Amb aquest mòdul s'implementa una exploració estadística de les dades d'etiquetatge del corpus. La funció accedeix al corpus etiquetat i en processa factors com la mitjana de tonicitat per síl·laba, la distància entre el contorn rítmic i el model binari (iàmbic), la filiació entre autors a través de dendrogrames, l'extrametricitat, etc. El resultat d'aquesta explotació es recull en la carpeta `etiquetat`, en què s'inclouen dues carpetes més, `svg` per als gràfics resultants de l'exploració i `xlsx` per als documents de dades d'Excel. Dins la carpeta `svg` també s'inclou una carpeta per a cada autor amb els gràfics individuals del contorn rítmic i la distància respecte del model iàmbic.
- ````
- ...
-     └── etiquetat
-             ├── csv
-             ├── json
-             ├── log
-             ├── svg
-             │    ├── contorn_rítmic.svg
-             │    ├── distància_iambe.svg
-             │    ├── ...
-             │    └── autors
-             │         └── autor_1
-             │               ├── contorn_rítmic.svg
-             │               └── distància_iambe.svg
-             └── xlsx
-                  ├── contorn_rítmic.xlsx
-                  ├── ...
-                  └── dendrograma.xlsx
- ````
-## Validau les dades __test
-El mòdul de validació de dades compara l'etiquetatge automàtic de l'aplicatiu amb l'etiquetatge manual. Opera a través de l'obra de testeig que és _Sol, i de dol_ de J. V. Foix. En el codi d'`escancat` s'emmagatzema l'etiquetatge manual de l'obra, que és comparada amb el resultat de l'escansió automàtica. Aquesta funció genera un índex de fiabilitat (sobre 100) de l'etiquetatge i en desa una sèrie de gràfics dins la carpeta `corpus/validacio`. Actualment, l'índex de fiabilitat del programa és del **97,56%**.
-## Analitzau un vers
-Aquesta funció permet analitzar un vers introduit per l'usuari, per defecte el mode d'anàlisi és el del decasíl·lab. Els resultats es mostren en pantalla i segueixen aquest esquema:
- ````
-    ajustat: True
-	text: Veles e vents han mos desigs complir
-	string: ve.les#e#vents#han#mos#de.sigs#com.plir
-	string_stress: VE.les#e#VENTS#han#MOS#de.SIGS#com.PLIR
-	pos: [('Veles', 'PROPN', 'nsubj'), ('e', 'CCONJ', 'det'), ('vents', 'NOUN', 'appos'), ('han', 'AUX', 'aux'), ('mos', 'ADP', 'aux'), ('desigs', 'NOUN', 'ROOT'), ('complir', 'VERB', 'xcomp')]
-	annotated: [[('ve', '4'), ('les', '0')], [('e', '0')], [('vents', '5')], [('han', '0')], [('mos', '3')], [('de', '0'), ('sigs', '4')], [('com', '0'), ('plir', '5')]]
-	pattern: [4, 0, 0, 5, 0, 3, 0, 4, 0, 5]
-	comparative_pattern: 4004030404
-	maxpattern: SWWSWSWSWS
-	n_words: 7
-	recompte_sillabes_metriques: 10
-	posicio_tall: 4
-	subdivision: 4+6
-	recompte_sillabes_extrametriques: 0
-	llicencies: None
-	_clash: 0
-	_lapse: 0
-	_ws_hl: 0
-	_non_initial: 1
-	_symetry: 1
-	h1_words: 3
-	h2_words: 4
-	cv_info: {'hiats_a_fm': [], 'hiats_a_m': [], 'hiats_t_fm': [], 'hiats_t_m': [], 'diftong_a_fm': [], 'diftong_a_m': [], 'diftong_t_fm': [], 'diftong_t_m': [], 'triftong_a_fm': [], 'triftong_a_m': [], 'triftong_t_fm': [], 'triftong_t_m': []}
-	metronome: Sw.w.S.w.S.wS.wS.|
- ````
-## Etiquetau un corpus de prosa
-[pendent]
+Per compilar un corpus:
 
-## Còpia de seguretat del corpus
-Du a terme una còpia de seguretat en format `zip` dels arxius del corpus, tant els compilats i etiquetats com els textos originals.
+```python
+compile(raw_files_path, corpus)
+```
 
-# Estructura del programa
+### Etiquetar un Corpus
+
+Per etiquetar un corpus:
+
+```python
+etiq(corpus)
+```
+
+### Exploració Estadística del Corpus
+
+Per realitzar una exploració estadística del corpus:
+
+```python
+explota(corpus)
+```
+
+### Escanejar un Vers
+
+Per escanejar un vers:
+
+```python
+scan(nlp, verse, goal=10)
+```
+
+### Ajuda
+
+Per obtenir ajuda:
+
+```python
+help()
+```
+
+### Funció Principal
+
+La funció `main()` és la funció principal del programa. Aquí es gestionen les diferents opcions disponibles:
+```python
+- **-list**: Llista de corpus disponibles per compilar.
+- **-help**: Mostra les opcions disponibles.
+- **-comp**: Compilar un corpus.
+- **-etiq**: Etiquetar un corpus.
+- **-desc**: Descripció estadística del corpus.
+- **-expl**: Exploració estadística del corpus.
+- **-ot**: Avaluació de les restriccions OT.
+- **-test**: Validar les dades de test.
+- **-scan**: Analitzar un vers.
+- **-prosa**: Analitzar un corpus de prosa.
+- **-bkp**: Còpia de seguretat del corpus.
+
+````
+
+### Exemple d'Execució
+
+Per executar el programa:
+
+```bash
+python AIMeRiC.py
+```
+
+## Llicència
+
+Aquest projecte està llicenciat sota els termes del Copyright ©2025, Pere Garau Borràs.
+
+## Estructura del programa
+
 Internament, aquest programa s'estructura en dos paquets:
-- `corpus` és el paquet que conté el corpus, les eines de compilació, la interfície d'etiquetatge i explotació del corpus de la tesi. :warning: Aquest paquet no és funcional sense el paquet `escansor_scr`.
-- `escansor_scr` és el paquet que conté el nucli de l'escansor, l'aplicació encarregada d'analitzar mètricament els versos. Aquest paquet permet l'ús de l'escansor de manera independent de la resta de l'aplicatiu. A través del paquet `corpus` l'escansor és executat automàticament per al conjunt de versos que componen el corpus.
-<!-- - :skull: `data` és el paquet encarregat de l'explotació estadística i visualització de dades del corpus. La seva funcionalitat és complementària a la de `corpus` i `escansor`. :warning: Aquest paquet és obsolet i aviat serà suprimit. -->
+
+- `corpus` és el paquet que conté el corpus, les eines de compilació, la interfície d'etiquetatge i explotació del corpus de la tesi. :warning: Aquest paquet no és funcional sense el paquet `escansor`.
+- `escansor_scr` és el paquet que conté el nucli de l'escansor, l'aplicació encarregada d'analitzar mètricament els versos. Aquest paquet permet l'ús de l'escansor de manera independent de l'aplicació de corpus.
+
 ---
- #### **©2025, Pere Garau Borràs**
- <img src="https://logo.uib.cat/digitalAssets/338/338690_logo-uib-horizontal300.png" alt="UIB" width="30%">
+
+#### **©2025, Pere Garau Borràs**
+<img src="https://logo.uib.cat/digitalAssets/338/338690_logo-uib-horizontal300.png" alt="UIB" width="30%">

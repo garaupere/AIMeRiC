@@ -4,8 +4,8 @@ import time
 from copy import deepcopy
 from colorama import Fore
 
+from AIMeRiC.escansio.modules.utils.syntax import encavalcament
 from AIMeRiC.escansio.modules.word import Word
-from AIMeRiC.escansio.modules.utils.OT_constraints import analyze_OT
 from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
@@ -21,6 +21,7 @@ class Vers:
     def __init__(self, nlp, text: str, objectiu: int):
         self.objectiu = objectiu
         self.text = text
+        self.encavalcament = encavalcament(self.text)
         self.__prepara__(nlp)
 
         resol_contactes_vocalics(self, best_mode='natural')
@@ -34,7 +35,6 @@ class Vers:
             self.__patrons__()
             self.__anota__()
 
-            self.__ot_analisi__()
             self.__mot_info__()
             self.__contactes_vocalics__()
             self.__metronome__()
@@ -51,6 +51,7 @@ class Vers:
         self.__uneix_mots__()
         self.__patrons__()
         self.__anota__()
+
 
 
     def __uneix_mots__(self):
@@ -89,9 +90,6 @@ class Vers:
         self.anotat = anota_vers(self)
         self.escansio_text = escansio_accentual(self)
 
-    def __ot_analisi__(self):
-        self._clash, self._lapse, self._ws_hl, self._non_initial, self._symetry = analyze_OT(self.contorn_accentual)
-
     def __mot_info__(self):
         self.n_mots = len(self.words)
         self.mots_colon1 = quants_mots(self)[0]
@@ -114,7 +112,6 @@ class Vers:
         self.__patrons__()
         self.__anota__()
         self.__mot_info__()
-        self.__ot_analisi__()
         self.__mot_info__()
         self.__contactes_vocalics__()
         self.__metronome__()
@@ -177,15 +174,11 @@ class Vers:
                      "subdivision": self.subdivisio,
                      "recompte_sillabes_extrametriques": self.recompte_sillabes_extrametriques,
                      "llicencies": self.llicencies,
-                     "*CLASH": self._clash,
-                     "*LAPSE": self._lapse,
-                     "*WS_HL": self._ws_hl,
-                     "*NON_INITIAL": self._non_initial,
-                     "*SYMETRY": self._symetry,
                      "h1_words": self.mots_colon1,
                      "h2_words": self.mots_colon2,
                      "comparative_pattern": self.contorn_cru,
                      "cv_info": self.contactes_vocalics,
+                     "encavalcament": self.encavalcament,
                      "metronome": self.metronome
                      }
                 }
@@ -205,9 +198,7 @@ class Vers:
                                                            self.recompte_sillabes_extrametriques,
                                                            self.subdivisio,
                                                            self.llicencies,
-                                                           self._clash, self._lapse, self._ws_hl, self._non_initial,
-                                                           self._symetry,
-                                                           self.mots_colon1, self.mots_colon2, str(self.contorn_accentual),
+                                                           self.mots_colon1, self.mots_colon2, str(self.contorn_accentual), self.encavalcament,
                                                            self.metronome]
 
     def desa_prosa(self):
@@ -218,21 +209,16 @@ class Vers:
                      "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
                      "pattern": self.patro,
                      "n_words": self.n_mots,
-                     "*CLASH": self._clash,
-                     "*LAPSE": self._lapse,
-                     "*WS_HL": self._ws_hl,
-                     "*NON_INITIAL": self._non_initial,
-                     "*SYMETRY": self._symetry,
                      "comparative_pattern": self.contorn_cru,
                      "cv_info": self.contactes_vocalics,
+                     "encavalcament": self.encavalcament,
                      "metronome": self.metronome
                      }
                 }
 
     def prosa_to_csv(self):
         return [self.text, self.escansio_text, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques,
-                self.patro, self.contorn_accentual, self._clash, self._lapse, self._ws_hl,
-                self._non_initial, self._symetry, self.metronome]
+                self.patro, self.contorn_accentual, self.metronome]
 
 
 if __name__ == "__main__":

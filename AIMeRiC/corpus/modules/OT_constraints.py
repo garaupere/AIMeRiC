@@ -100,3 +100,12 @@ class OT_constraints:
             if key[0] != 'pattern':
                 cons.append(key[0])
         return cons
+
+
+def enjambment(data):
+    """ALIGN-L (Line, L, Intonational phrase, L)-lines align with intonational
+    phrases (Hayes 2009: 139)"""
+    if data is True:
+        return 1
+    else:
+        return 0

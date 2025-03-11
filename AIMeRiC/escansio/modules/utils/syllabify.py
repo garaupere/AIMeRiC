@@ -18,9 +18,9 @@ class Hyphenator:
             self._insert_pattern(pattern)
 
         self.exceptions = exceptions
-        # for ex in exceptions:
-        #     #   Convert the hyphenated pattern into a point array for use later.
-        #     self.exceptions[ex.replace('-', '')] = [0] + [int(h == '-') for h in re.split(r"[^0-9 \r\n\t]", ex)]
+        #for ex in exceptions:
+            #   Convert the hyphenated pattern into a point array for use later.
+            #self.exceptions[ex.replace('-', '')] = [0] + [int(h == '-') for h in re.split(r"[^0-9 \r\n\t]", ex)]
 
     def _insert_pattern(self, pattern):
         # Convert the a pattern like 'a1bc3d4' into a string of chars 'abcd'

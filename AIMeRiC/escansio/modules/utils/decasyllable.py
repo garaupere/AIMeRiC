@@ -11,17 +11,18 @@ def find_tall(self, tall) -> bool:
     if int(self.nomes_sillabes[tall].pes) > 2:  # Si el valor correspon a un accent
         #print(">> TALL:", tall+1, self.no_words[tall].text, ':', self.no_words[tall].pes) # Debug
         for paraula in self.words:  # Recorre les paraules del vers
-            if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
-                paraula.stress[-1].pes = '5'
-                self.anotat[
-                    self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
-                self.nomes_sillabes[tall].pes = '5'  # Actualitza la llista de mots
-                self.patro[tall] = 5  # Actualitza el patró abstracte
-                self.words[
-                    self.words.index(paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
-                self.words[self.words.index(paraula)] = paraula  # Actualitza la paraula
-                result = True  # Indica que s'ha trobat un tall
-                return result  # Retorna True si s'ha trobat un tall
+            if paraula.stress:
+                if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
+                    paraula.stress[-1].pes = '5'
+                    self.anotat[
+                        self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
+                    self.nomes_sillabes[tall].pes = '5'  # Actualitza la llista de mots
+                    self.patro[tall] = 5  # Actualitza el patró abstracte
+                    self.words[
+                        self.words.index(paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
+                    self.words[self.words.index(paraula)] = paraula  # Actualitza la paraula
+                    result = True  # Indica que s'ha trobat un tall
+                    return result  # Retorna True si s'ha trobat un tall
     return result  # Retorna False si no s'ha trobat cap tall
 
 
