@@ -2,6 +2,7 @@
 import os
 
 import pandas as pd
+from tabulate import tabulate
 from tqdm import tqdm
 
 from AIMeRiC.corpus.modules.OT_constraints import OT_constraints, enjambment
@@ -18,15 +19,20 @@ def ot_analysis(corpus):
         OT_avaluacio = OT_eval(patrons)
         jerarquia = ranking(OT_avaluacio)
         rankings.append(jerarquia)
+        author_tableau = generate_tableau(OT_avaluacio, jerarquia)
+        # Desa el tableau en un Excel
+        author_tableau.to_excel(
+            fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ot.' + author.replace('.csv', '.tableau.xlsx'),
+            index=False)
 
         # Desa OT_avaluacio en un Excel
         OT_avaluacio.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ot.' + author.replace('.csv', '.xlsx'),
                               index=False)
 
     # Desa els rankings en un Excel [autor, ranking]
-    rankings = pd.DataFrame(rankings, columns=['ranking'])
+    rankings = pd.DataFrame(rankings)
     rankings['autor'] = [x.replace('.csv', '') for x in os.listdir(fr'{getUSB()}\corpora\{corpus}\etiquetat\csv\\')]
-    rankings = rankings[['autor', 'ranking']]
+    rankings = rankings[['autor'] + list(rankings.columns)[:-1]]
     rankings.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\rankings.xlsx', index=False)
 
     # Obté les dades globals i avalua les restriccions OT
@@ -38,10 +44,15 @@ def ot_analysis(corpus):
 
     # Calcula el ranking global
     ranking_global = ranking(glob_data, fr'{getUSB()}\corpora\{corpus}\etiquetat\{corpus}.csv')
-    # Desa el ranking global en un fitxer de text
-    with open(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ranking_global.txt', 'w') as file:
-        file.write(ranking_global)
-    print("Anàlisi OT completada. Jerarquia detectada:", ranking_global)
+    # Desa el ranking global en un Excel
+    pd.DataFrame(ranking_global.items(), columns=['restricció', 'violacions']).to_excel(
+        fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ranking_global.xlsx', index=False)
+
+    taleau = generate_tableau(glob_data, ranking_global)
+    # Desa el tableau en un Excel
+    taleau.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\tableau.xlsx', index=False)
+    print(tabulate(taleau, headers='keys', tablefmt='grid'))
+    print("Anàlisi OT completada. Jerarquia detectada:", ' >> '.join([f'{k}({v})' for k, v in ranking_global.items()]))
 
 
 def global_data(data):
@@ -111,7 +122,7 @@ def OT_eval(data):
     return data
 
 
-def ranking(data, path= None):
+def ranking(data, path=None):
     """Aquesta funció genera un ranking de les restriccions OT: les restriccions ordenades de menys violada a més violada"""
     # Calcula el ranking de cada patró
 
@@ -128,13 +139,10 @@ def ranking(data, path= None):
     # Afegeix alignL al ranking global
     if path:
         ranking['alignL'] = alignL(path)[0]
-
+        ranking['extrametricallity'] = extrametric(path)
 
     # Ordena el ranking de restricció menys violada a més violada
     ranking = {k: v for k, v in sorted(ranking.items(), key=lambda item: item[1])}
-
-    # Disposem el ranking en una llista
-    ranking = ' >> '.join([f'{key} ({value})' for key, value in ranking.items()])
 
     return ranking
 
@@ -149,6 +157,26 @@ def alignL(path):
     return sum(enjambments), sum(enjambments) / len(enjambments) * 100
 
 
+def extrametric(path):
+    data = read_csv(path)
+    data = normalitza(data)
+    return data['síl·labes extramètriques'].sum()
+
+
+def generate_tableau(eval, ranking):
+    """Genera un tableau amb les dades de l'anàlisi OT"""
+    if 'alignL' in ranking:
+        ranking.pop('alignL')
+    if 'extrametricallity' in ranking:
+        ranking.pop('extrametricallity')
+    jerarquia = list(ranking.keys())
+    eval = eval.loc[:, ['patró', 'freqüència', 'freqüència relativa'] + jerarquia]
+
+    # Canvia els valors numèrics de les restriccions per * i ** segons el valor en el dataframe
+    for con in jerarquia:
+        eval[con] = eval[con].map(lambda x: '*' * x if x > 0 else '')
+    return eval
+
+
 if __name__ == '__main__':
     ot_analysis('__test')
-    print(alignL(fr'{getUSB()}\corpora\__test\etiquetat\__test.csv'))
