@@ -9,6 +9,7 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.modules.utils import aplica_filtre
 
 plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams["font.family"] = "Times New Roman"
@@ -16,10 +17,12 @@ plt.rcParams["font.family"] = "Times New Roman"
 usb = getUSB()
 
 
-def analitza_corpus(corpus):
+def analitza_corpus(corpus, filtre=None):
     p_bar = tqdm(range(11))
     root = fr"{usb}/corpora/"
     data = read_csv(f'{root}{corpus}/etiquetat/{corpus}.csv')
+    if filtre:
+        data = aplica_filtre(data, filtre)
     p_bar.update(1)
     data = normalitza(data)
     p_bar.update(1)
@@ -376,8 +379,10 @@ def print_desctiptives(data_set, name):
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
 
 
-def descriu(corpus):
+def descriu(corpus, filtre=None):
     data = read_csv(f'{usb}/corpora/{corpus}/etiquetat/{corpus}.csv')
+    if filtre:
+        data = aplica_filtre(data, filtre)
     print_desctiptives(data, corpus)
 
 

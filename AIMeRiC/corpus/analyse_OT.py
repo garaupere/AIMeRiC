@@ -7,14 +7,17 @@ from tqdm import tqdm
 
 from AIMeRiC.corpus.modules.OT_constraints import OT_constraints, enjambment
 from AIMeRiC.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.modules.utils import aplica_filtre
 
 
-def ot_analysis(corpus):
+def ot_analysis(corpus, filtre=None):
     rankings = []
     for author in tqdm(os.listdir(fr'{getUSB()}\corpora\{corpus}\etiquetat\csv\\'),
                        desc='Avaluant les dades del corpus'):
         data = read_csv(fr'{getUSB()}\corpora\{corpus}\etiquetat\csv\\' + author)
         data = normalitza(data)
+        if filtre:
+            data = aplica_filtre(data, filtre)
         patrons = patterns(data)
         OT_avaluacio = OT_eval(patrons)
         jerarquia = ranking(OT_avaluacio)
@@ -36,11 +39,12 @@ def ot_analysis(corpus):
     rankings.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\rankings.xlsx', index=False)
 
     # Obté les dades globals i avalua les restriccions OT
-    glob_data = global_data(fr'{getUSB()}\corpora\{corpus}\etiquetat\{corpus}.csv')
+    glob_data = global_data(fr'{getUSB()}\corpora\{corpus}\etiquetat\{corpus}.csv', filtre)
     glob_data = OT_eval(glob_data)
 
     # Desa les dades globals en un Excel
     glob_data.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ot.{corpus}.xlsx', index=False)
+
 
     # Calcula el ranking global
     ranking_global = ranking(glob_data, fr'{getUSB()}\corpora\{corpus}\etiquetat\{corpus}.csv')
@@ -55,10 +59,12 @@ def ot_analysis(corpus):
     print("Anàlisi OT completada. Jerarquia detectada:", ' >> '.join([f'{k}({v})' for k, v in ranking_global.items()]))
 
 
-def global_data(data):
+def global_data(data, filtre=None):
     """Obté tots els patrons del corpus quantificats"""
     data = read_csv(data)
     data = normalitza(data)
+    if filtre:
+        data = aplica_filtre(data, filtre)
     pattern_colum = data[['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']].apply(
         lambda x: ''.join(x.astype(str)), axis=1)
     patterns = []
@@ -178,5 +184,10 @@ def generate_tableau(eval, ranking):
     return eval
 
 
+
+
 if __name__ == '__main__':
     ot_analysis('__test')
+
+
+

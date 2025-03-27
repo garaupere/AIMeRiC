@@ -44,12 +44,12 @@ def etiq(corpus):
     etiqueta(corpus_path, results_path, __version__, nlp, mode=10)
 
 
-def explota(corpus):
+def explota(corpus, filtre=None):
     """Exploració estadística del corpus"""
     usb = getUSB()
     root = f"{usb}/corpora/"
     results_path = f"{root}{corpus}/etiquetat/"
-    analitza_corpus(corpus)
+    analitza_corpus(corpus, filtre)
 
 
 def scan(nlp, verse, goal: int = 10):
@@ -151,15 +151,21 @@ def main():
 
             elif options[0] == '-desc':
                 corpus = options[1]
+                filtre = None
+                if len(options) > 2:
+                    filtre = options[2]
                 try:
-                    descriu(corpus)
+                    descriu(corpus, filtre)
                 except FileNotFoundError:
                     print('El corpus seleccionat no existeix.')
 
             elif options[0] == '-expl':
                 corpus = options[1]
+                filtre = None
+                if len(options) > 2:
+                    filtre = options[2]
                 try:
-                    explota(corpus)
+                    explota(corpus, filtre)
                 except FileNotFoundError:
                     print('El corpus seleccionat no existeix.')
 
@@ -169,8 +175,11 @@ def main():
 
             elif options[0] == '-ot':
                 corpus = options[1]
+                filtre = None
+                if len(options) > 2:
+                    filtre = options[2]
                 try:
-                    ot_analysis(corpus)
+                    ot_analysis(corpus, filtre)
                 except FileNotFoundError:
                     print('El corpus seleccionat no existeix.')
 
