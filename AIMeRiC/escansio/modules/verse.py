@@ -52,8 +52,6 @@ class Vers:
         self.__patrons__()
         self.__anota__()
 
-
-
     def __uneix_mots__(self):
         self.nomes_sillabes = sum([word.stress for word in self.words], [])
 
@@ -126,6 +124,12 @@ class Vers:
 
         if self.subdivisio is None:
             self.subdivisio = 'Cap'
+        else:
+            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[self.posicio_tall:]
+            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
+            self.escansio_text = self.escansio_text.split('.')
+            self.escansio_text = '.'.join(self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
+
         for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
                      "recompte_sillabes_extrametriques",
                      "ajustat", "subdivisio",
@@ -161,6 +165,12 @@ class Vers:
     def save(self):
         if self.subdivisio is None:
             self.subdivisio = 'Cap'
+        else:
+            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[self.posicio_tall:]
+            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
+        self.escansio_text = self.escansio_text.split('.')
+        self.escansio_text = '.'.join(self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
+
         return {self.text:
                     {"ajustat": self.ajustat,
                      "string": self.string,
@@ -184,8 +194,6 @@ class Vers:
                 }
 
     def to_csv(self):
-        if self.subdivisio is None:
-            self.subdivisio = 'Cap'
 
         if len(self.patro) < self.objectiu:
             sc_col = self.patro + [0] * (self.objectiu - len(self.patro))
@@ -194,11 +202,22 @@ class Vers:
         else:
             sc_col = self.patro
 
+        if self.subdivisio is None:
+            self.subdivisio = 'Cap'
+        else:
+            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[self.posicio_tall:]
+            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
+            self.escansio_text = self.escansio_text.split('.')
+            self.escansio_text = '.'.join(self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.',
+                                                                                                                 '|')
+
+
         return [self.text, self.escansio_text] + sc_col + [self.recompte_sillabes_metriques,
                                                            self.recompte_sillabes_extrametriques,
                                                            self.subdivisio,
                                                            self.llicencies,
-                                                           self.mots_colon1, self.mots_colon2, str(self.contorn_accentual), self.encavalcament,
+                                                           self.mots_colon1, self.mots_colon2,
+                                                           str(self.contorn_accentual), self.encavalcament,
                                                            self.metronome]
 
     def desa_prosa(self):
