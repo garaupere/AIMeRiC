@@ -1,11 +1,50 @@
-"""Un mòdul per a compliar el corpus de cada autor."""
+"""Un mòdul per a compilar el corpus de cada autor."""
 
 from tqdm import tqdm
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.parse import *
+from AIMeRiC.corpus.wikidata import get_person_info, get_wikidata_id
 import time
 
 usb = getUSB()
+
+
+def ctilc(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        autor_name = re.findall(r'<AUTOR>(.*?)</AUTOR>', ''.join(lines), re.DOTALL)[0]
+        autor_name_original = autor_name
+        reverse_name = autor_name.split(",")
+        if len(reverse_name) > 1:
+            autor_name = reverse_name[1] + ' ' + reverse_name[0]
+        autor_name = re.sub(r'\s+', ' ', autor_name).strip()
+        get_info = get_person_info(get_wikidata_id(autor_name))
+        if get_info:
+            corpus_dict = get_info
+            corpus_dict['author_id'] = autor_name_original
+
+
+        else:
+            corpus_dict = {
+                'author_id': autor_name.replace('\xad', ''),
+                'name': autor_name,
+                'books': {}
+            }
+        book_title = re.findall(r'<TÍTOL>(.*?)</TÍTOL>', ''.join(lines), re.DOTALL)
+        book_date = re.findall(r'<ANY>(.*?)</ANY>', ''.join(lines), re.DOTALL)
+
+        book_meta = {
+            'title': book_title[0],
+            'date': book_date[0],
+            'poems': {}
+        }
+        corpus_dict['books'].update({book_title[0]: book_meta})
+
+        text = ''.join(re.findall(r'<TEXT>(.*?)</TEXT>', ''.join(lines), re.DOTALL))
+
+        poem = list(filter(None, text.split('\n')))
+        corpus_dict['books'][book_title[0]]['poems'].update({'text': poem})
+        return corpus_dict
 
 
 def compile_corpus(path: str, corpus: str) -> None:
@@ -13,6 +52,31 @@ def compile_corpus(path: str, corpus: str) -> None:
     drive = path
     corpus_path = drive + corpus
     print(f'Compilant el corpus \'{corpus}\'...')
+
+    if corpus == 'ctilc':
+        # print(f'Compilant el corpus \'{corpus}\'...')
+        for file in os.listdir(corpus_path + '/'):
+            if file.endswith('.xml'):
+                corpus_dict = ctilc(corpus_path + '/' + file)
+                if not os.path.exists(f'{usb}/corpora/'):
+                    os.makedirs(f'{usb}/corpora/')
+                #    print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
+                if not os.path.exists(f'{usb}/corpora/{corpus}/'):
+                    os.makedirs(f'{usb}/corpora/{corpus}/')
+                #    print(f'\t>> La carpeta \'{usb}corpora/{corpus}\' ha estat creada.')
+
+                # Fes que el directori tengui aquesta estructura:
+                # corpora/{path}/sense_etiquetar/json/{folder}.json
+                if not os.path.exists(f'{usb}/corpora/{corpus}/sense_etiquetar/json/'):
+                    os.makedirs(f'{usb}/corpora/{corpus}/sense_etiquetar/json/')
+                #    print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
+
+                with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{file}.json", "w",
+                          encoding="utf-8") as json_file:
+                    json.dump(corpus_dict, json_file, ensure_ascii=False, indent=2)
+                #    print('-' * 40)
+                #    print(f"\t>> '{folder}.json' desat.")
+        return
 
     for folder_subcorpus in [x for x in os.listdir(corpus_path) if x != '__test']:
         # print(f'> {folder_subcorpus} autors trobats en new_files.')

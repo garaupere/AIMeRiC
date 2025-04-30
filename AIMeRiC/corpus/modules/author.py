@@ -55,17 +55,17 @@ class Author:
         """
         self.content = self.read_corpus(self.path)
         if self.content:
-            self.id = self.content.get('author_id').replace('\xad', '')
+            self.id = self.content.get('author_id').replace('\xad', '') if self.content.get('author_id') else None
             self.name = self.content.get('name')
-            self.gender = self.content.get('gender')
-            self.born_date = self.content.get('born_date')
-            self.death_date = self.content.get('death_date')
-            self.city = self.content.get('city')
-            self.dialect = self.content.get('dialect')
-            self.viaf = self.content.get('viaf')
-            self.wiki_id = self.content.get('wiki_id')
-            self.fast_tagg = self.content.get('fast_tag')
-            self.mov = self.content.get('mov')
+            self.gender = self.content.get('gender') if self.content.get('gender') else None
+            self.born_date = self.content.get('born_date') if self.content.get('born_date') else None
+            self.death_date = self.content.get('death_date') if self.content.get('death_date') else None
+            self.city = self.content.get('city') if self.content.get('city') else None
+            self.dialect = self.content.get('dialect') if self.content.get('dialect') else None
+            self.viaf = self.content.get('viaf') if self.content.get('viaf') else None
+            self.wiki_id = self.content.get('wiki_id') if self.content.get('wiki_id') else None
+            self.fast_tagg = self.content.get('fast_tag') if self.content.get('fast_tag') else None
+            self.mov = self.content.get('mov') if self.content.get('mov') else None
             self.books = self.content.get('books', [])
 
     @staticmethod
