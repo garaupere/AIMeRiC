@@ -245,6 +245,6 @@ if __name__ == "__main__":
 
     start = time.time()
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "Sol, i de dol, i amb vetusta gonella", 10)
+    vers = Vers(nlp, "cisterna de Sant Salvador, ran de muralla. Je límpid ni-.-el!, que creix", 10)
     vers.mostra()
     print(time.time() - start)
