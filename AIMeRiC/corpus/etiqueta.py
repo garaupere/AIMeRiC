@@ -128,18 +128,35 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         #print(author.id, len(rows)) # Debug
         if len(rows) > 99:
             os.makedirs(f"{results_path}json/", exist_ok=True)
-            with open(f"{results_path}json/{author.id}.json", 'w',
-                      encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
-                json.dump(results_dict, f, indent=4, ensure_ascii=False)
+            # Revisa si el fitxer f'{results_path}json/{author.id}.json ja existeix
+            if os.path.exists(f"{results_path}json/{author.id}.json"):
+               # Si ja existeix, afegeix el nou book als books
+                with open(f"{results_path}json/{author.id}.json", 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                    existing_data['books'].update(results_dict['books'])
+                with open(f"{results_path}json/{author.id}.json", 'w', encoding='utf-8') as f:
+                    json.dump(existing_data, f, indent=4, ensure_ascii=False)
+            else:
+                with open(f"{results_path}json/{author.id}.json", 'w',
+                          encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
+                    json.dump(results_dict, f, indent=4, ensure_ascii=False)
 
-            os.makedirs(f"{results_path}csv/", exist_ok=True)
-            with open(f"{results_path}csv/{author.id}.csv", 'w',
-                      encoding='utf-8') as f:
-                df = pd.DataFrame(rows, columns=head)
-                df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True)
+            # Comprova si ja existeix el fitxer CSV
+            if os.path.exists(f"{results_path}csv/{author.id}.csv"):
+                # Si ja existeix concatena el nou dataframe amb el dataframe existent (sense encapçalat)
+                existing_df = pd.read_csv(f"{results_path}csv/{author.id}.csv", encoding="utf-8", sep=';')
+                new_df = pd.DataFrame(rows, columns=head)
+                df = pd.concat([existing_df, new_df], ignore_index=True)
+                df.to_csv(f"{results_path}csv/{author.id}.csv", index=False, sep=';', encoding='utf-8', lineterminator='\n')
+            else:
+                os.makedirs(f"{results_path}csv/", exist_ok=True)
+                with open(f"{results_path}csv/{author.id}.csv", 'w',
+                          encoding='utf-8') as f:
+                    df = pd.DataFrame(rows, columns=head)
+                    df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True)
 
             os.makedirs(f"{results_path}log/", exist_ok=True)
-            with open(f"{results_path}log/{author.id}_outsiders.log", 'w', encoding='utf-8') as f:
+            with open(f"{results_path}log/{author.id}_outsiders.log", 'a', encoding='utf-8') as f:
                 for verse in outsiders:
                     f.write(verse + '\n')
             os.makedirs(f"{results_path}svg/", exist_ok=True)

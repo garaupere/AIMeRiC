@@ -136,9 +136,10 @@ class OT_constraints:
         colon_part = [3, 4,
                       5]  # Talls més freqüents en el decasíl·lab català (cal sumar-los-hi 1) = [4, 5, 6] (ordenats per freqüència d'ús)
         for position in colon_part:
-            if self.pattern is not '' and list(self.pattern)[position] == '1':
+            if self.pattern != '' and list(self.pattern)[position] == '1':
                 return 0
-            return 1
+            elif not '|' in self.pattern:
+                return 1
 
     def fit(self):
         """Les llengües seleccionen metres en què el vocabulari complet pot ser usat en una varietat més gran de formes.
@@ -160,7 +161,7 @@ class OT_constraints:
             return 0
 
     def long_last(self):
-        """"En una seqüència de grups de llargària desigual, els membres més llargs han de d’anar els últims."""
+        """"En una seqüència de grups de llargària desigual, els membres més llargs han d’anar els últims."""
         cons = [x for x in re.findall(r'^(001001|000001|0010001|0001001|)', self.pattern) if x != '']
         return len(cons)
 

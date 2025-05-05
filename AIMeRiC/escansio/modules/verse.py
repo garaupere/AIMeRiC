@@ -40,6 +40,7 @@ class Vers:
             self.__metronome__()
             self.__rima__()
             self.llicencies = None
+            self.__disposa_tall__()
         else:
             self.llicencies = llicencies(self)
 
@@ -99,6 +100,17 @@ class Vers:
     def __metronome__(self):
         self.metronome = metronome(self)
 
+    def __disposa_tall__(self):
+        if self.subdivisio is None:
+            self.subdivisio = 'Cap'
+        else:
+            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[
+                                                                                        self.posicio_tall:]
+            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
+        self.escansio_text = self.escansio_text.split('.')
+        self.escansio_text = '.'.join(
+            self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
+
     def __actualitza__(self):
         """Aquesta funció actualitza el vers després d'aplicar-hi llicències."""
         safe_words(self)
@@ -113,22 +125,17 @@ class Vers:
         self.__mot_info__()
         self.__contactes_vocalics__()
         self.__metronome__()
+        self.__disposa_tall__()
 
     def mostra(self):
+        """Mostra la informació del vers."""
+
         def color_tonic(pattern):
             return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
 
         def color_tonic_text(pattern_text):
             pattern = re.split(r'[.#]', pattern_text)
             return '.'.join([Fore.CYAN + x + Fore.RESET if x.isupper() else x for x in pattern]).replace('_', '‿')
-
-        if self.subdivisio is None:
-            self.subdivisio = 'Cap'
-        else:
-            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[self.posicio_tall:]
-            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
-            self.escansio_text = self.escansio_text.split('.')
-            self.escansio_text = '.'.join(self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
 
         for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
                      "recompte_sillabes_extrametriques",
@@ -163,14 +170,7 @@ class Vers:
 
     @property
     def save(self):
-        if self.subdivisio is None:
-            self.subdivisio = 'Cap'
-        else:
-            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[self.posicio_tall:]
-            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
-        self.escansio_text = self.escansio_text.split('.')
-        self.escansio_text = '.'.join(self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
-
+        """Retorna un diccionari amb la informació del vers."""
         return {self.text:
                     {"ajustat": self.ajustat,
                      "string": self.string,
@@ -194,23 +194,13 @@ class Vers:
                 }
 
     def to_csv(self):
-
+        """Retorna una llista amb la informació del vers per a guardar-la en un fitxer CSV."""
         if len(self.patro) < self.objectiu:
             sc_col = self.patro + [0] * (self.objectiu - len(self.patro))
         elif len(self.patro) > self.objectiu:
             sc_col = self.patro[:self.objectiu]
         else:
             sc_col = self.patro
-
-        if self.subdivisio is None:
-            self.subdivisio = 'Cap'
-        else:
-            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[self.posicio_tall:]
-            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
-            self.escansio_text = self.escansio_text.split('.')
-            self.escansio_text = '.'.join(self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.',
-                                                                                                                 '|')
-
 
         return [self.text, self.escansio_text] + sc_col + [self.recompte_sillabes_metriques,
                                                            self.recompte_sillabes_extrametriques,

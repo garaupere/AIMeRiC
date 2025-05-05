@@ -65,8 +65,7 @@ def global_data(data, filtre=None):
     data = normalitza(data)
     if filtre:
         data = aplica_filtre(data, filtre)
-    pattern_colum = data[['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']].apply(
-        lambda x: ''.join(x.astype(str)), axis=1)
+    pattern_colum = data['patró comparatiu']
     patterns = []
     for pattern in pattern_colum:
         patterns.append(pattern)
@@ -84,22 +83,18 @@ def global_data(data, filtre=None):
 
 def read_csv(path):
     """Carrega un fitxer csv a un DataFrame"""
-    data = pd.read_csv(path, sep=';', encoding='utf-8', lineterminator='\n', header=0)
+    data = pd.read_csv(path, sep=';', encoding='utf-8', lineterminator='\n', header=0, low_memory=False)
     return data
 
 
 def normalitza(data):
-    sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    data[sillabes] = data[sillabes].map(
-        lambda x: 1 if x > 1 else 0)  # 1 si és major que 1, 0 si no ho és
-
+    data['patró comparatiu'] = list(data['patró comparatiu'])
     return data
 
 
 def patterns(data):
     """Aquesta funció genera una llista amb els diferents patrons del corpus quantificats"""
-    pattern_colum = data[['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']].apply(
-        lambda x: ''.join(x.astype(str)), axis=1)
+    pattern_colum = data['patró comparatiu']
     patterns = []
     for pattern in pattern_colum:
         patterns.append(pattern)

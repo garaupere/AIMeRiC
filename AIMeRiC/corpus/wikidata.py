@@ -48,21 +48,24 @@ def get_person_info(wikidata_id):
     headers = {"Accept": "application/json"}
     response = requests.get(endpoint_url, params={"query": query, "format": "json"}, headers=headers)
     if response.status_code == 200:
-        data = response.json()
-        bindings = data.get("results", {}).get("bindings", [])
-        if bindings:
-            result = bindings[0]
-            return {
-                "name": result.get("fullName", {}).get("value"),
-                "gender": 0 if result.get("genderLabel", {}).get("value") in ["home", "masculí", "Home", "Masculí"] else 1 if result.get("genderLabel", {}).get("value") in ["dona", "femení", "Dona", "Femení"] else 2,
-                "born_date": result.get("birthYear", {}).get("value"),
-                "death_date": result.get("deathYear", {}).get("value", None),
-                "city": result.get("birthPlaceLabel", {}).get("value"),
-                "dialect": result.get("birthPlaceProvinceLabel", {}).get("value"),
-                "wiki_id": wikidata_id,
-                "viaf": result.get("viafID", {}).get("value"),
-                "books": {}
-            }
+        try:
+            data = response.json()
+            bindings = data.get("results", {}).get("bindings", [])
+            if bindings:
+                result = bindings[0]
+                return {
+                    "name": result.get("fullName", {}).get("value"),
+                    "gender": 0 if result.get("genderLabel", {}).get("value") in ["home", "masculí", "Home", "Masculí"] else 1 if result.get("genderLabel", {}).get("value") in ["dona", "femení", "Dona", "Femení"] else 2,
+                    "born_date": result.get("birthYear", {}).get("value"),
+                    "death_date": result.get("deathYear", {}).get("value", None),
+                    "city": result.get("birthPlaceLabel", {}).get("value"),
+                    "dialect": result.get("birthPlaceProvinceLabel", {}).get("value"),
+                    "wiki_id": wikidata_id,
+                    "viaf": result.get("viafID", {}).get("value"),
+                    "books": {}
+                }
+        except ValueError:
+            print("Error processing the response JSON.")
     return None
 
 if __name__ == "__main__":

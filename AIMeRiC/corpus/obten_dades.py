@@ -55,7 +55,7 @@ def read_csv(path):
 def normalitza(data):
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
     data[sillabes] = data[sillabes].applymap(
-        lambda x: 1 if x > 1 else 0)  # 1 si és major que 1, 0 si no ho és
+        lambda x: 1 if int(x) > 1 else 0)  # 1 si és major que 1, 0 si no ho és
 
     return data
 

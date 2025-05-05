@@ -1,4 +1,5 @@
 """Un mètode per gestionar la visualització de l'escansió"""
+import re
 
 
 def anota_vers(self):
