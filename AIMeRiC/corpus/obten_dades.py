@@ -367,7 +367,7 @@ def print_desctiptives(data_set, name):
     # Compta quants de llibres hi ha per autor
     df['Llibres'] = data_set.groupby('autor')['obra'].nunique()
     # Compta quants de poemes hi ha per autor
-    df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
+    #df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
     # Afegeix el valor total del corpus
     df.loc['Total'] = df.sum()
     df = df.reset_index()

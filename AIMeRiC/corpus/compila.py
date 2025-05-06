@@ -22,6 +22,7 @@ def ctilc(file_path):
         if get_info:
             corpus_dict = get_info
             corpus_dict['author_id'] = autor_name_original
+            corpus_dict['fast_tag'] = 'ctilc'
 
 
         else:
@@ -70,8 +71,8 @@ def compile_corpus(path: str, corpus: str) -> None:
                 if not os.path.exists(f'{usb}/corpora/{corpus}/sense_etiquetar/json/'):
                     os.makedirs(f'{usb}/corpora/{corpus}/sense_etiquetar/json/')
                 #    print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
-
-                with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{file}.json", "w",
+                name = corpus_dict['name']
+                with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{name}.json", "w",
                           encoding="utf-8") as json_file:
                     json.dump(corpus_dict, json_file, ensure_ascii=False, indent=2)
                 #    print('-' * 40)
