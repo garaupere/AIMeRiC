@@ -48,13 +48,13 @@ def analitza_corpus(corpus, filtre=None):
 
 def read_csv(path):
     """Carrega un fitxer csv a un DataFrame"""
-    data = pd.read_csv(path, sep=';', encoding='utf-8', lineterminator='\n', header=0)
+    data = pd.read_csv(path, sep=';', encoding='utf-8', lineterminator='\n', header=0, low_memory=False)
     return data
 
 
 def normalitza(data):
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    data[sillabes] = data[sillabes].applymap(
+    data[sillabes] = data[sillabes].map(
         lambda x: 1 if int(x) > 1 else 0)  # 1 si és major que 1, 0 si no ho és
 
     return data
@@ -93,8 +93,8 @@ def distancia_iambe(data, name):
     df = data.groupby('autor')[sillabes].mean() * 100
     model = [0, 100, 0, 100, 0, 100, 0, 100, 0, 100]
     distancies = pd.DataFrame()
-    for autor in df.index:
-        distancies[autor] = np.abs(df.loc[autor] - model)
+    new_columns = {autor: np.abs(df.loc[autor] - model) for autor in df.index}
+    distancies = pd.concat([distancies, pd.DataFrame(new_columns)], axis=1)
     distancies.T.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/distancia_iambe.xlsx')
 
     # Genera un gràfic amb la distància respecte del model per a cada síl·laba
@@ -119,8 +119,10 @@ def autors_individuals(data, name):
     # Calcula la distància respecte del model per a cada síl·laba
     model = [0, 100, 0, 100, 0, 100, 0, 100, 0, 100]
     distancies = pd.DataFrame()
-    for autor in df.index:
-        distancies[autor] = np.abs(df.loc[autor] - model)
+
+    new_columns = {autor: np.abs(df.loc[autor] - model) for autor in df.index}
+    distancies = pd.concat([distancies, pd.DataFrame(new_columns)], axis=1)
+
 
     # Itera cada autor del DataFrame
     if not os.path.exists(f'{usb}/corpora/{name}/etiquetat/svg/autors/'):
@@ -292,7 +294,7 @@ def mitjana(data, name):
         plt.errorbar(range(1, 11), mean, yerr=dst, fmt='o', color='black', capsize=5)
     # Afegeix els valors de std als caps superiors
     for i, txt in enumerate(dst):
-        plt.annotate(f'{dst[i]:.2f}', (i + 1, mean[i] + dst[i] + 1), ha='center', va='bottom')
+        plt.annotate(f'{dst.iloc[i]:.2f}', (i + 1, mean.iloc[i] + dst.iloc[i] + 1), ha='center', va='bottom')
     plt.xticks(np.arange(0, 11))
     plt.grid(False)
     plt.tight_layout()

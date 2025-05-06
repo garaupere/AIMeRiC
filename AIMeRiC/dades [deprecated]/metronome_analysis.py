@@ -1,30 +1,24 @@
 import os
 
-
 import metronome as met
 import pandas as pd
 import csv
 
+from AIMeRiC.corpus.modules.getUSB import getUSB
 
-def prepare_data():
+
+def prepare_data(corpus):
     arr = {}
-    for file in os.listdir('../escansio/results'):
-        if file.endswith('.csv'):
-            print(file)
-            data = pd.read_csv(f'../escansio/results/{file}', delimiter=';')
-            print(data)
-            author = data['author'][0]
-            met_data = ''.join(data['metronome'])
-            arr[f"{author}"] = f"{met_data}"
-    dat_ready = pd.DataFrame(arr.items(), columns=['author', 'metronome'])
-    dat_ready.to_csv('metronome/met.csv', index=False, encoding='utf-8', sep=';')
-    print('Data prepared')
+    usb = getUSB()
+    data = pd.read_csv(f'{usb}/corpora/{corpus}/etiquetat/{corpus}.csv', delimiter=';')
+    # Conservar només les columnes que ens interessen (autor i metronome)
+    data = data[['metronome', 'autor']]
+    return data
 
 
-def metronome_analyze():
-    df = pd.read_csv('metronome/met.csv', delimiter=';', encoding='utf-8')
+def metronome_analyze(data):
     scorer = met.scoring.Scorer()
-    df1 = scorer.dist_matrix(df, col='metronome')
+    df1 = scorer.dist_matrix(data, col='metronome')
     print(df1)
     # Advanced Scoring - Custom params for the BioPython Aligner
 
@@ -43,15 +37,16 @@ def metronome_analyze():
         ("w", "S"): 0,
         ("w", "."): 0,  # not sure. In theory we don't care if spaces mismatch
         ("S", "."): 0,  # because metre isn't based on a fixed number of words
-    }
+        }
     # open and extend penalties for alignment gaps
     open_penalty = -6
     extend_penalty = -3
 
     s = met.scoring.Scorer(match_dict=md, open_gap_score=open_penalty, extend_gap_score=extend_penalty)
-    s.dist_matrix_parallel(df)
-    print(s.dist_matrix_parallel(df))
+    s.dist_matrix_parallel(data)
+    print(s.dist_matrix_parallel(data))
+
 
 if __name__ == '__main__':
-    # prepare_data()
-    metronome_analyze()
+    data = prepare_data('__test')
+    metronome_analyze(data)
