@@ -1,3 +1,4 @@
+import json
 import os
 
 import matplotlib.pyplot as plt
@@ -122,7 +123,6 @@ def autors_individuals(data, name):
 
     new_columns = {autor: np.abs(df.loc[autor] - model) for autor in df.index}
     distancies = pd.concat([distancies, pd.DataFrame(new_columns)], axis=1)
-
 
     # Itera cada autor del DataFrame
     if not os.path.exists(f'{usb}/corpora/{name}/etiquetat/svg/autors/'):
@@ -369,7 +369,7 @@ def print_desctiptives(data_set, name):
     # Compta quants de llibres hi ha per autor
     df['Llibres'] = data_set.groupby('autor')['obra'].nunique()
     # Compta quants de poemes hi ha per autor
-    #df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
+    # df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
     # Afegeix el valor total del corpus
     df.loc['Total'] = df.sum()
     df = df.reset_index()
@@ -379,6 +379,31 @@ def print_desctiptives(data_set, name):
     print("--" * 40)
     # Desa les dades en un full de càlcul
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
+    metadades_autors(name)
+
+
+def metadades_autors(corpus):
+    """Un mòdul per explorar les metadades dels autors"""
+    metadades = pd.DataFrame()
+    for autor in os.listdir(f'{usb}/corpora/{corpus}/etiquetat/json/'):
+        if autor.endswith('.json'):
+            # Obre el fitxer json
+            with open(f'{usb}/corpora/{corpus}/etiquetat/json/{autor}', encoding='utf-8') as f:
+                data = json.load(f)
+
+                meta = {"author_id": data["author_id"],
+                        "name": data["name"],
+                        "gender": data["gender"] if data["gender"] else 0,
+                        "born_date": data["born_date"],
+                        "death_date": data["death_date"],
+                        "city": data["city"],
+                        "dialect": data["dialect"],
+                        "viaf": data["viaf"],
+                        "wiki_id": data["wiki_id"]}
+                # Afegeix les metadades a un DataFrame
+                metadades = pd.concat([metadades, pd.DataFrame(meta, index=[0])], ignore_index=True)
+    # Desa les metadades en un fitxer xlsx
+    metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
 
 
 def descriu(corpus, filtre=None):
