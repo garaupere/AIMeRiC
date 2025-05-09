@@ -4,11 +4,14 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import folium
+import geemap.foliumap as geemap
 from tabulate import tabulate
 from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
+from AIMeRiC.corpus.geoproves import get_city
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.utils import aplica_filtre
 
@@ -404,6 +407,73 @@ def metadades_autors(corpus):
                 metadades = pd.concat([metadades, pd.DataFrame(meta, index=[0])], ignore_index=True)
     # Desa les metadades en un fitxer xlsx
     metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
+
+    # Genera un gràfic amb la quantitat d'autors per anys
+    plt.figure(figsize=(10, 5))
+    # Converteix les dates de naixement a datetime
+    metadades['born_date'] = pd.to_datetime(metadades['born_date'], errors='coerce')
+    # Filtra les dates de naixement que no són NaT
+    metadades = metadades[metadades['born_date'].notna()]
+
+    # Converteix les dates de naixement a l'any
+    metadades['born_year'] = metadades['born_date'].dt.year
+    # Agrupa els autors per any de naixement
+    autors_per_any = metadades.groupby('born_year').size()
+    # Genera el gràfic
+    plt.bar(autors_per_any.index, autors_per_any.values)
+    plt.xlabel('Any de naixement')
+    plt.ylabel('Nombre d\'autors')
+    plt.title('Nombre d\'autors per any de naixement')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    # Desa el gràfic en svg
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/autors_per_any.svg')
+    plt.close()
+
+    # Obté un df amb una llista de les ciutats i el nombre d'autors per ciutat
+    cities_df = metadades.groupby('city').size().reset_index(name='count')
+    # 3 columnes: ['city', 'count', 'coords']
+    # Afegeix les coordenades de cada ciutat amb geoproves.get_city(city)
+    coords = cities_df['city'].apply(lambda x: get_city(x))
+
+    # El dataframe ha de tenir les columnes ['ciutat', 'poetes', 'latitud', 'longitud', 'noms_poetes']
+    cities_df['ciutat'] = cities_df['city']
+    cities_df['poetes'] = cities_df['count']
+    cities_df['latitud'] = coords.apply(lambda x: x[0])
+    cities_df['longitud'] = coords.apply(lambda x: x[1])
+    # Afegeix una columna amb els noms dels poetes de cada ciutat
+    cities_df['noms_poetes'] = cities_df['city'].apply(lambda x: ', '.join(
+        metadades[metadades['city'] == x]['name'].tolist()))
+    cities_df = cities_df[['ciutat', 'poetes', 'latitud', 'longitud', 'noms_poetes']]
+
+    # Desa el df en un fitxer xlsx
+    cities_df.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/cities.xlsx')
+
+    # Genera un mapa
+    mapa = folium.Map(location=[39.5, 2.5], zoom_start=6)  # Centrat als Països Catalans
+
+    # Afegir punts al mapa
+    for index, row in cities_df.iterrows():
+        folium.CircleMarker(
+            location=(row['latitud'], row['longitud']),
+            radius=row['poetes'] * 0.5,  # Escala proporcional al nombre de poetes
+            popup=folium.Popup(
+            f"<b>{row['ciutat']}</b><br>"
+            f"Poetes: {row['poetes']}<br>"
+            f"Noms: {row['noms_poetes']}",
+            max_width=300  # Amplada màxima del popup
+        ),
+            color="blue",
+            fill=True,
+            fill_color="blue"
+        ).add_to(mapa)
+
+    # Guardar el mapa com a fitxer HTML
+    mapa.save(f"{usb}/corpora/{corpus}/etiquetat/svg/mapa.html")
+
+    # Desa el mapa com una imatge
+    output_image = f"{usb}/corpora/{corpus}/etiquetat/svg/mapa.png"
+    geemap.folium_to_image(mapa, output_image)
 
 
 def descriu(corpus, filtre=None):
