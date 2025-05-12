@@ -385,32 +385,9 @@ def print_desctiptives(data_set, name):
     metadades_autors(name)
 
 
-def metadades_autors(corpus):
-    """Un mòdul per explorar les metadades dels autors"""
-    metadades = pd.DataFrame()
-    for autor in os.listdir(f'{usb}/corpora/{corpus}/etiquetat/json/'):
-        if autor.endswith('.json'):
-            # Obre el fitxer json
-            with open(f'{usb}/corpora/{corpus}/etiquetat/json/{autor}', encoding='utf-8') as f:
-                data = json.load(f)
-
-                meta = {"author_id": data["author_id"],
-                        "name": data["name"],
-                        "gender": data["gender"] if data["gender"] else 0,
-                        "born_date": data["born_date"],
-                        "death_date": data["death_date"],
-                        "city": data["city"],
-                        "dialect": data["dialect"],
-                        "viaf": data["viaf"],
-                        "wiki_id": data["wiki_id"]}
-                # Afegeix les metadades a un DataFrame
-                metadades = pd.concat([metadades, pd.DataFrame(meta, index=[0])], ignore_index=True)
-    # Desa les metadades en un fitxer xlsx
-    metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
-
-    # Obté un df amb una llista de les ciutats i el nombre d'autors per ciutat
+def cartografies(metadades, corpus):
     cities_df = metadades.groupby('city').size().reset_index(name='count')
-    # 3 columnes: ['city', 'count', 'coords']
+
     # Afegeix les coordenades de cada ciutat amb geoproves.get_city(city)
     coords = cities_df['city'].apply(lambda x: get_city(x))
 
@@ -421,16 +398,19 @@ def metadades_autors(corpus):
     cities_df['longitud'] = coords.apply(lambda x: x[1])
     cities_df['província'] = coords.apply(lambda x: x[2])
     cities_df['país'] = coords.apply(lambda x: x[3])
+    cities_df['versos'] = cities_df['ciutat'].apply(lambda x: metadades[metadades['city'] == x]['versos'].sum())
     # Afegeix una columna amb els noms dels poetes de cada ciutat
     cities_df['noms_poetes'] = cities_df['city'].apply(lambda x: ', '.join(
         metadades[metadades['city'] == x]['name'].tolist()))
-    cities_df = cities_df[['ciutat', 'poetes', 'latitud', 'longitud', 'província', 'país', 'noms_poetes']]
+    cities_df = cities_df[['ciutat', 'poetes', 'latitud', 'longitud', 'província', 'país', 'noms_poetes', 'versos']]
 
     # Desa el df en un fitxer xlsx
     cities_df.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/cities.xlsx')
 
     # Genera un mapa
     mapa = folium.Map(location=[39.5, 2.5], zoom_start=6)  # Centrat als Països Catalans
+    autors = folium.FeatureGroup("Autors")
+    versos = folium.FeatureGroup("Versos")
 
     # Afegir punts al mapa
     for index, row in cities_df.iterrows():
@@ -442,55 +422,92 @@ def metadades_autors(corpus):
                 f"Poetes: {row['poetes']}<br>"
                 f"Noms: {row['noms_poetes']}",
                 max_width=300  # Amplada màxima del popup
-            ),
+                ),
             color="blue",
             fill=True,
             fill_color="blue"
-        ).add_to(mapa)
+            ).add_to(autors)
 
+        folium.CircleMarker(
+            location=(row['latitud'], row['longitud']),
+            radius=row['versos'] * 0.001,  # Escala proporcional al nombre de versos
+            popup=folium.Popup(
+                f"<b>{row['ciutat']}</b><br>"
+                f"Versos: {row['versos']}<br>",
+                max_width=300  # Amplada màxima del popup
+                ),
+            color="red",
+            fill=True,
+            fill_color="red"
+            ).add_to(versos)
+
+    mapa.add_child(autors)
+    mapa.add_child(versos)
+
+    folium.LayerControl().add_to(mapa)
     # Guardar el mapa com a fitxer HTML
     mapa.save(f"{usb}/corpora/{corpus}/etiquetat/svg/mapa.html")
 
-    # Df d'autors amb any de naixement i mort
-    autors_df = pd.DataFrame()
+
+def timeline(metadades, corpus):
+    # Convertir les dates de naixement al format datetime
+    metadades['born_date'] = pd.to_datetime(metadades['born_date'], errors='coerce')
+
+    # Eliminar files amb dates de naixement no vàlides (NaT)
+    df = metadades.dropna(subset=['born_date'])
+
+    # Ordenar els autors per data de naixement
+    df = df.sort_values(by='born_date')
+
+    # Crear la línia de temps
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.scatter(df['born_date'], [1] * len(df), color='blue', s=100)
+
+    # Afegir etiquetes amb els noms dels autors
+    for i, row in df.iterrows():
+        ax.text(row['born_date'], 1.02, row['name'], rotation=45, ha='right', fontsize=8)
+
+    # Configurar el gràfic
+    ax.set_yticks([])
+    ax.set_xlabel("Data de naixement")
+    ax.set_title("Distribució de les dates de naixement dels autors")
+    plt.tight_layout()
+
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/timeline.svg')
+
+
+
+def metadades_autors(corpus):
+    """Un mòdul per explorar les metadades dels autors"""
+    metadades = pd.DataFrame()
     for autor in os.listdir(f'{usb}/corpora/{corpus}/etiquetat/json/'):
         if autor.endswith('.json'):
             # Obre el fitxer json
             with open(f'{usb}/corpora/{corpus}/etiquetat/json/{autor}', encoding='utf-8') as f:
                 data = json.load(f)
+
+                versos = len(
+                    pd.read_csv(f'{usb}/corpora/{corpus}/etiquetat/csv/{autor.replace(".json", "")}.csv', sep=';',
+                                encoding='utf-8', lineterminator='\n', header=0, low_memory=False)) - 1
                 meta = {"author_id": data["author_id"],
                         "name": data["name"],
-                        "born_date": data["born_date"],
-                        "death_date": data["death_date"]}
+                        "gender": data["gender"] if data["gender"] else 0,
+                        "born_date": data["born_date"] if data["born_date"] else None,
+                        "death_date": data["death_date"] if data["death_date"] else None,
+                        "city": data["city"],
+                        "dialect": data["dialect"],
+                        "viaf": data["viaf"],
+                        "wiki_id": data["wiki_id"],
+                        "versos": versos}
                 # Afegeix les metadades a un DataFrame
-                autors_df = pd.concat([autors_df, pd.DataFrame(meta, index=[0])], ignore_index=True)
+                metadades = pd.concat([metadades, pd.DataFrame(meta, index=[0])], ignore_index=True)
 
-    # Cream una línia del temps amb els autors
+                # Converteix les dates a datetime
+                metadades['born_date'] = pd.to_datetime(metadades['born_date'], errors='coerce')
+                metadades['death_date'] = pd.to_datetime(metadades['death_date'], errors='coerce')
 
-    # Convertir la data de naixement a format datetime
-    autors_df['born_date'] = pd.to_datetime(autors_df['born_date'])
-#    autors_df['death_date'] = pd.to_datetime(autors_df['death_date'])
-
-    # Crear la línia del temps amb Plotly
-    fig = px.timeline(
-        autors_df,
-        x_start='naixement',  # Data inicial (en aquest cas, és la mateixa per a cada autor)
-        x_end='naixement',  # Data final (igual que l'inicial per representar un esdeveniment puntual)
-        y='nom',  # Eix Y: noms dels autors
-        title="Línia del temps dels autors",
-        labels={'naixement': 'Data de naixement', 'nom': 'Autor'}
-    )
-
-    # Ajustar el disseny del gràfic
-    fig.update_layout(
-        xaxis_title="Data de naixement",
-        yaxis_title="Autors",
-        showlegend=False,  # Amaga la llegenda, no és necessària aquí
-        xaxis=dict(type='date')  # Assegura que l'eix X és de tipus data
-    )
-
-    # Desa el gràfic
-    fig.write_image(f"{usb}/corpora/{corpus}/etiquetat/svg/línia_del_temps.svg")
+    # Desa les metadades en un fitxer xlsx
+    metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
 
 
 def descriu(corpus, filtre=None):
@@ -502,14 +519,9 @@ def descriu(corpus, filtre=None):
 
 if __name__ == '__main__':
     root = fr"{usb}/corpora/"
-    print("--" * 40)
-    print("Corpus disponibles:")
-    for corpus_folder in os.listdir(root):
-        print(f"\t• {corpus_folder}")
-    print("--" * 40)
-    enter = input("Quin corpus voleu explorar?\t")
-    if enter != "":
-        analitza_corpus(enter)
-    else:
-        for corpus in os.listdir(root):
-            analitza_corpus(corpus)
+    corpus = "actual_2"
+    #metadades_autors(corpus)
+
+    metadades = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
+    metadades = pd.read_excel(metadades, index_col=0)
+    timeline(metadades, corpus)

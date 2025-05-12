@@ -40,7 +40,11 @@ def info_city(ciutat, geojson_data):
             if feature['properties']['name:ca'] == ciutat:
                 geometry = feature['geometry']
                 feature = feature['properties']
-                return geometry, feature
+                try:
+                    comarca = feature['@relations'][0]['reltags']['name:ca']
+                except:
+                    comarca = feature['name:ca']
+                return geometry, feature, comarca
 
 
 
@@ -48,25 +52,27 @@ if __name__ == "__main__":
     #print(get_city('Campos'))
 
     # Carrega un geojson
-    with open('modules/ppcc2.geojson', 'r', encoding='utf-8') as f:
+    with open('modules/ppcc.geojson', 'r', encoding='utf-8') as f:
         geojson_data = json.load(f)
 
-    city = info_city('Barcelona', geojson_data)
+    city = info_city('Pollença', geojson_data)
+    print(city[0])
+    print(city[1])
+    print(city[2])
 
-    # Fes un mapa
-    m = folium.Map(location=[city[0]['coordinates'][1], city[0]['coordinates'][0]], zoom_start=10)
+    # En un mapa dibuixa l'àrea de la ciutat
+    # Mapa centrat en els Països Catalans
+    m = folium.Map(location=[41.5, 1.5], zoom_start=7)
+    # Afegeix l'àrea de la ciutat
+    folium.GeoJson(city[0]).add_to(m)
 
-    folium.Polygon(
-        locations=city[0][0]['coordinates'][0],
-        color='blue',
-        fill=True,
-        fill_opacity=0.5,
-        popup=city[1]['name:ca']
-    ).add_to(m)
+    # Afegeix l'àrea de la comarca
+    #folium.GeoJson(geojson_data).add_to(m)
 
-    # Mostra el mapa
-    m.save('mapa.html')
+    m.save('map.html')
 
+
+# 3 columnes: ['city', 'count', 'coords']
 
 
 
