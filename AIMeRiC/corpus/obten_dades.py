@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import folium
-import geemap.foliumap as geemap
+import plotly.express as px
 from tabulate import tabulate
 from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
-from AIMeRiC.corpus.geoproves import get_city
+from AIMeRiC.corpus.geoproves import get_city, info_city
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.utils import aplica_filtre
 
@@ -408,28 +408,6 @@ def metadades_autors(corpus):
     # Desa les metadades en un fitxer xlsx
     metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
 
-    # Genera un gràfic amb la quantitat d'autors per anys
-    plt.figure(figsize=(10, 5))
-    # Converteix les dates de naixement a datetime
-    metadades['born_date'] = pd.to_datetime(metadades['born_date'], errors='coerce')
-    # Filtra les dates de naixement que no són NaT
-    metadades = metadades[metadades['born_date'].notna()]
-
-    # Converteix les dates de naixement a l'any
-    metadades['born_year'] = metadades['born_date'].dt.year
-    # Agrupa els autors per any de naixement
-    autors_per_any = metadades.groupby('born_year').size()
-    # Genera el gràfic
-    plt.bar(autors_per_any.index, autors_per_any.values)
-    plt.xlabel('Any de naixement')
-    plt.ylabel('Nombre d\'autors')
-    plt.title('Nombre d\'autors per any de naixement')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    # Desa el gràfic en svg
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/autors_per_any.svg')
-    plt.close()
-
     # Obté un df amb una llista de les ciutats i el nombre d'autors per ciutat
     cities_df = metadades.groupby('city').size().reset_index(name='count')
     # 3 columnes: ['city', 'count', 'coords']
@@ -441,10 +419,12 @@ def metadades_autors(corpus):
     cities_df['poetes'] = cities_df['count']
     cities_df['latitud'] = coords.apply(lambda x: x[0])
     cities_df['longitud'] = coords.apply(lambda x: x[1])
+    cities_df['província'] = coords.apply(lambda x: x[2])
+    cities_df['país'] = coords.apply(lambda x: x[3])
     # Afegeix una columna amb els noms dels poetes de cada ciutat
     cities_df['noms_poetes'] = cities_df['city'].apply(lambda x: ', '.join(
         metadades[metadades['city'] == x]['name'].tolist()))
-    cities_df = cities_df[['ciutat', 'poetes', 'latitud', 'longitud', 'noms_poetes']]
+    cities_df = cities_df[['ciutat', 'poetes', 'latitud', 'longitud', 'província', 'país', 'noms_poetes']]
 
     # Desa el df en un fitxer xlsx
     cities_df.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/cities.xlsx')
@@ -458,11 +438,11 @@ def metadades_autors(corpus):
             location=(row['latitud'], row['longitud']),
             radius=row['poetes'] * 0.5,  # Escala proporcional al nombre de poetes
             popup=folium.Popup(
-            f"<b>{row['ciutat']}</b><br>"
-            f"Poetes: {row['poetes']}<br>"
-            f"Noms: {row['noms_poetes']}",
-            max_width=300  # Amplada màxima del popup
-        ),
+                f"<b>{row['ciutat']}</b><br>"
+                f"Poetes: {row['poetes']}<br>"
+                f"Noms: {row['noms_poetes']}",
+                max_width=300  # Amplada màxima del popup
+            ),
             color="blue",
             fill=True,
             fill_color="blue"
@@ -471,9 +451,46 @@ def metadades_autors(corpus):
     # Guardar el mapa com a fitxer HTML
     mapa.save(f"{usb}/corpora/{corpus}/etiquetat/svg/mapa.html")
 
-    # Desa el mapa com una imatge
-    output_image = f"{usb}/corpora/{corpus}/etiquetat/svg/mapa.png"
-    geemap.folium_to_image(mapa, output_image)
+    # Df d'autors amb any de naixement i mort
+    autors_df = pd.DataFrame()
+    for autor in os.listdir(f'{usb}/corpora/{corpus}/etiquetat/json/'):
+        if autor.endswith('.json'):
+            # Obre el fitxer json
+            with open(f'{usb}/corpora/{corpus}/etiquetat/json/{autor}', encoding='utf-8') as f:
+                data = json.load(f)
+                meta = {"author_id": data["author_id"],
+                        "name": data["name"],
+                        "born_date": data["born_date"],
+                        "death_date": data["death_date"]}
+                # Afegeix les metadades a un DataFrame
+                autors_df = pd.concat([autors_df, pd.DataFrame(meta, index=[0])], ignore_index=True)
+
+    # Cream una línia del temps amb els autors
+
+    # Convertir la data de naixement a format datetime
+    autors_df['born_date'] = pd.to_datetime(autors_df['born_date'])
+#    autors_df['death_date'] = pd.to_datetime(autors_df['death_date'])
+
+    # Crear la línia del temps amb Plotly
+    fig = px.timeline(
+        autors_df,
+        x_start='naixement',  # Data inicial (en aquest cas, és la mateixa per a cada autor)
+        x_end='naixement',  # Data final (igual que l'inicial per representar un esdeveniment puntual)
+        y='nom',  # Eix Y: noms dels autors
+        title="Línia del temps dels autors",
+        labels={'naixement': 'Data de naixement', 'nom': 'Autor'}
+    )
+
+    # Ajustar el disseny del gràfic
+    fig.update_layout(
+        xaxis_title="Data de naixement",
+        yaxis_title="Autors",
+        showlegend=False,  # Amaga la llegenda, no és necessària aquí
+        xaxis=dict(type='date')  # Assegura que l'eix X és de tipus data
+    )
+
+    # Desa el gràfic
+    fig.write_image(f"{usb}/corpora/{corpus}/etiquetat/svg/línia_del_temps.svg")
 
 
 def descriu(corpus, filtre=None):
