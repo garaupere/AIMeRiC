@@ -80,7 +80,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
         scansion_cols = [str(col + 1) for col in range(0, mode)]
-        head = (['autor', 'fast_tag', 'mov', 'any', 'obra', 'poema', 'núm. de vers', 'text del vers',
+        head = (['autor', 'font', 'any', 'obra', 'poema', 'núm. de vers', 'text del vers',
                  'escansió plana'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
                  'mots al còlon 1', 'mots al còlon 2',
@@ -102,27 +102,33 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                     i = 0
 
                     for verse in poem.verses:  # Per cada vers del poema
-                        #print(f"\t{verse}")
-                        if 110 > len(verse) > 20 and re.search(r"[a-zA-Z]", verse):
-                            processed_verses.add(verse)  # Afegeix el vers al conjunt de versos processats
+                        try:
+                            if 110 > len(verse) > 20 and re.search(r"[a-zA-Z]", verse):
+                                processed_verses.add(verse)  # Afegeix el vers al conjunt de versos processats
 
-                            vers = escaneja(nlp, verse, goal=mode)  # Crea un objecte Vers
-                            if verse is not None:
-                                try:
-                                    if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
-                                        #vers.mostra()  # Imprimeix la metadata del vers
-                                        results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
-                                            vers.save)  # Guarda la metadata del vers
-                                        rows.append(
-                                            [author.id, author.fast_tagg, author.mov, author.born_date, book_title,
-                                             poem_title, i + 1] + vers.to_csv())
-                                        i += 1
-                                    else:
+                                vers = escaneja(nlp, verse, goal=mode)  # Crea un objecte Vers
+                                if verse is not None:
+                                    try:
+                                        if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
+                                            #vers.mostra()  # Imprimeix la metadata del vers
+                                            results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
+                                                vers.save)  # Guarda la metadata del vers
+                                            rows.append(
+                                                [author.id, author.font, author.born_date, book_title,
+                                                 poem_title, i + 1] + vers.to_csv())
+                                            i += 1
+                                        else:
+                                            outsiders.append(verse)
+                                    except Exception as e:
+                                        print(f"Error: {e}")
+                                        print(verse)
                                         outsiders.append(verse)
-                                except Exception as e:
-                                    print(f"Error: {e}")
-                                    outsiders.append(verse)
-                                    i += 1
+                                        i += 1
+                        except Exception as e:
+                            print(verse)
+                            print(f"Error: {e}")
+                            outsiders.append(verse)
+                            i += 1
 
         #print(author.id, len(rows)) # Debug
         if len(rows) > 99:
@@ -158,7 +164,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
             os.makedirs(f"{results_path}log/", exist_ok=True)
             with open(f"{results_path}log/{author.id}_outsiders.log", 'a', encoding='utf-8') as f:
                 for verse in outsiders:
-                    f.write(verse + '\n')
+                    f.write(str(verse) + '\n')
             os.makedirs(f"{results_path}svg/", exist_ok=True)
             os.makedirs(f"{results_path}xlsx/", exist_ok=True)
             os.makedirs(f"{results_path}ot/", exist_ok=True)
@@ -186,7 +192,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
             with open(f'{results_path}dades_autors.csv', 'a', encoding='utf-8') as dades_autors:
                 dades_autors.write(
-                    f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.fast_tagg};{author.mov};{len(rows)}\n")
+                    f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.font};{len(rows)}\n")
 
             #print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
             #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")

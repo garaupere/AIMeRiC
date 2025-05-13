@@ -1,6 +1,7 @@
 import json
 import os
 
+import geopandas
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -382,7 +383,6 @@ def print_desctiptives(data_set, name):
     print("--" * 40)
     # Desa les dades en un full de càlcul
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
-    metadades_autors(name)
 
 
 def cartografies(metadades, corpus):
@@ -448,6 +448,15 @@ def cartografies(metadades, corpus):
     # Guardar el mapa com a fitxer HTML
     mapa.save(f"{usb}/corpora/{corpus}/etiquetat/svg/mapa.html")
 
+    gdf = geopandas.GeoDataFrame(cities_df, geometry=geopandas.points_from_xy(cities_df.longitud, cities_df.latitud))
+    gdf.crs = "EPSG:4326"  # Defineix el sistema de coordenades
+    # Desam el geodataframe com a geojson
+    gdf.to_file(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa.geojson', driver='GeoJSON')
+
+    print("Mapa generat i desat!")
+
+
+
 
 def timeline(metadades, corpus):
     # Convertir les dates de naixement al format datetime
@@ -474,7 +483,6 @@ def timeline(metadades, corpus):
     plt.tight_layout()
 
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/timeline.svg')
-
 
 
 def metadades_autors(corpus):
@@ -508,6 +516,8 @@ def metadades_autors(corpus):
 
     # Desa les metadades en un fitxer xlsx
     metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
+    print("Metadades extretes!")
+    return metadades
 
 
 def descriu(corpus, filtre=None):
@@ -515,11 +525,13 @@ def descriu(corpus, filtre=None):
     if filtre:
         data = aplica_filtre(data, filtre)
     print_desctiptives(data, corpus)
+    metadades = metadades_autors(corpus)
+    cartografies(metadades, corpus)
 
 
 if __name__ == '__main__':
     root = fr"{usb}/corpora/"
-    corpus = "actual_2"
+    corpus = "actual"
     #metadades_autors(corpus)
 
     metadades = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
