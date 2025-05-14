@@ -12,7 +12,7 @@ from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
-from AIMeRiC.corpus.geoproves import get_city, info_city
+from AIMeRiC.corpus.geoproves import get_city
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.utils import aplica_filtre
 
@@ -404,6 +404,10 @@ def cartografies(metadades, corpus):
         metadades[metadades['city'] == x]['name'].tolist()))
     cities_df = cities_df[['ciutat', 'poetes', 'latitud', 'longitud', 'província', 'país', 'noms_poetes', 'versos']]
 
+    # Calcula el percentatge de poetes i versos per ciutat
+    cities_df['poetes_rel'] = (cities_df['poetes'] / cities_df['poetes'].sum()) * 100
+    cities_df['versos_rel'] = (cities_df['versos'] / cities_df['versos'].sum()) * 100
+
     # Desa el df en un fitxer xlsx
     cities_df.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/cities.xlsx')
 
@@ -422,11 +426,11 @@ def cartografies(metadades, corpus):
                 f"Poetes: {row['poetes']}<br>"
                 f"Noms: {row['noms_poetes']}",
                 max_width=300  # Amplada màxima del popup
-                ),
+            ),
             color="blue",
             fill=True,
             fill_color="blue"
-            ).add_to(autors)
+        ).add_to(autors)
 
         folium.CircleMarker(
             location=(row['latitud'], row['longitud']),
@@ -435,11 +439,11 @@ def cartografies(metadades, corpus):
                 f"<b>{row['ciutat']}</b><br>"
                 f"Versos: {row['versos']}<br>",
                 max_width=300  # Amplada màxima del popup
-                ),
+            ),
             color="red",
             fill=True,
             fill_color="red"
-            ).add_to(versos)
+        ).add_to(versos)
 
     mapa.add_child(autors)
     mapa.add_child(versos)
@@ -454,8 +458,6 @@ def cartografies(metadades, corpus):
     gdf.to_file(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa.geojson', driver='GeoJSON')
 
     print("Mapa generat i desat!")
-
-
 
 
 def timeline(metadades, corpus):
@@ -493,7 +495,6 @@ def metadades_autors(corpus):
             # Obre el fitxer json
             with open(f'{usb}/corpora/{corpus}/etiquetat/json/{autor}', encoding='utf-8') as f:
                 data = json.load(f)
-
                 versos = len(
                     pd.read_csv(f'{usb}/corpora/{corpus}/etiquetat/csv/{autor.replace(".json", "")}.csv', sep=';',
                                 encoding='utf-8', lineterminator='\n', header=0, low_memory=False)) - 1
@@ -506,13 +507,10 @@ def metadades_autors(corpus):
                         "dialect": data["dialect"],
                         "viaf": data["viaf"],
                         "wiki_id": data["wiki_id"],
+                        "font": [data['font']],
                         "versos": versos}
                 # Afegeix les metadades a un DataFrame
                 metadades = pd.concat([metadades, pd.DataFrame(meta, index=[0])], ignore_index=True)
-
-                # Converteix les dates a datetime
-                metadades['born_date'] = pd.to_datetime(metadades['born_date'], errors='coerce')
-                metadades['death_date'] = pd.to_datetime(metadades['death_date'], errors='coerce')
 
     # Desa les metadades en un fitxer xlsx
     metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
@@ -536,4 +534,5 @@ if __name__ == '__main__':
 
     metadades = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
     metadades = pd.read_excel(metadades, index_col=0)
-    timeline(metadades, corpus)
+    cartografies(metadades, corpus)
+    # timeline(metadades, corpus)
