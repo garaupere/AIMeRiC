@@ -11,6 +11,7 @@ def group_feet(pattern):
     feet = [x for x in feet.split('.') if x != '']
     return feet
 
+
 def enjambment(encavalcament):
     """ALIGN-L (Line, L, Intonational phrase, L)-lines align with intonational
     phrases (Hayes 2009: 139)"""
@@ -32,7 +33,8 @@ class OT_constraints:
         self.extra_clash = self.extra_clash()
         self.lapse = self.lapse()
         self.extra_lapse = self.extra_lapse()
-        self.ws_hl = self.ws_hl()
+        self.global_ws_hl = self.global_ws_hl()
+        self.strict_ws_hl = self.strict_ws_hl()
         self.non_initial = self.non_initial()
         self.symetry = self.symetry()
         self.foot_bin = self.foot_bin()
@@ -57,9 +59,6 @@ class OT_constraints:
         cons = self.list_constraints()
         weigth = {con: getattr(self, con) * frequency for con in cons}
         return weigth
-
-
-
 
     def clash(self):
         """Compta les violacions de *CLASH, Jiménez (2019)"""
@@ -89,10 +88,17 @@ class OT_constraints:
         else:
             return 0
 
-    def ws_hl(self):
+    def global_ws_hl(self):
         """Compta les violacions de *WS-HL, Jiménez (2019)"""
         if self.pattern is not None:
             return len(re.findall('11$', self.pattern))
+        else:
+            return 0
+
+    def strict_ws_hl(self):
+        """Compta les violacions de *WS-HL, Jiménez (2019)"""
+        if self.pattern is not None:
+            return len(re.findall(r'11\|', self.pattern))
         else:
             return 0
 
@@ -165,7 +171,7 @@ class OT_constraints:
         cons = [x for x in re.findall(r'^(001001|000001|0010001|0001001|)', self.pattern) if x != '']
         return len(cons)
 
-    def list_constraints(self):
+    def list_constraints(self) -> list:
         """Retorna una llista amb les restriccions de l'OT segons apareixen a la __init__"""
         cons = []
         for key in self.__dict__.items():

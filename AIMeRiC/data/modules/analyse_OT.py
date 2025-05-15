@@ -71,7 +71,7 @@ def global_data(data, filtre=None):
 
     # Compta les repeticions de cada patró i genera un DataFrame amb els resultats
     patterns = pd.Series(patterns).value_counts().reset_index()
-    patterns.columns = ['patró', 'freqüència']
+    patterns.columns = ['patró comparatiu', 'freqüència']
     patterns = patterns.sort_values(by='freqüència', ascending=False)
 
     # Afegeix la freqüència relativa
@@ -100,7 +100,7 @@ def patterns(data):
 
     # Compta les repeticions de cada patró i genera un DataFrame amb els resultats
     patterns = pd.Series(patterns).value_counts().reset_index()
-    patterns.columns = ['patró', 'freqüència']
+    patterns.columns = ['patró comparatiu', 'freqüència']
     patterns = patterns.sort_values(by='freqüència', ascending=False)
 
     # Afegeix la freqüència relativa
@@ -112,7 +112,7 @@ def patterns(data):
 def OT_eval(data):
     """Aquesta funció avalua les restriccions OT per a cada patró"""
     evals = []
-    for pattern in data['patró']:
+    for pattern in data['patró comparatiu']:
         eval = OT_constraints(pattern).eval()
         evals.append(eval)
     # Disposa l'avaluació en el DataFrame
@@ -128,7 +128,7 @@ def ranking(data, path=None):
 
     ranking = {}
     rankings = {k: 0 for k in OT_constraints('').list_constraints()}
-    for pattern, fq in data[['patró', 'freqüència']].values:
+    for pattern, fq in data[['patró comparatiu', 'freqüència']].values:
         ot = OT_constraints(pattern)
         ranking[pattern] = ot.weigth(fq)
         rankings = rankings = {k: v + ranking[pattern].get(k, 0) for k, v in rankings.items()}
@@ -170,7 +170,7 @@ def generate_tableau(eval, ranking):
     if 'extrametricallity' in ranking:
         ranking.pop('extrametricallity')
     jerarquia = list(ranking.keys())
-    eval = eval.loc[:, ['patró', 'freqüència', 'freqüència relativa'] + jerarquia]
+    eval = eval.loc[:, ['patró comparatiu', 'freqüència', 'freqüència relativa'] + jerarquia]
 
     # Canvia els valors numèrics de les restriccions per * i ** segons el valor en el dataframe
     for con in jerarquia:

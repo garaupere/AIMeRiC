@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import contextily as ctx
 import pandas as pd
-from tabulate import tabulate
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
+
+
+
 
 # Obre el fitxer geojson i llegeix el contingut.
 usb = getUSB()
@@ -17,7 +19,6 @@ def desctiptives(data_set, name):
     """Un mòdul per mostrar informacions descriptives de les dades"""
     # 1. Imprimeix en un df el nombre d'autors de les dades, amb el nombre de versos i síl·labes per a cada autor
     # El df ha de tenir les columnes= ['Autor', 'Versos', 'Síl·labes']
-    print("--" * 20, "Nombre d'autors", "--" * 20)
     versos = data_set.groupby('autor')['1'].count()
     silabes = data_set.groupby('autor')['síl·labes mètriques'].sum()
     silabes_extra = data_set.groupby('autor')['síl·labes extramètriques'].sum()
@@ -31,11 +32,9 @@ def desctiptives(data_set, name):
     df.loc['Total'] = df.sum()
     df = df.reset_index()
     df = df.rename(columns={'index': 'Autor'})
-
-    print(tabulate(df, headers='keys', tablefmt='fancy_grid'))
-    print("--" * 40)
     # Desa les dades en un full de càlcul
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
+    return df
 
 
 def mapa_estatic(geojson):
@@ -59,7 +58,7 @@ def mapa_estatic(geojson):
 
     # Guarda el mapa com a imatge
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_autors.svg', dpi=600, bbox_inches='tight')
-    plt.close()
+    #plt.close()
 
     # Configura la figura
     fig, ax = plt.subplots(figsize=(15, 15))
@@ -76,6 +75,7 @@ def mapa_estatic(geojson):
 
     # Guarda el mapa com a imatge
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
 
@@ -96,6 +96,7 @@ def dialectes(df):
         plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
     # Gràfic versos per dialecte
@@ -107,6 +108,7 @@ def dialectes(df):
         plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
     return new_df
@@ -114,7 +116,13 @@ def dialectes(df):
 
 def generes(df):
     df = df[['name', 'gender', 'versos']]
-    df['gender'] = df['gender'].replace({0: 'home', 1: 'dona', 2: 'altres'})
+
+    # Ensure df is a copy, not a view
+    df = df.copy()
+
+    df['gender'] = df['gender'].astype(str)
+    # Perform the operation
+    df.loc[:, 'gender'] = df['gender'].replace({'0': 'home', '1': 'dona', '2': 'altres'})
 
     # Per a cada gènere quantifica quants autors i quants versos hi ha
     new_df = df.groupby('gender').agg({'name': 'count', 'versos': 'sum'}).reset_index()
@@ -129,6 +137,7 @@ def generes(df):
         plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
     # Gràfic versos per gènere
@@ -140,14 +149,22 @@ def generes(df):
         plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
+
+    return new_df
 
 
 def anys(df):
     df = df[['name', 'born_date', 'death_date', 'versos']]
 
-    # Agrupa els autors per dècada de naixement
-    df['decade'] = (df['born_date'] // 10) * 10
+    # Ensure df is a copy, not a view
+    df = df.copy()
+
+    # Elimina els autors sense data de naixement
+    df = df.dropna(subset=['born_date'])
+    # Perform the operation
+    df.loc[:, 'decade'] = (df['born_date'] // 10) * 10
     # Elimina els autors sense data de naixement
     df = df[df['decade'] != 0]
 
@@ -170,6 +187,7 @@ def anys(df):
                  va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
     # Gràfic versos per dècada
@@ -182,8 +200,8 @@ def anys(df):
                  va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.svg', dpi=600, bbox_inches='tight')
-    plt.close()
-
+    #plt.show()
+    #plt.close()
 
 
     # Fes una línia del temps amb els autors
@@ -210,7 +228,10 @@ def anys(df):
     plt.xticks(range(1845, 2030, 5))
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/linia_temps.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
+
+    return new_df
 
 
 def font(df):
@@ -245,9 +266,9 @@ def font(df):
         plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
-    print(tabulate(new_df, headers='keys', tablefmt='psql'))
     # Gràfic versos per font
     plt.figure(figsize=(6, 6))
     plt.bar(new_df['font'], new_df['versos'], color='red', alpha=0.5)
@@ -259,6 +280,8 @@ def font(df):
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.svg', dpi=600, bbox_inches='tight')
     plt.show()
     plt.close()
+
+    return new_df
 
 
 if __name__ == '__main__':
@@ -273,9 +296,9 @@ if __name__ == '__main__':
     gdf = gpd.read_file(path)
 
     #mapa_estatic(usb, corpus)
-    #metadades = pd.read_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades.xlsx')
+    metadades = pd.read_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
     # Genera els gràfics
     #dialectes(metadades)
-    #generes(metadades)
+    generes(metadades)
     #anys(metadades)
     #font(metadades)
