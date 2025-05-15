@@ -3,10 +3,8 @@ from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.etiqueta import etiqueta
-from AIMeRiC.corpus.obten_dades import analitza_corpus, descriu
 from AIMeRiC.corpus.prosa import prosa
 from AIMeRiC.corpus.valida import valida
-from AIMeRiC.corpus.analyse_OT import ot_analysis
 from AIMeRiC.escansio.escansor import escaneja, __version__
 
 __author__ = "Pere Garau Borràs"
@@ -43,15 +41,6 @@ def etiq(corpus):
     results_path = f"{root}{corpus}/etiquetat/"
     etiqueta(corpus_path, results_path, __version__, nlp, mode=10)
 
-
-def explota(corpus, filtre=None):
-    """Exploració estadística del corpus"""
-    usb = getUSB()
-    root = f"{usb}/corpora/"
-    results_path = f"{root}{corpus}/etiquetat/"
-    analitza_corpus(corpus, filtre)
-
-
 def scan(nlp, verse, goal: int = 10):
     analisi = escaneja(nlp, verse, goal)
     return analisi.mostra()
@@ -65,12 +54,6 @@ def help():
           Fore.RESET)
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus", Fore.GREEN, "(-etiq", Fore.RED, "corpus)",
           Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Descripció estadística del corpus", Fore.GREEN, "(-desc", Fore.RED,
-          "corpus)", Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Exploració estadística del corpus", Fore.GREEN, "(-expl", Fore.RED,
-          "corpus)", Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Avaluació de les restriccions OT", Fore.GREEN, "(-ot", Fore.RED,
-          "corpus)", Fore.RESET)
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test", Fore.GREEN, "(-test)", Fore.RESET)
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers", Fore.GREEN, "(-scan", Fore.RED, "vers)", Fore.RESET)
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa", Fore.GREEN, "(-prosa)", Fore.RESET)
@@ -149,39 +132,9 @@ def main():
                 except FileNotFoundError:
                     print('El corpus seleccionat no existeix.')
 
-            elif options[0] == '-desc':
-                corpus = options[1]
-                filtre = None
-                if len(options) > 2:
-                    filtre = options[2]
-                try:
-                    descriu(corpus, filtre)
-                except FileNotFoundError:
-                    print('El corpus seleccionat no existeix.')
-
-            elif options[0] == '-expl':
-                corpus = options[1]
-                filtre = None
-                if len(options) > 2:
-                    filtre = options[2]
-                try:
-                    explota(corpus, filtre)
-                except FileNotFoundError:
-                    print('El corpus seleccionat no existeix.')
-
             elif options[0] == '-scan':
                 verse = ' '.join(options[1:])
                 scan(nlp, verse)
-
-            elif options[0] == '-ot':
-                corpus = options[1]
-                filtre = None
-                if len(options) > 2:
-                    filtre = options[2]
-                try:
-                    ot_analysis(corpus, filtre)
-                except FileNotFoundError:
-                    print('El corpus seleccionat no existeix.')
 
 
 if __name__ == "__main__":

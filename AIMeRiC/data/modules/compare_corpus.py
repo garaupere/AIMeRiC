@@ -2,7 +2,7 @@ import pandas as pd
 from tabulate import tabulate
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
-from AIMeRiC.corpus.obten_dades import read_csv
+from AIMeRiC.data.modules.utils import read_csv
 
 
 def compare(corpus_1, corpus_2):

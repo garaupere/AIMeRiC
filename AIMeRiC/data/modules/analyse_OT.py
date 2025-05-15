@@ -5,9 +5,9 @@ import pandas as pd
 from tabulate import tabulate
 from tqdm import tqdm
 
-from AIMeRiC.corpus.modules.OT_constraints import OT_constraints, enjambment
 from AIMeRiC.corpus.modules.getUSB import getUSB
-from AIMeRiC.corpus.modules.utils import aplica_filtre
+from AIMeRiC.data.modules.OT_constraints import OT_constraints, enjambment
+from AIMeRiC.data.modules.utils import aplica_filtre
 
 
 def ot_analysis(corpus, filtre=None):
@@ -44,7 +44,6 @@ def ot_analysis(corpus, filtre=None):
 
     # Desa les dades globals en un Excel
     glob_data.to_excel(fr'{getUSB()}\corpora\{corpus}\etiquetat\ot\ot.{corpus}.xlsx', index=False)
-
 
     # Calcula el ranking global
     ranking_global = ranking(glob_data, fr'{getUSB()}\corpora\{corpus}\etiquetat\{corpus}.csv')
@@ -179,10 +178,5 @@ def generate_tableau(eval, ranking):
     return eval
 
 
-
-
 if __name__ == '__main__':
     ot_analysis('__test')
-
-
-

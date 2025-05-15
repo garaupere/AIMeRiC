@@ -6,15 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import folium
-import plotly.express as px
 from tabulate import tabulate
 from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
-from AIMeRiC.corpus.geoproves import get_city
 from AIMeRiC.corpus.modules.getUSB import getUSB
-from AIMeRiC.corpus.modules.utils import aplica_filtre
+from AIMeRiC.data.modules.geoproves import get_city
+from AIMeRiC.data.modules.utils import aplica_filtre, read_csv
 
 plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams["font.family"] = "Times New Roman"
@@ -50,11 +49,6 @@ def analitza_corpus(corpus, filtre=None):
     autors_individuals(data, corpus)
     p_bar.update(1)
 
-
-def read_csv(path):
-    """Carrega un fitxer csv a un DataFrame"""
-    data = pd.read_csv(path, sep=';', encoding='utf-8', lineterminator='\n', header=0, low_memory=False)
-    return data
 
 
 def normalitza(data):
@@ -360,29 +354,7 @@ def cmap_subdivisions(data, name):
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/cmap_subdivisions.xlsx')
 
 
-def print_desctiptives(data_set, name):
-    """Un mòdul per mostrar informacions descriptives de les dades"""
-    # 1. Imprimeix en un df el nombre d'autors de les dades, amb el nombre de versos i síl·labes per a cada autor
-    # El df ha de tenir les columnes= ['Autor', 'Versos', 'Síl·labes']
-    print("--" * 20, "Nombre d'autors", "--" * 20)
-    versos = data_set.groupby('autor')['1'].count()
-    silabes = data_set.groupby('autor')['síl·labes mètriques'].sum()
-    silabes_extra = data_set.groupby('autor')['síl·labes extramètriques'].sum()
-    silabes = silabes + silabes_extra
-    df = pd.DataFrame({'Versos': versos, 'Síl·labes': silabes})
-    # Compta quants de llibres hi ha per autor
-    df['Llibres'] = data_set.groupby('autor')['obra'].nunique()
-    # Compta quants de poemes hi ha per autor
-    # df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
-    # Afegeix el valor total del corpus
-    df.loc['Total'] = df.sum()
-    df = df.reset_index()
-    df = df.rename(columns={'index': 'Autor'})
 
-    print(tabulate(df, headers='keys', tablefmt='fancy_grid'))
-    print("--" * 40)
-    # Desa les dades en un full de càlcul
-    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
 
 
 def cartografies(metadades, corpus):
@@ -460,33 +432,6 @@ def cartografies(metadades, corpus):
     print("Mapa generat i desat!")
 
 
-def timeline(metadades, corpus):
-    # Convertir les dates de naixement al format datetime
-    metadades['born_date'] = pd.to_datetime(metadades['born_date'], errors='coerce')
-
-    # Eliminar files amb dates de naixement no vàlides (NaT)
-    df = metadades.dropna(subset=['born_date'])
-
-    # Ordenar els autors per data de naixement
-    df = df.sort_values(by='born_date')
-
-    # Crear la línia de temps
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.scatter(df['born_date'], [1] * len(df), color='blue', s=100)
-
-    # Afegir etiquetes amb els noms dels autors
-    for i, row in df.iterrows():
-        ax.text(row['born_date'], 1.02, row['name'], rotation=45, ha='right', fontsize=8)
-
-    # Configurar el gràfic
-    ax.set_yticks([])
-    ax.set_xlabel("Data de naixement")
-    ax.set_title("Distribució de les dates de naixement dels autors")
-    plt.tight_layout()
-
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/timeline.svg')
-
-
 def metadades_autors(corpus):
     """Un mòdul per explorar les metadades dels autors"""
     metadades = pd.DataFrame()
@@ -518,14 +463,6 @@ def metadades_autors(corpus):
     return metadades
 
 
-def descriu(corpus, filtre=None):
-    data = read_csv(f'{usb}/corpora/{corpus}/etiquetat/{corpus}.csv')
-    if filtre:
-        data = aplica_filtre(data, filtre)
-    print_desctiptives(data, corpus)
-    metadades = metadades_autors(corpus)
-    cartografies(metadades, corpus)
-
 
 if __name__ == '__main__':
     root = fr"{usb}/corpora/"
@@ -535,4 +472,3 @@ if __name__ == '__main__':
     metadades = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
     metadades = pd.read_excel(metadades, index_col=0)
     cartografies(metadades, corpus)
-    # timeline(metadades, corpus)

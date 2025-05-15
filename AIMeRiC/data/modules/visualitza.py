@@ -3,7 +3,6 @@ import ast
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import contextily as ctx
-import numpy as np
 import pandas as pd
 from tabulate import tabulate
 
@@ -14,14 +13,36 @@ usb = getUSB()
 corpus = 'actual'
 
 
-def mapa_estatic(usb, corpus):
-    path = f'{usb}/corpora/{corpus}/etiquetat/svg/mapa.geojson'
+def desctiptives(data_set, name):
+    """Un mòdul per mostrar informacions descriptives de les dades"""
+    # 1. Imprimeix en un df el nombre d'autors de les dades, amb el nombre de versos i síl·labes per a cada autor
+    # El df ha de tenir les columnes= ['Autor', 'Versos', 'Síl·labes']
+    print("--" * 20, "Nombre d'autors", "--" * 20)
+    versos = data_set.groupby('autor')['1'].count()
+    silabes = data_set.groupby('autor')['síl·labes mètriques'].sum()
+    silabes_extra = data_set.groupby('autor')['síl·labes extramètriques'].sum()
+    silabes = silabes + silabes_extra
+    df = pd.DataFrame({'Versos': versos, 'Síl·labes': silabes})
+    # Compta quants de llibres hi ha per autor
+    df['Llibres'] = data_set.groupby('autor')['obra'].nunique()
+    # Compta quants de poemes hi ha per autor
+    # df['Poemes'] = data_set.groupby('autor')['poema'].nunique()
+    # Afegeix el valor total del corpus
+    df.loc['Total'] = df.sum()
+    df = df.reset_index()
+    df = df.rename(columns={'index': 'Autor'})
 
-    # Llegeix les dades del fitxer GeoJSON
-    gdf = gpd.read_file(path)
+    print(tabulate(df, headers='keys', tablefmt='fancy_grid'))
+    print("--" * 40)
+    # Desa les dades en un full de càlcul
+    df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/descriptives.xlsx')
+
+
+def mapa_estatic(geojson):
+
 
     # Converteix el sistema de coordenades a Web Mercator (EPSG:3857) per a utilitzar contextily
-    gdf = gdf.to_crs(epsg=3857)
+    gdf = geojson.to_crs(epsg=3857)
 
     # Configura la figura
     fig, ax = plt.subplots(figsize=(15, 15))
@@ -55,13 +76,10 @@ def mapa_estatic(usb, corpus):
 
     # Guarda el mapa com a imatge
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos.svg', dpi=600, bbox_inches='tight')
+    plt.close()
 
 
-
-
-def dialectes(usb, corpus):
-    path = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
-    df = pd.read_excel(path)
+def dialectes(df):
     df = df[['name', 'dialect', 'versos']]
 
     # Per a cada dialecte quantifica quants autors i quants versos hi ha
@@ -94,9 +112,7 @@ def dialectes(usb, corpus):
     return new_df
 
 
-def generes(usb, corpus):
-    path = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
-    df = pd.read_excel(path)
+def generes(df):
     df = df[['name', 'gender', 'versos']]
     df['gender'] = df['gender'].replace({0: 'home', 1: 'dona', 2: 'altres'})
 
@@ -127,10 +143,8 @@ def generes(usb, corpus):
     plt.close()
 
 
-def anys(usb, corpus):
-    path = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
-    df = pd.read_excel(path)
-    df = df[['name', 'born_date', 'versos']]
+def anys(df):
+    df = df[['name', 'born_date', 'death_date', 'versos']]
 
     # Agrupa els autors per dècada de naixement
     df['decade'] = (df['born_date'] // 10) * 10
@@ -170,8 +184,7 @@ def anys(usb, corpus):
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.svg', dpi=600, bbox_inches='tight')
     plt.close()
 
-    df = pd.read_excel(path)
-    df = df[['name', 'born_date', 'death_date', 'versos']]
+
 
     # Fes una línia del temps amb els autors
 
@@ -200,9 +213,7 @@ def anys(usb, corpus):
     plt.close()
 
 
-def font(usb, corpus):
-    path = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
-    df = pd.read_excel(path)
+def font(df):
     df = df[['name', 'font', 'versos']]
 
     # Imprimeix cada fila del df
@@ -214,15 +225,16 @@ def font(usb, corpus):
                     df._append({'name': row['name'], 'font': x, 'versos': row['versos']}, ignore_index=True)
                 df = df.drop(index)
 
-
     # Elimina els autors sense font
-    #df = df.dropna(subset=['font'])
+    # df = df.dropna(subset=['font'])
 
     # Per a cada font quantifica quants autors i quants versos hi ha
     new_df = df.groupby('font').agg({'name': 'count', 'versos': 'sum'}).reset_index()
     new_df.columns = ['font', 'autors', 'versos']
 
-    new_df['font'] = new_df['font'].replace({'Corpus Textual Informatitzat de la Llengua Catalana': 'CTILC', 'Corpus Literari Digital de la Càtedra Màrius Torres': 'CMT', "Donatiu de l'autor o curador": "donatiu", 'Llibre electrònic': 'ebook'})
+    new_df['font'] = new_df['font'].replace({'Corpus Textual Informatitzat de la Llengua Catalana': 'CTILC',
+                                             'Corpus Literari Digital de la Càtedra Màrius Torres': 'CMT',
+                                             "Donatiu de l'autor o curador": "donatiu", 'Llibre electrònic': 'ebook'})
 
     # Gràfic autors per font
     plt.figure(figsize=(6, 6))
@@ -245,12 +257,25 @@ def font(usb, corpus):
         plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
     plt.xticks(rotation=45)
     plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.svg', dpi=600, bbox_inches='tight')
+    plt.show()
     plt.close()
 
 
+if __name__ == '__main__':
+    # Executa les funcions
+    corpus = 'actual'
+    usb = getUSB()
+    data = pd.read_csv(f'{usb}/corpora/{corpus}/etiquetat/{corpus}.csv', encoding='utf-8', lineterminator='\n', sep=';')
+    desctiptives(data, corpus)
+    # Genera el mapa
+    path = f'{usb}/corpora/{corpus}/etiquetat/svg/mapa.geojson'
+    # Llegeix les dades del fitxer GeoJSON
+    gdf = gpd.read_file(path)
 
-#dialectes(usb, corpus)
-#generes(usb, corpus)
-#anys(usb, corpus)
-#font(usb, corpus)
-mapa_estatic(usb, corpus)
+    #mapa_estatic(usb, corpus)
+    #metadades = pd.read_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades.xlsx')
+    # Genera els gràfics
+    #dialectes(metadades)
+    #generes(metadades)
+    #anys(metadades)
+    #font(metadades)
