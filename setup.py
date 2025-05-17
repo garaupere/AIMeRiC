@@ -20,7 +20,8 @@ setup(
         'folium',
         'getUSB',
         'colorama',
-        'cfonts'
+        'cfonts',
+        'kaleido'
         ],
     classifiers=[
         'Programming Language :: Python :: 3',

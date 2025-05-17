@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import folium
 from plotly.offline import iplot, init_notebook_mode
+import plotly.figure_factory as ff
 from tabulate import tabulate
 from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
@@ -53,7 +54,6 @@ def analitza_corpus(corpus, filtre=None):
     p_bar.update(1)
 
 
-
 def normalitza(data):
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
     data[sillabes] = data[sillabes].map(
@@ -81,7 +81,7 @@ def contorn_ritmic(data, name):
             mode='lines+markers',
             name=autor,
             line=dict(dash='dash')
-        ))
+            ))
 
     # Afegir la línia de la mitjana
     autors_mean = df.mean()
@@ -91,7 +91,7 @@ def contorn_ritmic(data, name):
         mode='lines+markers',
         name='Mitjana',
         line=dict(color='red', width=2)
-    ))
+        ))
 
     # Configuració del gràfic
     fig.update_layout(
@@ -102,7 +102,10 @@ def contorn_ritmic(data, name):
         yaxis=dict(range=[0, 1]),
         legend_title="Autors",
         template="plotly_white"
-    )
+        )
+    # Inverteix les branques del dendrograma
+    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')),
+                        selector=dict(mode='markers+lines'))
 
     # Emmarca el gràfic només en els valors de 1-10 a X i 0-100 a Y
     fig.update_xaxes(range=[1, 10])
@@ -118,8 +121,8 @@ def contorn_ritmic(data, name):
     init_notebook_mode()
     iplot(fig)
     # Desa el gràfic com a fitxer SVG
+    fig.layout.width = 800
     fig.write_image(f'{usb}/corpora/{name}/etiquetat/svg/contorn_ritmic.svg')
-
 
 
 def distancia_iambe(data, name):
@@ -237,6 +240,8 @@ def index_binarietat(data, name):
     plt.close()
 
 
+
+
 def dendrograma(data, name):
     """Fes un dendrograma de semblança dels contorns rítmics dels autors."""
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -244,30 +249,27 @@ def dendrograma(data, name):
 
     # Calcula la distància euclidiana entre els autors
     dist = pdist(df, metric='euclidean')
-    dist = squareform(dist)
     Z = linkage(dist, 'ward')
 
-    # Dibuixa el dendrograma
-    plt.figure(figsize=(10, 5))
-    dendrogram(Z,
-               orientation='top',
-               labels=df.index,
-               leaf_rotation=90,
-               distance_sort='descending',
-               show_leaf_counts=True)
+    # Crea el dendrograma amb Plotly
+    fig = ff.create_dendrogram(df.values, orientation='top', labels=df.index.tolist(), linkagefun=lambda _: Z)
 
-    # Personalitzar el gràfic: eliminar el marc i només mostrar l'eix Y
-    ax = plt.gca()
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(True)
-    ax.spines['bottom'].set_visible(False)
-    ax.get_xaxis().set_visible(True)
+    # Configura el layout
+    fig.update_layout(
+        width=1000,
+        height=500,
+        title="Dendrograma de semblança dels contorns rítmics",
+        xaxis_title="Autors",
+        yaxis_title="Distància Euclidiana",
+        template="plotly_white"
+    )
 
-    plt.tight_layout()
-    # Desa el gràfic en svg
-    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/dendrograma.svg')
-    plt.close()
+    # Desa el gràfic com a fitxer HTML
+    fig.write_html(f'{usb}/corpora/{name}/etiquetat/svg/dendrograma.html')
+    iplot(fig)
+
+    # Desa el gràfic com a fitxer SVG
+    fig.write_image(f'{usb}/corpora/{name}/etiquetat/svg/dendrograma.svg')
 
     # Desa les dades del dendrograma en un fitxer xlsx
     pd.DataFrame(Z).to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/dendrograma.xlsx')
@@ -334,6 +336,7 @@ def mitjana(data, name):
     plt.tight_layout()
     # Desa el gràfic en svg
     plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/mitjana.svg')
+    plt.show()
     plt.close()
 
 
@@ -390,9 +393,6 @@ def cmap_subdivisions(data, name):
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/cmap_subdivisions.xlsx')
 
 
-
-
-
 def cartografies(metadades, corpus):
     cities_df = metadades.groupby('city').size().reset_index(name='count')
 
@@ -434,11 +434,11 @@ def cartografies(metadades, corpus):
                 f"Poetes: {row['poetes']}<br>"
                 f"Noms: {row['noms_poetes']}",
                 max_width=300  # Amplada màxima del popup
-            ),
+                ),
             color="blue",
             fill=True,
             fill_color="blue"
-        ).add_to(autors)
+            ).add_to(autors)
 
         folium.CircleMarker(
             location=(row['latitud'], row['longitud']),
@@ -447,11 +447,11 @@ def cartografies(metadades, corpus):
                 f"<b>{row['ciutat']}</b><br>"
                 f"Versos: {row['versos']}<br>",
                 max_width=300  # Amplada màxima del popup
-            ),
+                ),
             color="red",
             fill=True,
             fill_color="red"
-        ).add_to(versos)
+            ).add_to(versos)
 
     mapa.add_child(autors)
     mapa.add_child(versos)
@@ -497,7 +497,6 @@ def metadades_autors(corpus):
     metadades.to_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
     print("Metadades extretes!")
     return metadades
-
 
 
 if __name__ == '__main__':
