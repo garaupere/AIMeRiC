@@ -3,9 +3,12 @@ import os
 
 import geopandas
 import matplotlib.pyplot as plt
+import kaleido
+import plotly.graph_objects as go
 import numpy as np
 import pandas as pd
 import folium
+from plotly.offline import iplot, init_notebook_mode
 from tabulate import tabulate
 from tqdm import tqdm
 from scipy.spatial.distance import pdist, squareform
@@ -60,30 +63,63 @@ def normalitza(data):
 
 
 def contorn_ritmic(data, name):
-    """Genera un DataFrame amb el contorn rítmic de cada autor i fes-ne un gràfic."""
+    """Genera un DataFrame amb el contorn rítmic de cada autor i fes-ne un gràfic interactiu."""
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    df = data.groupby('autor')[sillabes].mean() * 100
+    df = data.groupby('autor')[sillabes].mean()
     # Desa el DataFrame en un fitxer xlsx
     df.to_excel(f'{usb}/corpora/{name}/etiquetat/xlsx/contorn_ritmic.xlsx')
-    # Genera un gràfic amb el contorn rítmic de cada autor
 
-    x_values = range(1, 11)
+    # Genera un gràfic interactiu amb Plotly
+    fig = go.Figure()
+
+    # Afegir línies per a cada autor
+    x_values = list(range(1, 11))
     for autor in df.index:
-        plt.plot(x_values, df.loc[autor], marker='o', linestyle='--', label=autor)
+        fig.add_trace(go.Scatter(
+            x=x_values,
+            y=df.loc[autor],
+            mode='lines+markers',
+            name=autor,
+            line=dict(dash='dash')
+        ))
+
+    # Afegir la línia de la mitjana
     autors_mean = df.mean()
+    fig.add_trace(go.Scatter(
+        x=x_values,
+        y=autors_mean,
+        mode='lines+markers',
+        name='Mitjana',
+        line=dict(color='red', width=2)
+    ))
 
-    plt.plot(x_values, autors_mean, marker='x', linestyle='-', color='red', label='Mitjana')
-    plt.axhline(50, color='gray', linestyle='-', alpha=0.2)
-    plt.xticks(np.arange(0, 11))
-    plt.legend()
-    plt.grid(False)
-    plt.tight_layout()
-    # Desa el gràfic en svg
-    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/contorn_ritmic.svg')
+    # Configuració del gràfic
+    fig.update_layout(
+        title="Contorn Rítmic per Autor",
+        xaxis_title="Síl·labes",
+        yaxis_title="Freqüència (%)",
+        xaxis=dict(tickmode='linear', tick0=1, dtick=1),
+        yaxis=dict(range=[0, 1]),
+        legend_title="Autors",
+        template="plotly_white"
+    )
 
-    # Desa el gràfic en svg
-    plt.savefig(f'{usb}/corpora/{name}/etiquetat/svg/distancia_iambe.svg')
-    plt.close()
+    # Emmarca el gràfic només en els valors de 1-10 a X i 0-100 a Y
+    fig.update_xaxes(range=[1, 10])
+    fig.update_yaxes(range=[0, 1])
+
+    # Autoscale
+    fig.update_yaxes(autorange=True)
+    fig.update_xaxes(autorange=True)
+
+    # Desa el gràfic com a fitxer HTML
+    fig.write_html(f'{usb}/corpora/{name}/etiquetat/svg/contorn_ritmic.html')
+
+    init_notebook_mode()
+    iplot(fig)
+    # Desa el gràfic com a fitxer SVG
+    fig.write_image(f'{usb}/corpora/{name}/etiquetat/svg/contorn_ritmic.svg')
+
 
 
 def distancia_iambe(data, name):
