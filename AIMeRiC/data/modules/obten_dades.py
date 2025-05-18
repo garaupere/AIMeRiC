@@ -103,9 +103,6 @@ def contorn_ritmic(data, name):
         legend_title="Autors",
         template="plotly_white"
         )
-    # Inverteix les branques del dendrograma
-    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')),
-                        selector=dict(mode='markers+lines'))
 
     # Emmarca el gràfic només en els valors de 1-10 a X i 0-100 a Y
     fig.update_xaxes(range=[1, 10])
@@ -240,10 +237,8 @@ def index_binarietat(data, name):
     plt.close()
 
 
-
-
 def dendrograma(data, name):
-    """Fes un dendrograma de semblança dels contorns rítmics dels autors."""
+    """Fes un dendrograma de semblança dels contorns rítmics dels autors amb orientació vertical."""
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
     df = data.groupby('autor')[sillabes].mean() * 100
 
@@ -251,16 +246,17 @@ def dendrograma(data, name):
     dist = pdist(df, metric='euclidean')
     Z = linkage(dist, 'ward')
 
-    # Crea el dendrograma amb Plotly
-    fig = ff.create_dendrogram(df.values, orientation='top', labels=df.index.tolist(), linkagefun=lambda _: Z)
+    # Crea el dendrograma amb orientació vertical (branques horitzontals, etiquetes verticals)
+    fig = ff.create_dendrogram(df.values, orientation='left', labels=df.index.tolist(), linkagefun=lambda _: Z)
 
+    n_autors = len(df)
     # Configura el layout
     fig.update_layout(
-        width=1000,
-        height=500,
+        width=700,
+        height=100 + n_autors * 12,
         title="Dendrograma de semblança dels contorns rítmics",
-        xaxis_title="Autors",
-        yaxis_title="Distància Euclidiana",
+        xaxis_title="Distància Euclidiana",
+        yaxis_title="Autors",
         template="plotly_white"
     )
 

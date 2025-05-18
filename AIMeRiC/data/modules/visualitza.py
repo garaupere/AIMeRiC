@@ -1,14 +1,12 @@
 import ast
 
-import matplotlib.pyplot as plt
 import geopandas as gpd
-import contextily as ctx
 import pandas as pd
+import plotly.graph_objects as go
+from plotly.offline import iplot
+import plotly.express as px
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
-
-
-
 
 # Obre el fitxer geojson i llegeix el contingut.
 usb = getUSB()
@@ -38,78 +36,104 @@ def desctiptives(data_set, name):
 
 
 def mapa_estatic(geojson):
+    # Converteix el sistema de coordenades a WGS84 (EPSG:4326) per a Plotly
+    gdf = geojson.to_crs(epsg=4326)
 
+    # Mapa per autors
+    fig_autors = px.scatter_mapbox(
+        gdf,
+        lat=gdf.geometry.y,
+        lon=gdf.geometry.x,
+        size=gdf['poetes'],
+        color_discrete_sequence=["blue"],
+        opacity=0.5,
+        hover_name="ciutat",
+        hover_data={"poetes": True, "versos": False},
+        title="Mapa d'Autors"
+        )
+    fig_autors.update_layout(
+        mapbox_style="carto-positron",
+        mapbox_zoom=5.5,
+        mapbox_center={"lat": 39.5, "lon": 2.5},
+        height=800
+        )
+    iplot(fig_autors)
+    fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_autors.html')
 
-    # Converteix el sistema de coordenades a Web Mercator (EPSG:3857) per a utilitzar contextily
-    gdf = geojson.to_crs(epsg=3857)
-
-    # Configura la figura
-    fig, ax = plt.subplots(figsize=(15, 15))
-
-    # Dibuixa els punts de ciutat
-    gdf.plot(ax=ax, color='blue', alpha=0.4, markersize=10 * gdf['poetes'], label='Autors')
-
-    # Afegeix un mapa base (OpenStreetMap per defecte)
-    ctx.add_basemap(ax, source=ctx.providers.CartoDB.PositronNoLabels)
-
-    # Configura el títol i les etiquetes dels eixos
-    # Amaga els eixos
-    ax.set_axis_off()
-
-    # Guarda el mapa com a imatge
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_autors.svg', dpi=600, bbox_inches='tight')
-    #plt.close()
-
-    # Configura la figura
-    fig, ax = plt.subplots(figsize=(15, 15))
-
-    # Dibuixa els punts de ciutat
-    gdf.plot(ax=ax, color='red', alpha=0.4, markersize=0.015 * gdf['versos'], label='Versos')
-
-    # Afegeix un mapa base (OpenStreetMap per defecte)
-    ctx.add_basemap(ax, source=ctx.providers.CartoDB.PositronNoLabels)
-
-    # Configura el títol i les etiquetes dels eixos
-    # Amaga els eixos
-    ax.set_axis_off()
-
-    # Guarda el mapa com a imatge
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    # Mapa per versos
+    fig_versos = px.scatter_mapbox(
+        gdf,
+        lat=gdf.geometry.y,
+        lon=gdf.geometry.x,
+        size=gdf['versos'],
+        color_discrete_sequence=["red"],
+        opacity=0.5,
+        hover_name="ciutat",
+        hover_data={"versos": True, "poetes": False},
+        title="Mapa de Versos"
+        )
+    fig_versos.update_layout(
+        mapbox_style="carto-positron",
+        mapbox_zoom=5.5,
+        mapbox_center={"lat": 39.5, "lon": 2.5},
+        height=800
+        )
+    iplot(fig_versos)
+    fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos.html')
 
 
 def dialectes(df):
     df = df[['name', 'dialect', 'versos']]
 
     # Per a cada dialecte quantifica quants autors i quants versos hi ha
-
     new_df = df.groupby('dialect').agg({'name': 'count', 'versos': 'sum'}).reset_index()
     new_df.columns = ['dialect', 'autors', 'versos']
 
     # Gràfic autors per dialecte
-    plt.figure(figsize=(6, 6))
-    plt.bar(new_df['dialect'], new_df['autors'], color='blue', alpha=0.5)
-    # Indica el percentage de cada dialecte
-    total = new_df['autors'].sum()
-    for i, v in enumerate(new_df['autors']):
-        plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    total_autors = new_df['autors'].sum()
+    fig_autors = go.Figure()
+    fig_autors.add_trace(go.Bar(
+        x=new_df['dialect'],
+        y=new_df['autors'],
+        marker_color='blue',
+        opacity=0.5,
+        text=[f'{v / total_autors * 100:.1f}%' for v in new_df['autors']],
+        textposition='outside'
+        ))
+    fig_autors.update_layout(
+        title="Autors per Dialecte",
+        xaxis_title="Dialecte",
+        yaxis_title="Nombre d'Autors",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+
+    iplot(fig_autors)
+    fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.html')
+    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.svg')
 
     # Gràfic versos per dialecte
-    plt.figure(figsize=(6, 6))
-    plt.bar(new_df['dialect'], new_df['versos'], color='red', alpha=0.5)
-    # Indica el percentage de cada dialecte
-    total = new_df['versos'].sum()
-    for i, v in enumerate(new_df['versos']):
-        plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    total_versos = new_df['versos'].sum()
+    fig_versos = go.Figure()
+    fig_versos.add_trace(go.Bar(
+        x=new_df['dialect'],
+        y=new_df['versos'],
+        marker_color='red',
+        opacity=0.5,
+        text=[f'{v / total_versos * 100:.1f}%' for v in new_df['versos']],
+        textposition='outside'
+        ))
+    fig_versos.update_layout(
+        title="Versos per Dialecte",
+        xaxis_title="Dialecte",
+        yaxis_title="Nombre de Versos",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+
+    iplot(fig_versos)
+    fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.html')
+    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.svg')
 
     return new_df
 
@@ -129,28 +153,50 @@ def generes(df):
     new_df.columns = ['gender', 'autors', 'versos']
 
     # Gràfic autors per gènere
-    plt.figure(figsize=(6, 6))
-    plt.bar(new_df['gender'], new_df['autors'], color='blue', alpha=0.5)
-    # Indica el percentage de cada gènere
-    total = new_df['autors'].sum()
-    for i, v in enumerate(new_df['autors']):
-        plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    total_autors = new_df['autors'].sum()
+    fig_autors = go.Figure()
+    fig_autors.add_trace(go.Bar(
+        x=new_df['gender'],
+        y=new_df['autors'],
+        marker_color='blue',
+        opacity=0.5,
+        text=[f'{v / total_autors * 100:.1f}%' for v in new_df['autors']],
+        textposition='outside'
+        ))
+    fig_autors.update_layout(
+        title="Autors per Gènere",
+        xaxis_title="Gènere",
+        yaxis_title="Nombre d'Autors",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+
+    iplot(fig_autors)
+    fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.html')
+    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.svg')
 
     # Gràfic versos per gènere
-    plt.figure(figsize=(6, 6))
-    plt.bar(new_df['gender'], new_df['versos'], color='red', alpha=0.5)
-    # Indica el percentage de cada gènere
-    total = new_df['versos'].sum()
-    for i, v in enumerate(new_df['versos']):
-        plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    total_versos = new_df['versos'].sum()
+    fig_versos = go.Figure()
+    fig_versos.add_trace(go.Bar(
+        x=new_df['gender'],
+        y=new_df['versos'],
+        marker_color='red',
+        opacity=0.5,
+        text=[f'{v / total_versos * 100:.1f}%' for v in new_df['versos']],
+        textposition='outside'
+        ))
+    fig_versos.update_layout(
+        title="Versos per Gènere",
+        xaxis_title="Gènere",
+        yaxis_title="Nombre de Versos",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+
+    iplot(fig_versos)
+    fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.html')
+    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.svg')
 
     return new_df
 
@@ -178,58 +224,77 @@ def anys(df):
     new_df['versos_rel'] = new_df['versos'] / new_df['versos'].sum() * 100
 
     # Gràfic autors per dècada
-    plt.figure(figsize=(8, 6))
-    # Distribueix a l'eix X les diferents dècades i fes una barra per cada dècada
-    plt.bar(new_df['decade'], new_df['autors'], color='blue', alpha=0.5)
-    # Indica el percentage de cada dècada a partir de la columna autors_rel
-    for i in range(len(new_df)):
-        plt.text(new_df['decade'][i], new_df['autors'][i] + 0.5, f'{new_df["autors_rel"][i]:.1f}%', ha='center',
-                 va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    fig_autors = go.Figure()
+    fig_autors.add_trace(go.Bar(
+        x=new_df['decade'],
+        y=new_df['autors'],
+        marker_color='blue',
+        opacity=0.5,
+        text=[f'{v:.1f}%' for v in new_df['autors_rel']],
+        textposition='outside'
+        ))
+    fig_autors.update_layout(
+        title="Autors per Dècada",
+        xaxis_title="Dècada",
+        yaxis_title="Nombre d'Autors",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+
+    iplot(fig_autors)
+    fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.html')
+    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.svg')
 
     # Gràfic versos per dècada
-    plt.figure(figsize=(8, 6))
-    # Distribueix a l'eix X les diferents dècades i fes una barra per cada dècada
-    plt.bar(new_df['decade'], new_df['versos'], color='red', alpha=0.5)
-    # Indica el percentage de cada dècada a partir de la columna autors_rel
-    for i in range(len(new_df)):
-        plt.text(new_df['decade'][i], new_df['versos'][i] + 0.5, f'{new_df["versos_rel"][i]:.1f}%', ha='center',
-                 va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.svg', dpi=600, bbox_inches='tight')
-    #plt.show()
-    #plt.close()
+    fig_versos = go.Figure()
+    fig_versos.add_trace(go.Bar(
+        x=new_df['decade'],
+        y=new_df['versos'],
+        marker_color='red',
+        opacity=0.5,
+        text=[f'{v:.1f}%' for v in new_df['versos_rel']],
+        textposition='outside'
+        ))
+    fig_versos.update_layout(
+        title="Versos per Dècada",
+        xaxis_title="Dècada",
+        yaxis_title="Nombre de Versos",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
 
+    iplot(fig_versos)
+    fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.html')
+    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.svg')
 
-    # Fes una línia del temps amb els autors
-
-    # Els autors sense data de mort es representen fins 2025
+    # Línia del temps dels autors
     df['death_date'] = df['death_date'].fillna(2025)
-
-    # Crea una nova columna amb la durada de la vida
-    df['life_duration'] = (df['death_date'] - df['born_date'])
-    df['life_duration'] = df['life_duration'].fillna(0)
-    df['year'] = df['born_date']
-
-    # Ordena els autors per data de naixement
+    df['life_duration'] = (df['death_date'] - df['born_date']).fillna(0)
     df = df.sort_values(by=['born_date'], ascending=False)
-    # Plot línia del temps
-    plt.figure(figsize=(18, 25))
-    plt.hlines(df['name'], df['born_date'], df['death_date'], color='blue', alpha=0.5, lw=2)
-    plt.scatter(df['born_date'], df['name'], color='blue', marker='|', alpha=0.5, s=100)
-    plt.scatter(df['death_date'], df['name'], color='blue', marker='|', alpha=0.5, s=100)
-    plt.title('Línia del temps dels autors')
-    plt.xlabel('Data')
-    plt.ylabel('Autors')
-    # Fes que els anys (eix X) apareguin cada 5 anys
-    plt.xticks(range(1845, 2030, 5))
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/linia_temps.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+
+    fig_timeline = go.Figure()
+    for _, row in df.iterrows():
+        fig_timeline.add_trace(go.Scatter(
+            x=[row['born_date'], row['death_date']],
+            y=[row['name'], row['name']],
+            mode='lines+markers',
+            line=dict(color='blue', width=2),
+            opacity=0.5,
+            marker=dict(size=8),
+            name=row['name']
+            ))
+    fig_timeline.update_layout(
+        title="Línia del Temps dels Autors",
+        xaxis_title="Any",
+        yaxis_title="Autors",
+        xaxis=dict(tickmode='linear', dtick=5, range=[1845, 2030]),
+        template="plotly_white",
+        height=800
+        )
+
+    iplot(fig_timeline)
+    fig_timeline.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/linia_temps.html')
+    fig_timeline.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/linia_temps.svg')
 
     return new_df
 
@@ -257,29 +322,48 @@ def font(df):
                                              'Corpus Literari Digital de la Càtedra Màrius Torres': 'CMT',
                                              "Donatiu de l'autor o curador": "donatiu", 'Llibre electrònic': 'ebook'})
 
-    # Gràfic autors per font
-    plt.figure(figsize=(6, 6))
-    plt.bar(new_df['font'], new_df['autors'], color='blue', alpha=0.5)
-    # Indica el percentage de cada font
-    total = new_df['autors'].sum()
-    for i, v in enumerate(new_df['autors']):
-        plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    total_autors = new_df['autors'].sum()
+    fig_autors = go.Figure()
+    fig_autors.add_trace(go.Bar(
+        x=new_df['font'],
+        y=new_df['autors'],
+        marker_color='blue',
+        opacity=0.5,
+        text=[f'{v / total_autors * 100:.1f}%' for v in new_df['autors']],
+        textposition='outside'
+        ))
+    fig_autors.update_layout(
+        title="Autors per Font",
+        xaxis_title="Font",
+        yaxis_title="Nombre d'Autors",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+    fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.html')
+    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.svg')
 
     # Gràfic versos per font
-    plt.figure(figsize=(6, 6))
-    plt.bar(new_df['font'], new_df['versos'], color='red', alpha=0.5)
-    # Indica el percentage de cada font
-    total = new_df['versos'].sum()
-    for i, v in enumerate(new_df['versos']):
-        plt.text(i, v + 0.5, f'{v / total * 100:.1f}%', ha='center', va='bottom')
-    plt.xticks(rotation=45)
-    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.svg', dpi=600, bbox_inches='tight')
-    plt.show()
-    plt.close()
+    total_versos = new_df['versos'].sum()
+    fig_versos = go.Figure()
+    fig_versos.add_trace(go.Bar(
+        x=new_df['font'],
+        y=new_df['versos'],
+        marker_color='red',
+        opacity=0.5,
+        text=[f'{v / total_versos * 100:.1f}%' for v in new_df['versos']],
+        textposition='outside'
+        ))
+    fig_versos.update_layout(
+        title="Versos per Font",
+        xaxis_title="Font",
+        yaxis_title="Nombre de Versos",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+        )
+    fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.html')
+    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.svg')
+    iplot(fig_autors)
+    iplot(fig_versos)
 
     return new_df
 
