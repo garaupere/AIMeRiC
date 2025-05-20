@@ -122,6 +122,126 @@ def contorn_ritmic(data, name):
     fig.write_image(f'{usb}/corpora/{name}/etiquetat/svg/contorn_ritmic.svg')
 
 
+def contorn_subdivisio(data, name):
+    # Mostra els contorns rítmics dels autors i permet filtrar-los segons la subdivisió
+    sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    df = data.groupby('autor')[sillabes].mean()
+
+    # Crea un gràfic
+    fig = go.Figure()
+
+    # Afegeix una capa amb la mitjana de cada autor
+    for autor in df.index:
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 11)),
+            y=df.loc[autor],
+            mode='lines+markers',
+            name=f'{autor} (global)',
+            line=dict(dash='dash')
+        ))
+
+    # Afegeix una altra capa amb la mitjana del contorn rítmic de cada autor amb la subdivisió 4+6
+    df_subdivisio = data[data['subdivisió'] == '4+6'].groupby('autor')[sillabes].mean()
+    for autor in df_subdivisio.index:
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 11)),
+            y=df_subdivisio.loc[autor],
+            mode='lines+markers',
+            name=f'{autor} (4+6)',
+            line=dict(dash='dot')
+        ))
+
+    # Afegeix una altra capa amb la mitjana del contorn rítmic de cada autor amb la subdivisió 6+4
+    df_subdivisio = data[data['subdivisió'] == '6+4'].groupby('autor')[sillabes].mean()
+    for autor in df_subdivisio.index:
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 11)),
+            y=df_subdivisio.loc[autor],
+            mode='lines+markers',
+            name=f'{autor} (6+4)',
+            line=dict(dash='dot')
+        ))
+
+    # Afegeix una altra capa amb la mitjana del contorn rítmic de cada autor amb la subdivisió 5+5
+    df_subdivisio = data[data['subdivisió'] == '5+5'].groupby('autor')[sillabes].mean()
+    for autor in df_subdivisio.index:
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 11)),
+            y=df_subdivisio.loc[autor],
+            mode='lines+markers',
+            name=f'{autor} (5+5)',
+            line=dict(dash='dot')
+        ))
+
+    # Afegeix una altra capa amb la mitjana del contorn rítmic de cada autor amb la subdivisió 'Cap'
+    df_subdivisio = data[data['subdivisió'] == 'Cap'].groupby('autor')[sillabes].mean()
+    for autor in df_subdivisio.index:
+        fig.add_trace(go.Scatter(
+            x=list(range(1, 11)),
+            y=df_subdivisio.loc[autor],
+            mode='lines+markers',
+            name=f'{autor} (Cap)',
+            line=dict(dash='dot')
+        ))
+
+    # Afegeix un selector de capes
+    fig.update_layout(
+        title="Contorn Rítmic per Autor",
+        xaxis_title="Síl·labes",
+        yaxis_title="Freqüència (%)",
+        xaxis=dict(tickmode='linear', tick0=1, dtick=1),
+        yaxis=dict(range=[0, 1]),
+        legend_title="Autors",
+        template="plotly_white",
+        updatemenus=[
+            {
+                "buttons": [
+                    {
+                        'label': 'Global',
+                        'method': 'update',
+                        'args': [{'visible': [True if 'global' in trace.name else False for trace in fig.data]}]
+                    },
+                    {
+                        "label": "4+6",
+                        "method": "update",
+                        "args": [{"visible": [True if '4+6' in trace.name else False for trace in fig.data]}]
+                    },
+                    {
+                        "label": "6+4",
+                        "method": "update",
+                        "args": [{"visible": [True if '6+4' in trace.name else False for trace in fig.data]}]
+                    },
+                    {
+                        "label": "5+5",
+                        "method": "update",
+                        "args": [{"visible": [True if '5+5' in trace.name else False for trace in fig.data]}]
+                    },
+                    {
+                        "label": "Cap",
+                        "method": "update",
+                        "args": [{"visible": [True if 'Cap' in trace.name else False for trace in fig.data]}]
+                    }
+                ],
+                "direction": "down"
+            }
+        ]
+    )
+
+    # Emmarca el gràfic només en els valors de 1-10 a X i 0-100 a Y
+    fig.update_xaxes(range=[1, 10])
+    fig.update_yaxes(range=[0, 1])
+    # Autoscale
+    fig.update_yaxes(autorange=True)
+    fig.update_xaxes(autorange=True)
+
+    iplot(fig)
+    # Desa el gràfic com a fitxer HTML
+    fig.write_html(f'{usb}/corpora/{name}/etiquetat/svg/contorn_subdivisio.html')
+
+
+
+
+
 def distancia_iambe(data, name):
     # Calcula la distància respecte del model per a cada síl·laba
     sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
@@ -502,4 +622,7 @@ if __name__ == '__main__':
 
     metadades = f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx'
     metadades = pd.read_excel(metadades, index_col=0)
-    cartografies(metadades, corpus)
+    data = pd.read_csv(f'{usb}/corpora/{corpus}/etiquetat/{corpus}.csv', sep=';', encoding='utf-8', lineterminator='\n', header=0,
+                        low_memory=False)
+    #cartografies(metadades, corpus)
+    contorn_subdivisio(data, corpus)

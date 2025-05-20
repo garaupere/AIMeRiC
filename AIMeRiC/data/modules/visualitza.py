@@ -1,10 +1,12 @@
 import ast
 
 import geopandas as gpd
+import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.offline import iplot
 import plotly.express as px
+import contextily as ctx
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
 
@@ -35,7 +37,7 @@ def desctiptives(data_set, name):
     return df
 
 
-def mapa_estatic(geojson):
+def mapa_dinamic(geojson):
     # Converteix el sistema de coordenades a WGS84 (EPSG:4326) per a Plotly
     gdf = geojson.to_crs(epsg=4326)
 
@@ -59,6 +61,7 @@ def mapa_estatic(geojson):
         )
     iplot(fig_autors)
     fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_autors.html')
+    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_autors.svg')
 
     # Mapa per versos
     fig_versos = px.scatter_mapbox(
@@ -80,6 +83,45 @@ def mapa_estatic(geojson):
         )
     iplot(fig_versos)
     fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos.html')
+    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos.svg')
+
+
+def mapa_static(geojson):
+    # Converteix el sistema de coordenades a WGS84 (EPSG:4326)
+    gdf = geojson.to_crs(epsg=4326)
+
+    # Mapa per autors
+    fig, ax = plt.subplots(figsize=(15, 10))
+    gdf.plot(
+        ax=ax,
+        marker='o',
+        color='blue',
+        markersize=gdf['poetes'] * 10,  # Adjust marker size based on 'poetes'
+        alpha=0.5,
+        label="Autors"
+    )
+
+    ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.CartoDB.PositronNoLabels, zoom=8)
+    ax.axis('off')  # Remove axes for a cleaner look
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_autors_static.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
+    # Mapa per versos
+    fig, ax = plt.subplots(figsize=(15, 10))
+    gdf.plot(
+        ax=ax,
+        marker='o',
+        color='red',
+        markersize=gdf['versos'] * 0.05,  # Adjust marker size based on 'versos'
+        alpha=0.5,
+        edgecolor='none',  # Remove marker perimeter
+        label="Versos"
+    )
+    ctx.add_basemap(ax, crs=gdf.crs.to_string(), source=ctx.providers.CartoDB.PositronNoLabels, zoom=8)
+    ax.axis('off')  # Remove axes for a cleaner look
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/mapa_versos_static.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
 
 
 def dialectes(df):
@@ -110,7 +152,6 @@ def dialectes(df):
 
     iplot(fig_autors)
     fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.html')
-    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.svg')
 
     # Gràfic versos per dialecte
     total_versos = new_df['versos'].sum()
@@ -133,7 +174,23 @@ def dialectes(df):
 
     iplot(fig_versos)
     fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.html')
-    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.svg')
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['dialect'], new_df['autors'], color='blue', alpha=0.5)
+    plt.xticks(rotation=45)
+    for i, v in enumerate(new_df['autors']):
+        plt.text(i, v + 0.5, f'{v / total_autors * 100:.1f}%', ha='center', va='bottom', color='gray', alpha=0.8)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_a.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['dialect'], new_df['versos'], color='red', alpha=0.5)
+    plt.xticks(rotation=45)
+    for i, v in enumerate(new_df['versos']):
+        plt.text(i, v + 0.5, f'{v / total_versos * 100:.1f}%', ha='center', va='bottom', color='gray', alpha=0.8)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/dialecte_v.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
 
     return new_df
 
@@ -173,7 +230,6 @@ def generes(df):
 
     iplot(fig_autors)
     fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.html')
-    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.svg')
 
     # Gràfic versos per gènere
     total_versos = new_df['versos'].sum()
@@ -196,7 +252,22 @@ def generes(df):
 
     iplot(fig_versos)
     fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.html')
-    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.svg')
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['gender'], new_df['autors'], color='blue', alpha=0.5)
+    plt.xticks(rotation=45)
+    for i, v in enumerate(new_df['autors']):
+        plt.text(i, v + 0.5, f'{v / total_autors * 100:.1f}%', ha='center', va='bottom', color='gray', alpha=0.8)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_a.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['gender'], new_df['versos'], color='red', alpha=0.5)
+    plt.xticks(rotation=45)
+    for i, v in enumerate(new_df['versos']):
+        plt.text(i, v + 0.5, f'{v / total_versos * 100:.1f}%', ha='center', va='bottom', color='gray', alpha=0.8)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/genere_v.svg', bbox_inches='tight', dpi=600)
+    plt.close()
 
     return new_df
 
@@ -243,7 +314,6 @@ def anys(df):
 
     iplot(fig_autors)
     fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.html')
-    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.svg')
 
     # Gràfic versos per dècada
     fig_versos = go.Figure()
@@ -265,7 +335,6 @@ def anys(df):
 
     iplot(fig_versos)
     fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.html')
-    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.svg')
 
     # Línia del temps dels autors
     df['death_date'] = df['death_date'].fillna(2025)
@@ -295,6 +364,60 @@ def anys(df):
     iplot(fig_timeline)
     fig_timeline.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/linia_temps.html')
     fig_timeline.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/linia_temps.svg')
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['decade'], new_df['autors'], color='blue', alpha=0.5)
+    plt.xticks(rotation=45)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_a.svg')
+    plt.close()
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['decade'], new_df['versos'], color='red', alpha=0.5)
+    plt.xticks(rotation=45)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/decade_v.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
+    # Genera un any de producció per a cada autor. Per obtenir-lo es fa la mitjana entre la data de naixement i la de mort
+    total_versos = df['versos'].sum()
+    # Elimina els autors sense data de naixement
+    df = df.dropna(subset=['born_date'])
+    # Els autors sense data de mort se'ls assigna el 2025
+    df['death_date'] = df['death_date'].fillna(2025)
+
+    # Calcula l'any de producció
+    df['produccio'] = (df['born_date'] + df['death_date']) / 2
+
+    # Dècades de producció
+    df['prod_decade'] = (df['produccio'] // 10) * 10
+
+    df = df.groupby('decade').agg({'name': 'count', 'versos': 'sum'}).reset_index()
+
+    # Plot dècades de producció
+    fig_prod = go.Figure()
+    fig_prod.add_trace(go.Bar(
+        x=df['prod_decade'],
+        y=df['versos'],
+        marker_color='green',
+        opacity=0.5,
+        text=[f'{v / total_versos * 100:.1f}%' for v in df['versos']],
+        textposition='outside'
+    ))
+    fig_prod.update_layout(
+        title="Producció per dècada",
+        xaxis_title="Dècada",
+        yaxis_title="Nombre de Versos",
+        xaxis=dict(tickangle=45),
+        template="plotly_white"
+    )
+    fig_prod.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/prod_decade.html')
+    iplot(fig_prod)
+
+    print(df['prod_decade'])
+    plt.figure(figsize=(6, 6))
+    plt.bar(df['prod_decade'], df['versos'], color='green', alpha=0.5)
+    plt.xticks(rotation=45)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/prod_decade.svg', bbox_inches='tight', dpi=600)
+    plt.close()
 
     return new_df
 
@@ -340,7 +463,6 @@ def font(df):
         template="plotly_white"
         )
     fig_autors.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.html')
-    fig_autors.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.svg')
 
     # Gràfic versos per font
     total_versos = new_df['versos'].sum()
@@ -361,11 +483,31 @@ def font(df):
         template="plotly_white"
         )
     fig_versos.write_html(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.html')
-    fig_versos.write_image(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.svg')
+
+
+
     iplot(fig_autors)
     iplot(fig_versos)
 
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['font'], new_df['autors'], color='blue', alpha=0.5)
+    plt.xticks(rotation=45)
+    for i, v in enumerate(new_df['autors']):
+        plt.text(i, v + 0.5, f'{v / total_autors * 100:.1f}%', ha='center', va='bottom', color='gray', alpha=0.8)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_a.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
+    plt.figure(figsize=(6, 6))
+    plt.bar(new_df['font'], new_df['versos'], color='red', alpha=0.5)
+    plt.xticks(rotation=45)
+    for i, v in enumerate(new_df['versos']):
+        plt.text(i, v + 0.5, f'{v / total_versos * 100:.1f}%', ha='center', va='bottom', color='gray', alpha=0.8)
+    plt.savefig(f'{usb}/corpora/{corpus}/etiquetat/svg/font_v.svg', bbox_inches='tight', dpi=600)
+    plt.close()
+
     return new_df
+
+
 
 
 if __name__ == '__main__':
@@ -379,10 +521,13 @@ if __name__ == '__main__':
     # Llegeix les dades del fitxer GeoJSON
     gdf = gpd.read_file(path)
 
-    #mapa_estatic(usb, corpus)
+    #mapa_dinamic(dgf)
+
+    #mapa_static(gdf)
     metadades = pd.read_excel(f'{usb}/corpora/{corpus}/etiquetat/xlsx/metadades_autors.xlsx')
     # Genera els gràfics
     #dialectes(metadades)
-    generes(metadades)
-    #anys(metadades)
+    #generes(metadades)
+    anys(metadades)
     #font(metadades)
+
