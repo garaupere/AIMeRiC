@@ -225,6 +225,40 @@ class Vers:
                      }
                 }
 
+    def desa_syll(self, n, align):
+        ## Desa les 10 primeres síl·labes del vers o les 10 últimes, segons el paràmetre align.
+        if align == "l":
+            self.nomes_sillabes = self.nomes_sillabes[:n]
+        elif align == "r":
+            self.nomes_sillabes = self.nomes_sillabes[-n:]
+        else:
+            raise ValueError("El paràmetre align ha de ser 'L' o 'R'.")
+
+        self.patro = [int(s.pes) for s in self.nomes_sillabes]
+        self.contorn_cru = ''.join([str(x) for x in self.patro]).rstrip('0')
+        self.contactes_vocalics = contactes_vocalics_info(self)
+        self.metronome = metronome(self)
+        self.recompte_sillabes_metriques = recompte_metric(self)
+
+        dict = {self.text:
+                {"string": self.string,
+                     "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
+                     "pattern": self.patro,
+                     "comparative_pattern": self.contorn_cru,
+                     "cv_info": self.contactes_vocalics,
+                     "metronome": self.metronome
+                     }
+                }
+        row = [self.text, self.patro, self.contorn_cru, self.recompte_sillabes_metriques, self.contorn_accentual, self.metronome]
+
+        if self.recompte_sillabes_metriques == n:
+            return dict, row
+        else:
+            return None
+
+
+
+
     def prosa_to_csv(self):
         return [self.text, self.escansio_text, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques,
                 self.patro, self.contorn_accentual, self.metronome]
@@ -235,6 +269,6 @@ if __name__ == "__main__":
 
     start = time.time()
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "cisterna de Sant Salvador, ran de muralla. Je límpid ni-.-el!, que creix", 10)
-    vers.mostra()
+    vers = Vers(nlp, "El port exterior de Ciutadella és un anar i venir continu de vaixells.", 10)
+    print(vers.desa_syll(10, "l"))
     print(time.time() - start)

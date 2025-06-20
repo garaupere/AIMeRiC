@@ -29,18 +29,25 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
     head = ['id', 'autor', 'book', 'year', 'text', 'string_stress', 'recompte_sillabes_metriques', 'recompte_sillabes_extrametriques', 'pattern', 'maxpattern', 'clash', 'lapse', 'ws_hl', 'non_initial', 'symetry',
             'metronome', 'iambes', 'troqueus', 'anapests', 'dàctils', 'peus']
+    head_syl = ['id', 'autor', 'book', 'year', 'text', 'patró', 'max_patró', 'recompte_sillabes_metriques', 'controrn accentual', 'metronome']
 
     for file in tqdm(os.listdir(corpus_path), desc="Etiquetant el corpus", leave=True, position=0,
                      ncols=80):  # Per cada autor del corpus
         author = Author(os.path.join(corpus_path, file))  # Crea un objecte Autor
         author.print_metadata()  # Imprimeix la metadata de l'autor
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
+        syll_dict_L = author.save_metadata()
+        syll_dict_R = author.save_metadata()
 
         rows = []
+        rowsL = []
+        rowsR = []
         for book_title in author.books:  # Per a cada llibre de l'autor
             book = Book(book_title, author.content)  # Crea un objecte Llibre
             book.print_metadata()  # Imprimeix la metadata del llibre
             results_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
+            syll_dict_L['books'].update(book.save_metadata())
+            syll_dict_R['books'].update(book.save_metadata())
 
             for poem_title in book.poems:  # Per cada poema del llibre
                 if book.poems[poem_title]:  # Si el poema no és buit
@@ -48,6 +55,8 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                     pagina.print_metadata()  # Imprimeix la metadata del poema
                     results_dict['books'][book_title]['poems'].update(
                         pagina.save_metadata())  # Guarda la metadata del poema
+                    syll_dict_L['books'][book_title]['poems'].update(pagina.save_metadata())
+                    syll_dict_R['books'][book_title]['poems'].update(pagina.save_metadata())
 
                     i = 1
 
@@ -62,7 +71,23 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
                                     if paragraf is not None:
                                         results_dict['books'][book_title]['poems'][poem_title]['verses'].update(linia.desa_prosa())  # Guarda la metadata del vers format prosa
+
+                                        syL = linia.desa_syll(10, 'l')  # Guarda la metadata del vers format síl·labic a l'esquerra
+                                        syR = linia.desa_syll(10, 'r')  # Guarda la metadata del vers format síl·labic a la dreta
+
+                                        if syL is not None:
+                                            syll_dict_L['books'][book_title]['poems'][poem_title]['verses'].update(syL[0])
+                                            syll_row_L = [f"{i}.{sub_i}", author.name, book_title,
+                                                          book.year] + syL[1]
+                                            rowsL.append(syll_row_L)
+                                        if syR is not None:
+                                            syll_dict_R['books'][book_title]['poems'][poem_title]['verses'].update(syR[0])
+                                            syll_row_R = [f"{i}.{sub_i}", author.name, book_title,
+                                                          book.year] + syR[1]
+                                            rowsR.append(syll_row_R)
+
                                         row = [f"{i}.{sub_i}", author.name, book_title, book.year] + linia.prosa_to_csv() + dades_prosa(linia)
+
                                         print(row)
                                         rows.append(row)
                                         sub_i += 1
@@ -74,11 +99,27 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                   encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
             json.dump(results_dict, f, indent=4, ensure_ascii=False)
 
+        with open(f"{results_path}json/{author.id}_syll_L.json", 'w',
+                    encoding='utf-8') as f:
+            json.dump(syll_dict_L, f, indent=4, ensure_ascii=False)
+        with open(f"{results_path}json/{author.id}_syll_R.json", 'w',
+                    encoding='utf-8') as f:
+            json.dump(syll_dict_R, f, indent=4, ensure_ascii=False)
+
         os.makedirs(f"{results_path}csv/", exist_ok=True)
         with open(f"{results_path}csv/{author.id}.csv", 'w',
                   encoding='utf-8') as f:  # Guarda els resultats en un fitxer CSV
             df = pd.DataFrame(rows, columns=head)
             df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+
+        with open(f"{results_path}csv/{author.id}_syll_L.csv", 'w',
+                    encoding='utf-8') as f:
+            dfL = pd.DataFrame(rowsL, columns=head_syl)
+            dfL.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+        with open(f"{results_path}csv/{author.id}_syll_R.csv", 'w',
+                    encoding='utf-8') as f:
+            dfR = pd.DataFrame(rowsR, columns=head_syl)
+            dfR.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True, decimal=',', float_format='%.2f')
 
         os.makedirs(f"{results_path}svg/", exist_ok=True)
         os.makedirs(f"{results_path}xlsx/", exist_ok=True)
