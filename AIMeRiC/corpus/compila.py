@@ -56,27 +56,34 @@ def compile_corpus(path: str, corpus: str) -> None:
 
     if corpus == 'ctilc':
         # print(f'Compilant el corpus \'{corpus}\'...')
-        for file in os.listdir(corpus_path + '/'):
-            if file.endswith('.xml'):
-                corpus_dict = ctilc(corpus_path + '/' + file)
-                if not os.path.exists(f'{usb}/corpora/'):
-                    os.makedirs(f'{usb}/corpora/')
-                #    print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
-                if not os.path.exists(f'{usb}/corpora/{corpus}/'):
-                    os.makedirs(f'{usb}/corpora/{corpus}/')
-                #    print(f'\t>> La carpeta \'{usb}corpora/{corpus}\' ha estat creada.')
+        print("HA SELECCIONAT TORNAR A COMPILAR EL CTILC.")
+        input = input("Això sobreescriurà els fitxers .json existents. Voleu continuar? (s/n): ")
+        if input.lower() != 's':
+            print("Operació cancel·lada. No s'han fet canvis.")
+            return
+        else:
+            print("Continuant amb la recompilació del corpus CTILC...")
+            for file in os.listdir(corpus_path + '/'):
+                if file.endswith('.xml'):
+                    corpus_dict = ctilc(corpus_path + '/' + file)
+                    if not os.path.exists(f'{usb}/corpora/'):
+                        os.makedirs(f'{usb}/corpora/')
+                    #    print(f'>> La carpeta \'{usb}/corpora\' ha estat creada.')
+                    if not os.path.exists(f'{usb}/corpora/{corpus}/'):
+                        os.makedirs(f'{usb}/corpora/{corpus}/')
+                    #    print(f'\t>> La carpeta \'{usb}corpora/{corpus}\' ha estat creada.')
 
-                # Fes que el directori tengui aquesta estructura:
-                # corpora/{path}/sense_etiquetar/json/{folder}.json
-                if not os.path.exists(f'{usb}/corpora/{corpus}/sense_etiquetar/json/'):
-                    os.makedirs(f'{usb}/corpora/{corpus}/sense_etiquetar/json/')
-                #    print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
-                name = corpus_dict['name']
-                with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{name}.json", "w",
-                          encoding="utf-8") as json_file:
-                    json.dump(corpus_dict, json_file, ensure_ascii=False, indent=2)
-                #    print('-' * 40)
-                #    print(f"\t>> '{folder}.json' desat.")
+                    # Fes que el directori tengui aquesta estructura:
+                    # corpora/{path}/sense_etiquetar/json/{folder}.json
+                    if not os.path.exists(f'{usb}/corpora/{corpus}/sense_etiquetar/json/'):
+                        os.makedirs(f'{usb}/corpora/{corpus}/sense_etiquetar/json/')
+                    #    print(f'\t\t>> La carpeta \'{usb}/corpora/{corpus}/sense_etiquetar/json\' ha estat creada.')
+                    name = corpus_dict['name']
+                    with open(f"{usb}/corpora/{corpus}/sense_etiquetar/json/{name}.json", "w",
+                              encoding="utf-8") as json_file:
+                        json.dump(corpus_dict, json_file, ensure_ascii=False, indent=2)
+                    #    print('-' * 40)
+                    #    print(f"\t>> '{folder}.json' desat.")
         return
 
     for folder_subcorpus in [x for x in os.listdir(corpus_path) if x != '__test']:
