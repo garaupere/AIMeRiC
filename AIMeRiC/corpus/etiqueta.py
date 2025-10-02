@@ -63,7 +63,7 @@ def clean_results_folders(results_path):
 
 
 def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
-    global rows
+    global rows, df
     corpus_name = corpus_path.split('/')[2]
     global_json = {
         'name': corpus_name,
@@ -87,7 +87,9 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
         scansion_cols = [str(col + 1) for col in range(0, mode)]
-        head = (['autor', 'font', 'any', 'obra', 'poema', 'núm. de vers', 'text del vers',
+        head = (['autor', 'font', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
+                 'obra', 'any', 'traducció',
+                 'poema', 'núm. de vers', 'text del vers',
                  'escansió plana'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
                  'mots al còlon 1', 'mots al còlon 2',
@@ -121,7 +123,8 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                                             results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
                                                 vers.save)  # Guarda la metadata del vers
                                             rows.append(
-                                                [author.id, author.font, author.born_date, book_title,
+                                                [author.id, author.font, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
+                                                 book_title, book.year, book.translation,
                                                  poem_title, i + 1] + vers.to_csv())
                                             i += 1
                                         else:

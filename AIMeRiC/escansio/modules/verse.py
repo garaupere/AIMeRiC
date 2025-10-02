@@ -3,6 +3,7 @@ import re
 import time
 from copy import deepcopy
 from colorama import Fore
+import pandas as pd
 
 from AIMeRiC.escansio.modules.utils.syntax import encavalcament
 from AIMeRiC.escansio.modules.word import Word
@@ -99,17 +100,16 @@ class Vers:
 
     def __metronome__(self):
         self.metronome = metronome(self)
-
     def __disposa_tall__(self):
         if self.subdivisio is None:
             self.subdivisio = 'Cap'
-        else:
+        elif self.subdivisio != 'Cap':
             self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[
                                                                                         self.posicio_tall:]
             self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
-        self.escansio_text = self.escansio_text.split('.')
-        self.escansio_text = '.'.join(
-            self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
+            self.escansio_text = self.escansio_text.split('.')
+            self.escansio_text = '.'.join(
+                self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
 
     def __actualitza__(self):
         """Aquesta funció actualitza el vers després d'aplicar-hi llicències."""
@@ -133,17 +133,13 @@ class Vers:
         def color_tonic(pattern):
             return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
 
-        def color_tonic_text(pattern_text):
-            pattern = re.split(r'[.#]', pattern_text)
-            return '.'.join([Fore.CYAN + x + Fore.RESET if x.isupper() else x for x in pattern]).replace('_', '‿')
-
         for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
                      "recompte_sillabes_extrametriques",
                      "ajustat", "subdivisio",
                      "anotat", "n_mots", "mots_colon1", "mots_colon2",
                      "llicencies"]:
             if attr == "escansio_text":
-                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Escansió: {color_tonic_text(getattr(self, attr))}")
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Escansió: {(getattr(self, attr))}")
             elif attr == "contorn_accentual":
                 print(Fore.CYAN, f"\t➥", Fore.RESET, f"Contorn accentual:", f"{color_tonic(getattr(self, attr))}")
             elif attr == "recompte_sillabes_metriques":
@@ -225,39 +221,28 @@ class Vers:
                      }
                 }
 
-    def desa_syll(self, n, align):
-        ## Desa les 10 primeres síl·labes del vers o les 10 últimes, segons el paràmetre align.
-        if align == "l":
-            self.nomes_sillabes = self.nomes_sillabes[:n]
-        elif align == "r":
-            self.nomes_sillabes = self.nomes_sillabes[-n:]
-        else:
-            raise ValueError("El paràmetre align ha de ser 'L' o 'R'.")
-
-        self.patro = [int(s.pes) for s in self.nomes_sillabes]
-        self.contorn_cru = ''.join([str(x) for x in self.patro]).rstrip('0')
-        self.contactes_vocalics = contactes_vocalics_info(self)
-        self.metronome = metronome(self)
-        self.recompte_sillabes_metriques = recompte_metric(self)
-
-        dict = {self.text:
-                {"string": self.string,
-                     "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
-                     "pattern": self.patro,
-                     "comparative_pattern": self.contorn_cru,
-                     "cv_info": self.contactes_vocalics,
-                     "metronome": self.metronome
-                     }
-                }
-        row = [self.text, self.patro, self.contorn_cru, self.recompte_sillabes_metriques, self.contorn_accentual, self.metronome]
-
-        if self.recompte_sillabes_metriques == n:
-            return dict, row
-        else:
-            return None
-
-
-
+    def desa_prosa_2(self):
+        """Guarda el vers en format prosa."""
+        if self.recompte_sillabes_metriques > 9:
+            data = {
+                "text": [self.text],
+                "string": [self.string],
+                "string_stress": [self.escansio_text],
+                "annotated": [self.anotat],
+                "no_words": [[syllable.save_metadata() for syllable in self.nomes_sillabes]],
+                "pattern": [self.patro],
+                "n_words": [self.n_mots],
+                "comparative_pattern": [self.contorn_cru],
+                "cv_info": [self.contactes_vocalics],
+                "encavalcament": [self.encavalcament],
+                "metronome": [self.metronome],
+                "first_10_patro": [self.patro[:10]],
+                "first_10_comparative_pattern": [self.contorn_cru[:10]],
+                "last_10_patro": [self.patro[-10:]],
+                "last_10_comparative_pattern": [self.contorn_cru[-10:]]
+            }
+            return pd.DataFrame(data)
+        return None
 
     def prosa_to_csv(self):
         return [self.text, self.escansio_text, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques,

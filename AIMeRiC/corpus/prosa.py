@@ -107,10 +107,10 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
             json.dump(syll_dict_R, f, indent=4, ensure_ascii=False)
 
         os.makedirs(f"{results_path}csv/", exist_ok=True)
-        with open(f"{results_path}csv/{author.id}.csv", 'w',
-                  encoding='utf-8') as f:  # Guarda els resultats en un fitxer CSV
-            df = pd.DataFrame(rows, columns=head)
-            df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+        #with open(f"{results_path}csv/{author.id}.csv", 'w',
+                  #encoding='utf-8') as f:  # Guarda els resultats en un fitxer CSV
+            #df = pd.DataFrame(rows, columns=head)
+            #df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True, decimal=',', float_format='%.2f')
 
         with open(f"{results_path}csv/{author.id}_syll_L.csv", 'w',
                     encoding='utf-8') as f:
@@ -125,7 +125,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         os.makedirs(f"{results_path}xlsx/", exist_ok=True)
 
     corpus_name = corpus_path.split('/')[2]
-    merge_tables(results_path, corpus_name)
+    #merge_tables(results_path, corpus_name)
 
 
 def dades_prosa(vers: Vers):
@@ -202,3 +202,4 @@ if __name__ == "__main__":
     seconds = int(elapsed_time % 60)
     print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
     print("Fi de l'etiquetatge.")
+

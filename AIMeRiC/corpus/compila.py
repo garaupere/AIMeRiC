@@ -57,8 +57,8 @@ def compile_corpus(path: str, corpus: str) -> None:
     if corpus == 'ctilc':
         # print(f'Compilant el corpus \'{corpus}\'...')
         print("HA SELECCIONAT TORNAR A COMPILAR EL CTILC.")
-        input = input("Això sobreescriurà els fitxers .json existents. Voleu continuar? (s/n): ")
-        if input.lower() != 's':
+        input_sing = input("Això sobreescriurà els fitxers .json existents. Voleu continuar? (s/n): ")
+        if input_sing.lower() != 's':
             print("Operació cancel·lada. No s'han fet canvis.")
             return
         else:

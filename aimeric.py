@@ -1,3 +1,4 @@
+import pandas as pd
 from colorama import Fore
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
@@ -49,16 +50,15 @@ def scan(nlp, verse, goal: int = 10):
 def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles", Fore.GREEN, "(-list)", Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus", Fore.GREEN, "(-comp", Fore.RED, "corpus)",
-          Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus", Fore.GREEN, "(-etiq", Fore.RED, "corpus)",
-          Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test", Fore.GREEN, "(-test)", Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers", Fore.GREEN, "(-scan", Fore.RED, "vers)", Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa", Fore.GREEN, "(-prosa)", Fore.RESET)
-    print(Fore.CYAN, f"\t➥", Fore.RESET, " Còpia de seguretat del corpus", Fore.GREEN, "(-bkp)", Fore.RESET, "\n")
-    print("Per accedir al menú d'ajuda, usau '-help'.")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles (" + Fore.GREEN + "-list" +  Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED + "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Comparar dos corpus (" + Fore.GREEN + "-compara" + Fore.RED, "corpus_1", Fore.RESET,  Fore.BLUE + "corpus_2" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus (" + Fore.GREEN + "-etiq", Fore.RED, "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test (" + Fore.GREEN, "-test" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan", Fore.RED + "vers" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa ("+  Fore.GREEN + "-prosa" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, " Còpia de seguretat del corpus (" + Fore.GREEN + "-bkp" + Fore.RESET + ")\n")
+    print("Per accedir al menú d'ajuda, usau '" + Fore.GREEN + "-help" + Fore.RESET + "'.")
     print("Per tancar el programa, premeu Intro.\n")
     print("--" * 40)
     print(
@@ -67,7 +67,33 @@ def help():
     print("--" * 40)
 
 
+def compara_corpus(corpus1, corpus2):
+    root = f"{getUSB()}/corpora/"
+    end = "/sense_etiquetar/json/"
+    fitxers1 = set(os.listdir(root + corpus1 + end))
+    fitxers2 = set(os.listdir(root + corpus2 + end))
+
+    comuns = sorted(fitxers1 & fitxers2)
+    nomes_carpeta1 = sorted(fitxers1 - fitxers2)
+    nomes_carpeta2 = sorted(fitxers2 - fitxers1)
+
+    # Crear un diccionari de dades
+    dades = {
+        f"Només {os.path.basename(corpus1)}": nomes_carpeta1,
+        f"Només {os.path.basename(corpus2)}": nomes_carpeta2,
+        "Comuns": comuns
+    }
+
+    # Crear un dataframe, omplint amb valors buits on sigui necessari
+    df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in dades.items()]))
+
+    # Escriure a Excel
+    df.to_excel(f"comparison_result_{corpus1}_{corpus2}.xlsx", index=False)
+    print(f"Resultat guardat a 'comparison_results_{corpus1}_{corpus2}.xlsx'")
+
+
 def main():
+    global options
     usb = getUSB()
     raw_files_path = rf"{usb}/compile_files/"
     root = f"{usb}/corpora/"
@@ -131,6 +157,11 @@ def main():
                     print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
                 except FileNotFoundError:
                     print('El corpus seleccionat no existeix.')
+
+            elif options[0] == "-compara":
+                compara_corpus(options[1], options[2])
+
+
 
             elif options[0] == '-scan':
                 verse = ' '.join(options[1:])
