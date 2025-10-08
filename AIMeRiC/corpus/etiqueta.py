@@ -112,7 +112,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
                     for verse in poem.verses:  # Per cada vers del poema
                         try:
-                            if 110 > len(verse) > 20 and re.search(r"[a-zA-Z]", verse):
+                            if 110 > len(str(verse)) > 20 and re.search(r"[a-zA-Z]", verse):
                                 processed_verses.add(verse)  # Afegeix el vers al conjunt de versos processats
 
                                 vers = escaneja(nlp, verse, goal=mode)  # Crea un objecte Vers
