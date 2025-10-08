@@ -77,7 +77,7 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> (pd.DataFrame, lis
 
     # Genera un df amb els versos no coincidents marcats amb un booleà
     df_comp['match'] = accuracy
-    df_comp.to_csv('AIMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
+    df_comp.to_csv('validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
 
     return df_comp
 
@@ -95,42 +95,46 @@ def plot_comparison(comparison_df):
     manual.columns = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
     # Mean scatter plot without lines
-    auto_mean = auto.mean() * 100
-    manual_mean = manual.mean() * 100
-    plt.figure(figsize=(5, 5))
+    auto_mean = auto.mean()
+    manual_mean = manual.mean()
+    plt.figure(figsize=(5, 3))
     plt.xticks(np.arange(0, 11))
     plt.plot(auto_mean, 'o', color='red', label='Automàtic')
     plt.plot(manual_mean, '^', color='blue', label='Manual')
+    plt.xlabel('síl·labes')
+    plt.ylabel('tonicitat')
     plt.grid(False)
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
-    plt.legend()
-    plt.savefig('AIMeRiC/corpus/validacio/comparison.svg')
+    plt.savefig('validacio/comparison.svg')
     plt.close()
 
     # Calcula la distància total entre els valors automàtics i manuals
     total_distance = np.abs(auto_mean - manual_mean).mean()
-    print(f'\t > Precisió de l\'etiquetatge: {100 - total_distance:.2f}%')
+    print(f'\t > Precisió de l\'etiquetatge: {1 - total_distance:.2f}%')
 
     # Desa les dades de la comparació en un fitxer xlsx
     difference = abs(auto_mean - manual_mean)
     df = pd.DataFrame({'Automàtic': auto_mean, 'Manual': manual_mean, 'Diferència': difference})
-    df.to_excel('AIMeRiC/corpus/validacio/comparison.xlsx', index=False)
-    plt.figure(figsize=(5, 5))
-    plt.bar(df.index, df['Diferència'], color='skyblue')
+    df.to_excel('validacio/comparison.xlsx', index=False)
+    plt.figure(figsize=(3, 3))
+    plt.bar(df.index, df['Diferència'], color='skyblue', edgecolor='black')
+    plt.xlabel('síl·labes')
+    plt.ylabel('diferència')
     # Difference mean
     plt.axhline(difference.mean(), color='red', linestyle='--', label='Mitjana')
-    plt.text(9.8, difference.mean() + 0.02, f'{difference.mean():.2f}', fontsize=12, color='red')
+    #plt.text(9.8, difference.mean() + 0.02, f'{difference.mean():.2f}', fontsize=10, color='red')
     plt.xticks(np.arange(0, 11))
     plt.grid(False)
     plt.tight_layout()
-    plt.savefig('AIMeRiC/corpus/validacio/difference.svg')
+    plt.savefig('validacio/difference.svg')
 
 
 if __name__ == '__main__':
     print('Validació de les dades __test.')
     usb = getUSB()
     automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
-    manual = normalitza(read_csv('AIMeRiC/corpus/validacio/__test_manual.csv'))
+    manual = normalitza(read_csv('validacio/__test_manual.csv'))
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)
