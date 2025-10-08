@@ -87,7 +87,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
         scansion_cols = [str(col + 1) for col in range(0, mode)]
-        head = (['autor', 'font', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
+        head = (['autor_id', 'autor', 'font', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
                  'obra', 'any', 'traducció',
                  'poema', 'núm. de vers', 'text del vers',
                  'escansió plana'] + scansion_cols +
@@ -123,7 +123,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                                             results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
                                                 vers.save)  # Guarda la metadata del vers
                                             rows.append(
-                                                [author.id, author.font, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
+                                                [author.id, author.name, author.font, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
                                                  book_title, book.year, book.translation,
                                                  poem_title, i + 1] + vers.to_csv())
                                             i += 1

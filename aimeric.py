@@ -47,11 +47,27 @@ def scan(nlp, verse, goal: int = 10):
     return analisi.mostra()
 
 
+def check_jsons(corpus):
+    """Comprova que tots els fitxers .json d'un directori estiguin ben formats."""
+    usb = getUSB()
+    path = f"{usb}/corpora/{corpus}/sense_etiquetar/json/"
+    for filename in os.listdir(path):
+        if filename.endswith(".json"):
+            file_path = os.path.join(path, filename)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    import json
+                    json.load(file)
+                print(f"{filename} està ben format.")
+            except json.JSONDecodeError as e:
+                print(f"\t >> Error de format en {filename}: {e}")
+
 def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles (" + Fore.GREEN + "-list" +  Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED + "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Comprovar els fitxers JSON d'un corpus (" + Fore.GREEN + "-check" + Fore.RED, "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Comparar dos corpus (" + Fore.GREEN + "-compara" + Fore.RED, "corpus_1", Fore.RESET,  Fore.BLUE + "corpus_2" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus (" + Fore.GREEN + "-etiq", Fore.RED, "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test (" + Fore.GREEN, "-test" + Fore.RESET + ")")
@@ -159,9 +175,17 @@ def main():
                     print('El corpus seleccionat no existeix.')
 
             elif options[0] == "-compara":
-                compara_corpus(options[1], options[2])
+                try:
+                    compara_corpus(options[1], options[2])
+                except FileNotFoundError:
+                    print('Un dels corpus seleccionats no existeix.')
 
-
+            elif options[0] == '-check':
+                corpus = options[1]
+                try:
+                    check_jsons(corpus)
+                except FileNotFoundError:
+                    print('El corpus seleccionat no existeix.')
 
             elif options[0] == '-scan':
                 verse = ' '.join(options[1:])

@@ -46,13 +46,17 @@ class Book:
 
         self.book_content = self.author_content.get('books', {}).get(self.number)
         if self.book_content:
-            self.title = self.book_content.get('title')
-            self.year = self.book_content.get('year')
-            self.publisher = self.book_content.get('publisher')
-            self.translation = self.book_content.get('translation', False) is True
-            self.poems = self.book_content.get('poems', [])
-            self.n_poems = len(self.poems)
-            self.n_verses = sum(len(poem) for poem in self.poems)  # Nombre total de versos
+            try:
+                self.title = self.book_content.get('title')
+                self.year = self.book_content.get('year')
+                self.publisher = self.book_content.get('publisher')
+                self.translation = self.book_content.get('translation', False) is True
+                self.poems = self.book_content.get('poems', [])
+                self.n_poems = len(self.poems)
+                self.n_verses = sum(len(poem) for poem in self.poems)  # Nombre total de versos
+            except AttributeError:
+                print(f"Error: El llibre '{self.number}' no té un títol vàlid.")
+
         else:
             print(f'Error: "{self.number}" no és un títol vàlid de l\'autor.')
 
