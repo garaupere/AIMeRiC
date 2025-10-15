@@ -42,7 +42,6 @@ class Author:
         self.dialect: Optional[str] = None
         self.viaf: Optional[str] = None
         self.wiki_id: Optional[str] = None
-        self.font: Optional[str] = None
         self.books: List[str] = []
         self._load_author_data()
 
@@ -62,7 +61,6 @@ class Author:
             self.dialect = self.content.get('dialect') if self.content.get('dialect') else None
             self.viaf = self.content.get('viaf') if self.content.get('viaf') else None
             self.wiki_id = self.content.get('wiki_id') if self.content.get('wiki_id') else None
-            self.font = self.content.get('font') if self.content.get('font') else None
             self.books = self.content.get('books', [])
 
     @staticmethod
@@ -101,7 +99,6 @@ class Author:
             f"Dialect: {self.dialect}\n"
             f"VIAF: {self.viaf}\n"
             f"Wikidata ID: {self.wiki_id}\n"
-            f"Font: {self.font}\n"
             f"Books: {self.n_books}\n"
         )
 
@@ -122,7 +119,6 @@ class Author:
             "dialect": self.dialect,
             "viaf": self.viaf,
             "wiki_id": self.wiki_id,
-            "font": self.font,
             "books": {},  # Estructura inicial per a guardar llibres
             "n_books": self.n_books
             }

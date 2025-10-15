@@ -28,6 +28,7 @@ class Book:
         self.year: Optional[int] = None
         self.translation: Optional[bool] = None
         self.publisher: Optional[str] = None
+        self.font: Optional[str] = None
         self.poems: List[Dict] = []
         self.n_poems: int = 0
         self.n_verses: int = 0
@@ -51,6 +52,7 @@ class Book:
                 self.year = self.book_content.get('year')
                 self.publisher = self.book_content.get('publisher')
                 self.translation = self.book_content.get('translation', False) is True
+                self.font = self.book_content.get('font')
                 self.poems = self.book_content.get('poems', [])
                 self.n_poems = len(self.poems)
                 self.n_verses = sum(len(poem) for poem in self.poems)  # Nombre total de versos
@@ -73,6 +75,7 @@ class Book:
             f"\tYear: {self.year}\n"
             f"\tPublisher: {self.publisher}\n"
             f"\tTranslation: {self.translation}\n"
+            f"\tFont: {self.font}\n"
             f"\tPoems: {self.n_poems}\n"
         )
 
@@ -89,8 +92,9 @@ class Book:
                 "year": self.year,
                 "publisher": self.publisher,
                 "translation": self.translation,
+                "font": self.font,
                 "poems": {},  # Estructura inicial per a guardar poemes
                 "n_poems": self.n_poems,
-                },
-            "n_verses": self.n_verses
+                "n_verses": self.n_verses
             }
+        }

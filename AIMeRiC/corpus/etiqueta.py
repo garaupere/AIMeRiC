@@ -87,8 +87,8 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
         scansion_cols = [str(col + 1) for col in range(0, mode)]
-        head = (['autor_id', 'autor', 'font', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
-                 'obra', 'any', 'traducció',
+        head = (['autor_id', 'autor', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
+                 'obra', 'any', 'traducció', 'font',
                  'poema', 'núm. de vers', 'text del vers',
                  'escansió plana'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
@@ -123,8 +123,8 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                                             results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
                                                 vers.save)  # Guarda la metadata del vers
                                             rows.append(
-                                                [author.id, author.name, author.font, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
-                                                 book_title, book.year, book.translation,
+                                                [author.id, author.name, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
+                                                 book_title, book.year, book.translation, book.font,
                                                  poem_title, i + 1] + vers.to_csv())
                                             i += 1
                                         else:
@@ -206,7 +206,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
             with open(f'{results_path}dades_autors.csv', 'a', encoding='utf-8') as dades_autors:
                 dades_autors.write(
-                    f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{author.font};{len(rows)}\n")
+                    f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{len(rows)}\n")
 
             #print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
             #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
