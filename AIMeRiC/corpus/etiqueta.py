@@ -65,12 +65,6 @@ def clean_results_folders(results_path):
 def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
     global rows, df
     corpus_name = corpus_path.split('/')[2]
-    global_json = {
-        'name': corpus_name,
-        'compiler': 'AIMeRiC',
-        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'authors': {},
-        }
     os.makedirs(f"{results_path}", exist_ok=True)
 
     clean_results_folders(results_path)
@@ -142,10 +136,6 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
 
         #print(author.id, len(rows)) # Debug
         if len(rows) > 99:
-
-            global_json['authors'].update({author.id: results_dict})
-
-
             os.makedirs(f"{results_path}json/", exist_ok=True)
             # Revisa si el fitxer f'{results_path}json/{author.id}.json ja existeix
             if os.path.exists(f"{results_path}json/{author.id}.json"):
@@ -212,11 +202,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
             #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
             #print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
 
-
     merge_tables(results_path, corpus_name)
-    with open(f"{results_path}/{corpus_name}.json", 'w', encoding='utf-8') as f:
-        json.dump(global_json, f, indent=4, ensure_ascii=False)
-    winsound.PlaySound('fi.wav', 0)
 
 if __name__ == "__main__":
     # Carrega el model de Spacy en català

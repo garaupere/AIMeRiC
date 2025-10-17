@@ -2,6 +2,7 @@
 import json
 import os
 import re
+from json import JSONDecodeError
 
 
 def should_ignore_page(content: str) -> bool:
@@ -18,8 +19,12 @@ def read_metadata(folder, level: str) -> dict:
     """Reads the metadata from the .info file in folder."""
     author_info = folder + "/" + level + ".info"
     with open(author_info, 'r', encoding='utf-8') as file:
-        content = file.read()
-        metadata = json.loads(content)
+        try:
+            content = file.read()
+            metadata = json.loads(content)
+        except JSONDecodeError:
+            print(f'Error: {JSONDecodeError}, en el fitxer: {author_info}')
+            return {}
         if level == "author":
             metadata['books'] = dict()
         elif level == "book":
