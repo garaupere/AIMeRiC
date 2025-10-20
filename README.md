@@ -164,4 +164,4 @@ Internament, aquest programa s'estructura en dos paquets:
 ---
 
 #### **©2025, Pere Garau Borràs**
-<img src="https://logo.uib.cat/digitalAssets/338/338690_logo-uib-horizontal300.png" alt="UIB" width="30%">
+![](uib.png)
