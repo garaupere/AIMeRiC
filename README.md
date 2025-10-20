@@ -1,12 +1,5 @@
-```markdown
-                                 ╔═╗ ╦ ╔╦╗ ╔═╗ ╦═╗ ╦ ╔═╗ 
-                                 ╠═╣ ║ ║║║ ║╣  ╠╦╝ ║ ║   
-                                 ╩ ╩ ╩ ╩ ╩ ╚═╝ ╩╚═ ╩ ╚═╝ 
-                 Anàlisi Informatitzada del Metre i el Ritme del Català
-                              ©2025, Pere Garau Borràs
+![](logo.png)
 
-````
----
 Aquest repositori conté l'aplicatiu _**AIMeRiC**: **A**nàlisi **I**nformatitzada del **Me**tre i el **Ri**tme del **C**atalà_ confeccionat en el marc la tesi **<i>La variabilitat rítmica del decasíl·lab català</i>** de Pere Garau Borràs a la Universitat de les Illes Balears.
 Les eines aplegades sota aquest aplicatiu permeten l'escansió (i.e. anàlisi mètrica i rítmica) automatitzada de textos en català. Principalment, el programa ha estat desevolupat per a l'anàlisi de poesia catalana.
 
