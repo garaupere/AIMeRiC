@@ -147,7 +147,7 @@ La funció `main()` és la funció principal del programa. Aquí es gestionen le
 Per executar el programa:
 
 ```bash
-python AIMeRiC.py
+python aimeric.py
 ```
 
 ## Llicència
