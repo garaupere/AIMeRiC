@@ -66,7 +66,7 @@ def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles (" + Fore.GREEN + "-list" +  Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED + "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED, "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Comprovar els fitxers JSON d'un corpus (" + Fore.GREEN + "-check" + Fore.RED, "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Comparar dos corpus (" + Fore.GREEN + "-compara" + Fore.RED, "corpus_1", Fore.RESET,  Fore.BLUE + "corpus_2" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus (" + Fore.GREEN + "-etiq", Fore.RED, "corpus" + Fore.RESET + ")")
