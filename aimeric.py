@@ -42,6 +42,7 @@ def etiq(corpus):
     results_path = f"{root}{corpus}/etiquetat/"
     etiqueta(corpus_path, results_path, __version__, nlp, mode=10)
 
+
 def scan(nlp, verse, goal: int = 10):
     analisi = escaneja(nlp, verse, goal)
     return analisi.mostra()
@@ -62,17 +63,23 @@ def check_jsons(corpus):
             except json.JSONDecodeError as e:
                 print(f"\t >> Error de format en {filename}: {e}")
 
+
 def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles (" + Fore.GREEN + "-list" +  Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED, "corpus" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Comprovar els fitxers JSON d'un corpus (" + Fore.GREEN + "-check" + Fore.RED, "corpus" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Comparar dos corpus (" + Fore.GREEN + "-compara" + Fore.RED, "corpus_1", Fore.RESET,  Fore.BLUE + "corpus_2" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus (" + Fore.GREEN + "-etiq", Fore.RED, "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles (" + Fore.GREEN + "-list" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED,
+          "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Comprovar els fitxers JSON d'un corpus (" + Fore.GREEN + "-check" + Fore.RED,
+          "corpus" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Comparar dos corpus (" + Fore.GREEN + "-compara" + Fore.RED, "corpus_1",
+          Fore.RESET, Fore.BLUE + "corpus_2" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus (" + Fore.GREEN + "-etiq", Fore.RED,
+          "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test (" + Fore.GREEN, "-test" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan", Fore.RED + "vers" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa ("+  Fore.GREEN + "-prosa" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan",
+          Fore.RED + "vers" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa (" + Fore.GREEN + "-prosa" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Còpia de seguretat del corpus (" + Fore.GREEN + "-bkp" + Fore.RESET + ")\n")
     print("Per accedir al menú d'ajuda, usau '" + Fore.GREEN + "-help" + Fore.RESET + "'.")
     print("Per tancar el programa, premeu Intro.\n")
