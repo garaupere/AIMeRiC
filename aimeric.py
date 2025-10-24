@@ -73,7 +73,7 @@ def help():
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test (" + Fore.GREEN, "-test" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan", Fore.RED + "vers" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa ("+  Fore.GREEN + "-prosa" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, " Còpia de seguretat del corpus (" + Fore.GREEN + "-bkp" + Fore.RESET + ")\n")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Còpia de seguretat del corpus (" + Fore.GREEN + "-bkp" + Fore.RESET + ")\n")
     print("Per accedir al menú d'ajuda, usau '" + Fore.GREEN + "-help" + Fore.RESET + "'.")
     print("Per tancar el programa, premeu Intro.\n")
     print("--" * 40)
