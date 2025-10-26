@@ -134,7 +134,6 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                             outsiders.append(verse)
                             i += 1
 
-        #print(author.id, len(rows)) # Debug
         if len(rows) > 99:
             os.makedirs(f"{results_path}json/", exist_ok=True)
             # Revisa si el fitxer f'{results_path}json/{author.id}.json ja existeix
