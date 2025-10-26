@@ -118,7 +118,7 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
                                                 vers.save)  # Guarda la metadata del vers
                                             rows.append(
                                                 [author.id, author.name, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
-                                                 book_title, book.year, book.translation, book.font,
+                                                 book.title, book.year, book.translation, book.font,
                                                  poem_title, i + 1] + vers.to_csv())
                                             i += 1
                                         else:
