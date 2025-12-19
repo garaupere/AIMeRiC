@@ -2,11 +2,12 @@ import pandas as pd
 from colorama import Fore
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
-from AIMeRiC.corpus.modules.getUSB import getUSB
+from AIMeRiC.corpus.modules.dictionary_scan import escaneja_diccionari, escaneja_diccionari_frequencies
 from AIMeRiC.corpus.etiqueta import etiqueta
 from AIMeRiC.corpus.prosa import prosa
 from AIMeRiC.corpus.valida import valida
 from AIMeRiC.escansio.escansor import escaneja, __version__
+from AIMeRiC.corpus.modules.getUSB import getUSB
 
 __author__ = "Pere Garau Borràs"
 __copyright__ = "Copyright © 2025, Pere Garau Borràs"
@@ -15,6 +16,7 @@ __version__ = __version__
 import os
 import time
 import spacy
+
 
 
 def compile(raw_files_path, corpus):
@@ -64,6 +66,16 @@ def check_jsons(corpus):
                 print(f"\t >> Error de format en {filename}: {e}")
 
 
+def scan_dictionary():
+    """Escaneja prosòdicament els mots d'un diccionari. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
+    diccionari = pd.read_csv('AIMeRiC/corpus/modules/diccionari.txt', sep=' ', dtype=str, encoding='utf-8')
+    diccionari.columns = ['mot', 'mot2', 'categoria']
+    resultats = escaneja_diccionari(nlp)
+    resultats.columns = ['mot', 'escansio', 'contorn_cru', 'contorn']
+    resultats.to_csv(f'{getUSB()}/corpora/diccionari/diccionari_prosodic.csv', index=False, encoding='utf-8', sep=';')
+    print(f"Escansió del diccionari completada i desada a '{getUSB()}/corpora/diccionari/diccionari_prosodic.csv'.")
+
+
 def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
@@ -80,6 +92,8 @@ def help():
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan",
           Fore.RED + "vers" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa (" + Fore.GREEN + "-prosa" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Escaneja un diccionari (" + Fore.GREEN + "-scandic" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Escaneja un diccionari amb freqüències (" + Fore.GREEN + "-scandic-fq" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Còpia de seguretat del corpus (" + Fore.GREEN + "-bkp" + Fore.RESET + ")\n")
     print("Per accedir al menú d'ajuda, usau '" + Fore.GREEN + "-help" + Fore.RESET + "'.")
     print("Per tancar el programa, premeu Intro.\n")
@@ -113,6 +127,13 @@ def compara_corpus(corpus1, corpus2):
     # Escriure a Excel
     df.to_excel(f"comparison_result_{corpus1}_{corpus2}.xlsx", index=False)
     print(f"Resultat guardat a 'comparison_results_{corpus1}_{corpus2}.xlsx'")
+
+
+def scan_dictionary_frequencies():
+    """Escaneja prosòdicament els mots d'un diccionari amb freqüències. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
+    escaneja_diccionari_frequencies(nlp).to_csv(f'{getUSB()}/corpora/diccionari/frequencies-dict-forms_prosodic.csv',
+                                               index=False, encoding='utf-8', sep=';')
+    print(f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/frequencies-dict-forms_prosodic.csv'.")
 
 
 def main():
@@ -150,11 +171,24 @@ def main():
                 prosa(nlp)
             except FileNotFoundError:
                 print("No disposau d'un corpus de prosa compilat.")
+        elif option == '-scandic':
+            start = time.time()
+            scan_dictionary()
+            elapsed_time = time.time() - start
+            minutes = int(elapsed_time // 60)
+            seconds = int(elapsed_time % 60)
+            print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
 
+        elif option == '-scandic-fq':
+            start = time.time()
+            scan_dictionary_frequencies()
+            elapsed_time = time.time() - start
+            minutes = int(elapsed_time // 60)
+            seconds = int(elapsed_time % 60)
+            print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
         elif option == "":
             print("Sortint del programa.")
             break
-
         else:
             try:
                 options = option.split(" ")

@@ -254,6 +254,6 @@ if __name__ == "__main__":
 
     start = time.time()
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "El port exterior de Ciutadella és un anar i venir continu de vaixells.", 10)
-    print(vers.desa_syll(10, "l"))
+    vers = Vers(nlp, "Sol, i de dol, i amb vetusta gonella,", 10)
+    vers.mostra()
     print(time.time() - start)
