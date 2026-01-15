@@ -32,7 +32,7 @@ def escansio_accentual(self):
         str: A string representation of the scansion where each word is represented by its syllables in uppercase for stressed and lowercase for unstressed, and words are joined by hashes.
     """
 
-    return '.'.join(
+    return '#'.join(
         ['.'.join(
             [syllable.text.upper() if int(syllable.pes) > 1 else syllable.text.lower() for syllable in word.stress]) for
          word in self.words]).replace('_', '‿')

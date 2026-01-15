@@ -19,7 +19,7 @@ from AIMeRiC.escansio.modules.utils.word_info import quants_mots, safe_words
 
 
 class Vers:
-    def __init__(self, nlp, text: str, objectiu: int):
+    def __init__(self, nlp, text: str, objectiu: int, permet_llicencies):
         self.objectiu = objectiu
         self.text = text
         self.encavalcament = encavalcament(self.text)
@@ -43,7 +43,7 @@ class Vers:
             self.llicencies = None
             self.__disposa_tall__()
         else:
-            self.llicencies = llicencies(self)
+            self.llicencies = llicencies(self, permet_llicencies)
 
     def __prepara__(self, nlp):
         self.pos = posTagger(nlp, self.text)
@@ -96,7 +96,26 @@ class Vers:
         self.mots_colon2 = quants_mots(self)[1]
 
     def __contactes_vocalics__(self):
-        self.contactes_vocalics = contactes_vocalics_info(self)
+        """Compute contactes_vocalics info and overwrite any previous value.
+
+        If the computed result is falsy or all contained lists are empty, store
+        None so previous data is not preserved across updates.
+        """
+        result = contactes_vocalics_info(self)
+        if not result:
+            # Nothing returned -> clear previous info
+            self.contactes_vocalics = None
+            return
+
+        # If all values in the dict are empty (no contours found), clear as well
+        try:
+            if all(not v for v in result.values()):
+                self.contactes_vocalics = None
+            else:
+                self.contactes_vocalics = result
+        except AttributeError:
+            # If result is not a dict-like object, just assign it (or None if falsy)
+            self.contactes_vocalics = result if result else None
 
     def __metronome__(self):
         self.metronome = metronome(self)

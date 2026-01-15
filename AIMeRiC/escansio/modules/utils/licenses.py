@@ -8,7 +8,7 @@ from .fonetica_sintactica import join_syllables, split_syllable, best_sinalefa, 
 from .stress import get_stress_index, secondary_stress
 
 
-def llicencies(self) -> str:
+def llicencies(self, permit) -> str:
     """
     Applies metrical licenses to a given verse.
 
@@ -21,25 +21,28 @@ def llicencies(self) -> str:
     diff = self.recompte_sillabes_metriques - self.objectiu
     max_iterations = self.objectiu
     iterations = 0
+    if permit:
+        while diff != 0 and iterations < max_iterations:
+            if diff > 0:
+                resol_contactes_vocalics(self, best_mode='sinalefa')
+                result = f'sinalefa {diff}'
+            else:
+                dialefa(self, abs(diff))
+                result = f'dialefa {abs(diff)}'
 
-    while diff != 0 and iterations < max_iterations:
-        if diff > 0:
-            resol_contactes_vocalics(self, best_mode='sinalefa')
-            result = f'sinalefa {diff}'
-        else:
-            dialefa(self, abs(diff))
-            result = f'dialefa {abs(diff)}'
-
-        self.__actualitza__()
-        diff = self.recompte_sillabes_metriques - self.objectiu
-
-        if diff > 0:
-            sineresi(self)
-            result = f'sineresis {diff}'
             self.__actualitza__()
             diff = self.recompte_sillabes_metriques - self.objectiu
 
-        iterations += 1
+            if diff > 0:
+                sineresi(self)
+                result = f'sineresis {diff}'
+                self.__actualitza__()
+                diff = self.recompte_sillabes_metriques - self.objectiu
+
+            iterations += 1
+    else:
+        result = ''
+        self.__actualitza__()
 
     return result
 
