@@ -245,36 +245,104 @@ def resol_contactes_vocalics(self, best_mode):
 
 
 def contactes_vocalics_info(self):
+    """Return vowel-contact information as an ordered mapping:
+
+    {1: {'tipus': 'hiat'/'diftong'/'triftong',
+         'tonicitat': True/False,
+         'frontera': 'interior'/'exterior',
+         'vocals': 'ai'},
+     2: ...}
+
+    Assumptions made:
+    - separator '#' and tie '‿' are treated as 'exterior' fronteres (entre paraules o enllaç entre paraules),
+      while '.' and adjacency (no separator) are treated as 'interior' fronteres (dins de la paraula).
+    - tonicitat is inferred by presence of uppercase vowel letters in the matched substring.
+    - triftongs are detected first to avoid counting constituent diftongs.
+    """
     clean = deepcopy(self.escansio_text)
-    dic_clean = {"[aàáâ]": "a", "[eèéê]": "e", "[iíìïyýÿî]": "i", "[oòóô]": "o", "[uúùüû]": "u", "[AÀÁÂ]": "A",
+    # Normalize certain sequences (preserve case to detect tonicitat)
+    dic_clean = {r"([qg])u([ei])": r"\1\2", "[aàáâ]": "a", "[eèéê]": "e", "[iíìïyýÿî]": "i", "[oòóô]": "o", "[uúùüû]": "u", "[AÀÁÂ]": "A",
                  "[EÈÉÊ]": "E", "[IÍÌÏYÝŸÎ]": "I", "[OÒÓÔ]": "O", "[UÚÙÜÛ]": "U"}
     for key, value in dic_clean.items():
         clean = re.sub(key, value, clean)
 
-    hiats_a_fm = re.findall(r"[aeiou]#[aeiou]", clean)
-    hiats_a_m = re.findall(r"[aeiou]\.[aeiou]", clean)
-    hiats_t_fm = re.findall(r"[AEIOUaeiou]#[AEIOU]", clean) + re.findall(r"[AEIOU]#[AEIOUaeiou]", clean)
-    hiats_t_m = re.findall(r"[AEIOUaeiou]\.[AEIOU]", clean) + re.findall(r"[AEIOU]\.[AEIOUaeiou]", clean)
-    diftong_a_fm = re.findall(r"[aeiou]_[aeiou]", clean)
-    diftong_a_m = re.findall(r"[aeiou][aeiou]", clean)
-    diftong_t_fm = re.findall(r"[AEIOUaeiou]_[AEIOU]", clean) + re.findall(r"[AEIOU]_[AEIOUaeiou]", clean)
-    diftong_t_m = re.findall(r"[AEIOUaeiou][AEIOU]", clean) + re.findall(r"[AEIOU][AEIOUaeiou]", clean)
-    triftong_a_fm = re.findall(r"[aeiou]_[aeiou]_[aeiou]", clean)
-    triftong_a_m = re.findall(r"[aeiou][aeiou][aeiou]", clean)
-    triftong_t_fm = re.findall(r"[AEIOUaeiou]_[AEIOU]_[AEIOU]", clean) + re.findall(r"[AEIOU]_[AEIOUaeiou]_[AEIOU]",
-                                                                                    clean) + re.findall(
-        r"[AEIOU]_[AEIOU]_[AEIOUaeiou]", clean) + re.findall(r"[AEIOUaeiou]_[AEIOU]_[AEIOUaeiou]", clean)
-    triftong_t_m = re.findall(r"[AEIOUaeiou][AEIOU][AEIOU]", clean) + re.findall(r"[AEIOU][AEIOUaeiou][AEIOU]",
-                                                                                 clean) + re.findall(
-        r"[AEIOU][AEIOU][AEIOUaeiou]", clean) + re.findall(r"[AEIOUaeiou][AEIOU][AEIOUaeiou]", clean)
+    candidates = []  # tuples of (start_index, end_index, entry_dict)
+    consumed_spans = []  # list of (start, end) to avoid overlaps
 
-    return {"hiats_a_fm": hiats_a_fm, "hiats_a_m": hiats_a_m, "hiats_t_fm": [x.lower() for x in hiats_t_fm],
-            "hiats_t_m": [x.lower() for x in hiats_t_m],
-            "diftong_a_fm": diftong_a_fm, "diftong_a_m": diftong_a_m,
-            "diftong_t_fm": [x.lower() for x in diftong_t_fm],
-            "diftong_t_m": [x.lower() for x in diftong_t_m], "triftong_a_fm": triftong_a_fm,
-            "triftong_a_m": triftong_a_m,
-            "triftong_t_fm": [x.lower() for x in triftong_t_fm], "triftong_t_m": [x.lower() for x in triftong_t_m]}
+    def overlaps(span):
+        s, e = span
+        for cs, ce in consumed_spans:
+            if not (e <= cs or s >= ce):
+                return True
+        return False
+
+    def mark(span):
+        consumed_spans.append(span)
+
+    # Helper to build entry
+    def make_entry(mgroups, tipo, separator=None):
+        # mgroups: tuple/list of matched vowel groups (strings)
+        vocals = ''.join([g for g in mgroups if g is not None]).lower()
+        tonicitat = any(any(ch.isupper() for ch in g) for g in mgroups)
+        if separator in ("#", "‿"):
+            frontera = 'exterior'
+        else:
+            frontera = 'interior'
+        return {'tipus': tipo, 'tonicitat': tonicitat, 'frontera': frontera, 'vocals': vocals}
+
+    # 1) Triftongs with explicit tie '‿' (exterior) and adjacency (interior)
+    for m in re.finditer(r'([AEIOUaeiou])‿([AEIOUaeiou])‿([AEIOUaeiou])', clean):
+        span = m.span()
+        if not overlaps(span):
+            entry = make_entry((m.group(1), m.group(2), m.group(3)), 'triftong', separator='‿')
+            candidates.append((span[0], span[1], entry))
+            mark(span)
+    for m in re.finditer(r'([AEIOUaeiou])([AEIOUaeiou])([AEIOUaeiou])', clean):
+        span = m.span()
+        if not overlaps(span):
+            entry = make_entry((m.group(1), m.group(2), m.group(3)), 'triftong', separator=None)
+            candidates.append((span[0], span[1], entry))
+            mark(span)
+
+    # 2) Diftongs with tie '‿' (exterior) and adjacency (interior)
+    for m in re.finditer(r'([AEIOUaeiou])‿([AEIOUaeiou])', clean):
+        span = m.span()
+        if not overlaps(span):
+            entry = make_entry((m.group(1), m.group(2)), 'diftong', separator='‿')
+            candidates.append((span[0], span[1], entry))
+            mark(span)
+    for m in re.finditer(r'([AEIOUaeiou])([AEIOUaeiou])', clean):
+        span = m.span()
+        if not overlaps(span):
+            entry = make_entry((m.group(1), m.group(2)), 'diftong', separator=None)
+            candidates.append((span[0], span[1], entry))
+            mark(span)
+
+    # 3) Hiats with exterior '#' and interior '.'
+    for m in re.finditer(r'([AEIOUaeiou])#([AEIOUaeiou])', clean):
+        span = m.span()
+        if not overlaps(span):
+            entry = make_entry((m.group(1), m.group(2)), 'hiat', separator='#')
+            candidates.append((span[0], span[1], entry))
+            mark(span)
+    for m in re.finditer(r'([AEIOUaeiou])\.([AEIOUaeiou])', clean):
+        span = m.span()
+        if not overlaps(span):
+            entry = make_entry((m.group(1), m.group(2)), 'hiat', separator='.')
+            candidates.append((span[0], span[1], entry))
+            mark(span)
+
+    # Sort candidates by their position in the text
+    candidates.sort(key=lambda x: x[0])
+
+    # Build the final mapping with 1-based integer keys
+    result = {}
+    idx = 1
+    for start, end, entry in candidates:
+        result[idx] = entry
+        idx += 1
+
+    return result
 
 
 def best_sinalefa(self):

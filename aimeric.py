@@ -68,10 +68,7 @@ def check_jsons(corpus):
 
 def scan_dictionary():
     """Escaneja prosòdicament els mots d'un diccionari. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
-    diccionari = pd.read_csv('AIMeRiC/corpus/modules/diccionari.txt', sep=' ', dtype=str, encoding='utf-8')
-    diccionari.columns = ['mot', 'mot2', 'categoria']
     resultats = escaneja_diccionari(nlp)
-    resultats.columns = ['mot', 'escansio', 'contorn_cru', 'contorn']
     resultats.to_csv(f'{getUSB()}/corpora/diccionari/diccionari_prosodic.csv', index=False, encoding='utf-8', sep=';')
     print(f"Escansió del diccionari completada i desada a '{getUSB()}/corpora/diccionari/diccionari_prosodic.csv'.")
 
@@ -131,9 +128,9 @@ def compara_corpus(corpus1, corpus2):
 
 def scan_dictionary_frequencies():
     """Escaneja prosòdicament els mots d'un diccionari amb freqüències. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
-    escaneja_diccionari_frequencies(nlp).to_csv(f'{getUSB()}/corpora/diccionari/frequencies-dict-forms_prosodic.csv',
+    escaneja_diccionari_frequencies(nlp).to_csv(f'{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv',
                                                index=False, encoding='utf-8', sep=';')
-    print(f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/frequencies-dict-forms_prosodic.csv'.")
+    print(f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv'.")
 
 
 def main():

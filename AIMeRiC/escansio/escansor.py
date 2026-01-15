@@ -6,10 +6,10 @@ import spacy
 from AIMeRiC.escansio.modules.verse import Vers
 
 
-def escaneja(nlp, verse: str, goal: int):
+def escaneja(nlp, verse: str, goal: int, permet_llicencies: bool = True) -> Vers:
     """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse."""
     try:
-        return Vers(nlp, verse, goal)
+        return Vers(nlp, verse, goal, permet_llicencies)
     except ValueError:
         print(f"Error: {ValueError}, en el vers: {verse}")
 
