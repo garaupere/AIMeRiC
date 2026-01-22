@@ -13,7 +13,8 @@ from AIMeRiC.escansio.modules.utils.meter import recompte_metric, metre_ajustat,
     maximal_comparison_pattern
 from AIMeRiC.escansio.modules.utils.prosody import accents_prosodics, cim_maxim
 from AIMeRiC.escansio.modules.utils.decasyllable import tall, subdivideix
-from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, escansio_accentual, metronome
+from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, escansio_accentual, metronome, \
+    scansion_array
 from AIMeRiC.escansio.modules.utils.licenses import llicencies
 from AIMeRiC.escansio.modules.utils.word_info import quants_mots, safe_words
 
@@ -79,6 +80,7 @@ class Vers:
     def __disposicio__(self):
         self.ajustat = metre_ajustat(self)
         self.string = escansio_plana(self)
+        self.escansio_array = scansion_array(self)
         self.escansio_text = escansio_accentual(self)
 
     def __rima__(self):
@@ -88,6 +90,7 @@ class Vers:
         cim_maxim(self)
         accents_prosodics(self)
         self.anotat = anota_vers(self)
+        self.escansio_array = scansion_array(self)
         self.escansio_text = escansio_accentual(self)
 
     def __mot_info__(self):

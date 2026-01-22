@@ -26,10 +26,11 @@ def find_tall(self, tall) -> bool:
     return result  # Retorna False si no s'ha trobat cap tall
 
 
-def tall(self) -> int or None:
+# python
+def tall(self):
     """Aquesta funció aplica la cesura al vers."""
     if self.recompte_sillabes_metriques == 10:  # Si el vers és decasíl·lab
-        talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català (cal sumar-los-hi 1) = [4, 5, 6] (ordenats per freqüència d'ús)
+        talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català (cal sumar-los-hi 1) = [4, 5, 6]
         tall = talls[0]
         cerca = find_tall(self, tall)  # Cerca el primer tall
         hist = [cerca]  # Històric de cerques
@@ -41,7 +42,10 @@ def tall(self) -> int or None:
             cerca = find_tall(self, tall)  # Cerca el següent tall
         hist.append(cerca)  # Històric de cerques
         if True in hist:  # Si s'ha trobat un tall
-            return tall + 1  # Retorna la posició del tall
+            pos = tall + 1
+            if pos == 10:
+                return None
+            return pos  # Retorna la posició del tall
         else:  # Si no s'ha trobat cap tall
             return None  # Retorna None
     else:

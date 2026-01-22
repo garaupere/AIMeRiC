@@ -1,5 +1,4 @@
 import re
-from copy import deepcopy
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.utils.meter import recompte_metric
@@ -19,7 +18,7 @@ def score(syllable, vers):
         if syllable.fono_info['vocal'] == 'i':
             points += 2
         else:
-            points +=1
+            points += 1
     if not syllable.tonic and syllable.fono_info['neutra']:
         points += 3
     if syllable.triftong:
@@ -99,7 +98,7 @@ def vallverdu_score(syllable1, syllable2):
         elif int(syllable1.pes) >= 3 and int(syllable2.pes) < 3:  # Tònica + àtona
             if vocal2['neutra']:  # 1.2. V́1+ə → elisió (arribaré el dia, arribaré avui) [GARAU]
                 return 2  # Elisió
-        elif int(syllable1.pes) < 3 and int(syllable2.pes) >= 3: # Àtona + tònica
+        elif int(syllable1.pes) < 3 and int(syllable2.pes) >= 3:  # Àtona + tònica
             if int(syllable2.pes) == 3:
                 if vocal2['alta']:
                     #[GARAU] V1+V́2i/u → diftong (casa una)
@@ -181,6 +180,7 @@ def resol_contactes_vocalics(self, best_mode):
             return best_contacte_vocalic(self)
         elif mode == 'sinalefa':
             return best_sinalefa(self)
+        return None
 
     best = get_best(best_mode)
 
@@ -245,29 +245,22 @@ def resol_contactes_vocalics(self, best_mode):
 
 
 def contactes_vocalics_info(self):
-    """Return vowel-contact information as an ordered mapping:
-
-    {1: {'tipus': 'hiat'/'diftong'/'triftong',
-         'tonicitat': True/False,
-         'frontera': 'interior'/'exterior',
-         'vocals': 'ai'},
-     2: ...}
-
-    Assumptions made:
-    - separator '#' and tie '‿' are treated as 'exterior' fronteres (entre paraules o enllaç entre paraules),
-      while '.' and adjacency (no separator) are treated as 'interior' fronteres (dins de la paraula).
-    - tonicitat is inferred by presence of uppercase vowel letters in the matched substring.
-    - triftongs are detected first to avoid counting constituent diftongs.
-    """
+    """Return vowel-contact information as an ordered mapping including syllable index (s_index)."""
+    from copy import deepcopy
     clean = deepcopy(self.escansio_text)
-    # Normalize certain sequences (preserve case to detect tonicitat)
-    dic_clean = {r"([qg])u([ei])": r"\1\2", "[aàáâ]": "a", "[eèéê]": "e", "[iíìïyýÿî]": "i", "[oòóô]": "o", "[uúùüû]": "u", "[AÀÁÂ]": "A",
-                 "[EÈÉÊ]": "E", "[IÍÌÏYÝŸÎ]": "I", "[OÒÓÔ]": "O", "[UÚÙÜÛ]": "U"}
+    dic_clean = {
+        r"([qg])u([ei])": r"\1\2",
+        "[aàáâ]": "a", "[eèéê]": "e", "[iíìïyýÿî]": "i",
+        "[oòóô]": "o", "[uúùüû]": "u",
+        "[AÀÁÂ]": "A", "[EÈÉÊ]": "E", "[IÍÌÏYÝŸÎ]": "I",
+        "[OÒÓÔ]": "O", "[UÚÙÜÛ]": "U",
+        "[Hh]": ""
+    }
     for key, value in dic_clean.items():
         clean = re.sub(key, value, clean)
 
-    candidates = []  # tuples of (start_index, end_index, entry_dict)
-    consumed_spans = []  # list of (start, end) to avoid overlaps
+    candidates = []
+    consumed_spans = []
 
     def overlaps(span):
         s, e = span
@@ -279,19 +272,14 @@ def contactes_vocalics_info(self):
     def mark(span):
         consumed_spans.append(span)
 
-    # Helper to build entry
     def make_entry(mgroups, tipo, separator=None):
-        # mgroups: tuple/list of matched vowel groups (strings)
         vocals = ''.join([g for g in mgroups if g is not None]).lower()
-        tonicitat = any(any(ch.isupper() for ch in g) for g in mgroups)
-        if separator in ("#", "‿"):
-            frontera = 'exterior'
-        else:
-            frontera = 'interior'
+        tonicitat = any(any(ch.isupper() for ch in (g or "")) for g in mgroups)
+        frontera = 'exterior' if separator in ("#", "‿", "_") else 'interior'
         return {'tipus': tipo, 'tonicitat': tonicitat, 'frontera': frontera, 'vocals': vocals}
 
-    # 1) Triftongs with explicit tie '‿' (exterior) and adjacency (interior)
-    for m in re.finditer(r'([AEIOUaeiou])‿([AEIOUaeiou])‿([AEIOUaeiou])', clean):
+    # find triftongs (with tie and adjacency)
+    for m in re.finditer(r'([AEIOUaeiou])[‿_]([AEIOUaeiou])[‿_]([AEIOUaeiou])', clean):
         span = m.span()
         if not overlaps(span):
             entry = make_entry((m.group(1), m.group(2), m.group(3)), 'triftong', separator='‿')
@@ -304,8 +292,8 @@ def contactes_vocalics_info(self):
             candidates.append((span[0], span[1], entry))
             mark(span)
 
-    # 2) Diftongs with tie '‿' (exterior) and adjacency (interior)
-    for m in re.finditer(r'([AEIOUaeiou])‿([AEIOUaeiou])', clean):
+    # diftongs
+    for m in re.finditer(r'([AEIOUaeiou])[‿_]([AEIOUaeiou])', clean):
         span = m.span()
         if not overlaps(span):
             entry = make_entry((m.group(1), m.group(2)), 'diftong', separator='‿')
@@ -318,7 +306,7 @@ def contactes_vocalics_info(self):
             candidates.append((span[0], span[1], entry))
             mark(span)
 
-    # 3) Hiats with exterior '#' and interior '.'
+    # hiats
     for m in re.finditer(r'([AEIOUaeiou])#([AEIOUaeiou])', clean):
         span = m.span()
         if not overlaps(span):
@@ -332,17 +320,44 @@ def contactes_vocalics_info(self):
             candidates.append((span[0], span[1], entry))
             mark(span)
 
-    # Sort candidates by their position in the text
     candidates.sort(key=lambda x: x[0])
 
-    # Build the final mapping with 1-based integer keys
+    # Substitute each contact by a single marker to compute syllable (vowel-nucleus) index
+    temp_text = clean
+    offset = 0
+    for start, end, entry in candidates:
+        temp_text = temp_text[:start + offset] + "¤" + temp_text[end + offset:]
+        offset += 1 - (end - start)
+
+    # Remove consonants to leave only vowel nuclei and markers
+    temp_text_nocons = re.sub(r"[^AEIOUaeiou¤]", "", temp_text)
+
+    # Build accumulative dict with 1-based integer keys
     result = {}
     idx = 1
     for start, end, entry in candidates:
+        # skip empty vocal results
+        if not entry.get('vocals'):
+            continue
+
+        # find first marker occurrence (corresponds to this candidate)
+        try:
+            marker_index = temp_text_nocons.index("¤")
+        except ValueError:
+            # no marker found (shouldn't happen), skip
+            continue
+
+        entry['s_index'] = marker_index + 1  # 1-based syllable index
         result[idx] = entry
         idx += 1
 
+        # remove this marker for next iteration
+        temp_text_nocons = temp_text_nocons.replace("¤", "", 1)
+
+    # overwrite previous stored info so repeated calls replace earlier results
+    setattr(self, 'contactes_vocalics', result)
     return result
+
 
 
 def best_sinalefa(self):
@@ -374,3 +389,4 @@ def best_sineresi(self):
     candidats = sorted(candidats, key=lambda x: x[2], reverse=True)
     # print('> Candidats sineresi:', [(x.text, y.text, z) for x, y, z in candidats])  # Debug
     return candidats
+

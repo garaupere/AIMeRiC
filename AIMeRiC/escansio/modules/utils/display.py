@@ -14,6 +14,15 @@ def anota_vers(self):
         for word in self.words]
 
 
+def scansion_array(self):
+    """
+    Represents the scansion as an array of syllable weights.
+
+    Returns:
+        list: A list of lists where each inner list contains the weights of the syllables in a word.
+    """
+    return [[(syllable.text, int(syllable.pes), syllable.fusionada, syllable.fono_info) for syllable in word.stress] for word in self.words]
+
 def escansio_plana(self):
     """
     Visualizes the scansion in a flat format.
