@@ -80,10 +80,10 @@ def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 
         author.print_metadata()  # Imprimeix la metadata de l'autor
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
-        scansion_cols = [str(col + 1) for col in range(0, mode)]
+        scansion_cols = [str(col) for col in range(1, mode + 1)]
         head = (['autor_id', 'autor', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
-                 'obra', 'any', 'traducció', 'font',
-                 'poema', 'núm. de vers', 'text del vers',
+                 'obra', 'any', 'traducció', 'font', 'poema',
+                 'núm. de vers', 'text del vers',
                  'escansió plana'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
                  'mots al còlon 1', 'mots al còlon 2',
