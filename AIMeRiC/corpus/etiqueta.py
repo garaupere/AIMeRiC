@@ -62,7 +62,7 @@ def clean_results_folders(results_path):
                 os.remove(f)
 
 
-def etiqueta(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
+def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
     global rows, df
     corpus_name = corpus_path.split('/')[2]
     os.makedirs(f"{results_path}", exist_ok=True)
@@ -227,14 +227,14 @@ if __name__ == "__main__":
         start = time.time()
         corpus_path = f"{root}{enter}/sense_etiquetar/json/"
         results_path = f"{root}{enter}/etiquetat/"
-        etiqueta(corpus_path, results_path, versio, nlp, mode=10)
+        etiqueta_corpus(corpus_path, results_path, versio, nlp, mode=10)
     else:
         start = time.time()
         for corpus_folder in os.listdir(root):
             start = time.time()
             corpus_path = f"{root}{corpus_folder}/sense_etiquetar/json/"
             results_path = f"{root}{corpus_folder}/etiquetat/"
-            etiqueta(corpus_path, results_path, versio, nlp, mode=10)
+            etiqueta_corpus(corpus_path, results_path, versio, nlp, mode=10)
 
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)
