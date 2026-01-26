@@ -3,7 +3,7 @@ from colorama import Fore
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.dictionary_scan import escaneja_diccionari, escaneja_diccionari_frequencies
-from AIMeRiC.corpus.etiqueta import etiqueta
+from AIMeRiC.corpus.etiqueta import etiqueta_corpus
 from AIMeRiC.corpus.prosa import prosa
 from AIMeRiC.corpus.valida import valida
 from AIMeRiC.escansio.escansor import escaneja, __version__
@@ -42,7 +42,7 @@ def etiq(corpus):
     root = f"{usb}/corpora/"
     corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
     results_path = f"{root}{corpus}/etiquetat/"
-    etiqueta(corpus_path, results_path, __version__, nlp, mode=10)
+    etiqueta_corpus(corpus_path, results_path, __version__, nlp, mode=10)
 
 
 def scan(nlp, verse, goal: int = 10):
