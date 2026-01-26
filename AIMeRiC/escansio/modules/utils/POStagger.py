@@ -1,20 +1,25 @@
+
+# AIMeRiC/escansio/modules/utils/POStagger.py
 """Un mòdul per a l'etiquetatge morfosintàctic de textos en català."""
 import re
 import string
+from types import SimpleNamespace
 
-from .preprocess import clean_text
+from AIMeRiC.escansio.modules.utils.preprocess import clean_text
+from AIMeRiC.escansio.modules.word import Word
 
 
 def correct_spacy(doc):
     """
-        Corrects the POS tags in the given SpaCy document based on predefined corrections.
+    Corrects the POS tags in the given SpaCy document based on predefined corrections.
 
-        Args:
-            doc (list): A list of tokens with their POS tags and dependencies.
+    Accepts a mix of:
+    - spacy Token objects,
+    - 7-field lists/tuples: (text, pos_, dep_, lemma_, morph, ancestors, children),
+    - 3-field tuples produced by `spacy_asyllabic`: (text, pos_, dep_).
 
-        Returns:
-            list: A corrected list of tokens with updated POS tags.
-                """
+    Normalizes each item to a 7-field list before applying corrections.
+    """
     corrections = {
         'el': 'DET', 'la': 'DET', 'els': 'DET', 'les': 'DET', 'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',
         'amb': 'ADPa', 'de': 'ADPa', 'en': 'ADPa', 'per': 'ADPa',
@@ -60,40 +65,95 @@ def correct_spacy(doc):
         "d'ex": 'ADP', 'pro': 'ADP'
     }
 
-    new_doc = [[text, pos_, dep_] for text, pos_, dep_ in doc]
-    for token in new_doc:
-        token_text = token[0].lower()
+    normalized = []
+    for item in doc:
+        # spacy Token object
+        if hasattr(item, "text") and not isinstance(item, (list, tuple)):
+            text = item.text
+            pos_ = getattr(item, "pos_", None)
+            dep_ = getattr(item, "dep_", None)
+            lemma_ = getattr(item, "lemma_", None)
+            morph = getattr(item, "morph", None)
+            ancestors = [a.text for a in getattr(item, "ancestors", [])] if getattr(item, "ancestors", None) is not None else []
+            children = [c.text for c in getattr(item, "children", [])] if getattr(item, "children", None) is not None else []
+        elif isinstance(item, (list, tuple)):
+            if len(item) >= 7:
+                text, pos_, dep_, lemma_, morph, ancestors, children = item[:7]
+            elif len(item) == 3:
+                text, pos_, dep_ = item
+                lemma_, morph = None, None
+                ancestors, children = [], []
+            else:
+                # pad shorter sequences
+                parts = list(item) + [None] * (7 - len(item))
+                text, pos_, dep_, lemma_, morph, ancestors, children = parts
+                if ancestors is None:
+                    ancestors = []
+                if children is None:
+                    children = []
+        else:
+            # unknown item type, skip
+            continue
+
+        # ensure lists for ancestors/children
+        if ancestors is None:
+            ancestors = []
+        if children is None:
+            children = []
+
+        normalized.append([text, pos_, dep_, lemma_, morph, ancestors, children])
+
+    # now apply original correction logic on normalized (which has 7 fields per token)
+    new_doc = normalized
+    for token in new_doc[:]:  # iterate over a shallow copy to allow removals
+        token_text = (token[0] or "").lower()
         if token_text in corrections:
             token[1] = corrections[token_text]
         if token[1] == "PUNCT" and token[0] in string.punctuation:
-            new_doc.remove(token)
-        if '-' in token[0] and token[1] == 'PRON':
+            try:
+                new_doc.remove(token)
+            except ValueError:
+                pass
+            continue
+        if '-' in (token[0] or "") and token[1] == 'PRON':
             token[1] = 'PRONe'
         if token[1] == 'PRON' and token[0] == 'que':
             token[1] = 'ADPa'
-        if token[1] not in ["PRON", "PRONe", "VERB", 'PUNCT'] and '-' in token[0]:  # Mosts compostos / ordinals
-            if '-' not in token[0][0]:
-                while '-' in token[0]:
+        if token[1] not in ["PRON", "PRONe", "VERB", 'PUNCT'] and '-' in (token[0] or ""):  # Mosts compostos / ordinals
+            if not (token[0] and token[0].startswith('-')):
+                # split repeatedly on first hyphen
+                while token[0] and '-' in token[0]:
                     split = re.split('-', token[0], 1)
                     left = split[0]
                     right = split[1]
-                    index = new_doc.index(token)
-                    new_doc.remove(token)
+                    try:
+                        index = new_doc.index(token)
+                    except ValueError:
+                        break
+                    # remove current token
+                    try:
+                        new_doc.pop(index)
+                    except IndexError:
+                        break
 
-                    left = [left, token[1], token[2]]
-                    right = [right, token[1], token[2]]
+                    left_item = [left, token[1], token[2], token[3], token[4], token[5], token[6]]
+                    right_item = [right, token[1], token[2], token[3], token[4], token[5], token[6]]
 
-                    if left[0] in corrections:
-                        left = [left[0], corrections[left[0]], token[2]]
-                    if right[0] in corrections:
-                        right = [right[0], corrections[right[0]], token[2]]
+                    if left_item[0] in corrections:
+                        left_item[1] = corrections[left_item[0]]
+                    if right_item[0] in corrections:
+                        right_item[1] = corrections[right_item[0]]
 
-                    new_doc.insert(index, left)
-                    new_doc.insert(index + 1, right)
+                    new_doc.insert(index, left_item)
+                    new_doc.insert(index + 1, right_item)
 
-                    token = new_doc[index + 1]
+                    # advance token reference to what was inserted as right_item
+                    if index + 1 < len(new_doc):
+                        token = new_doc[index + 1]
+                    else:
+                        break
+
     return new_doc
-
 
 def ortho_repair(text: str):
     """
@@ -132,7 +192,7 @@ def ocr_errors(doc):
         'juhý': 'juí', 'juhi': 'juí', 'juhy': 'juí'
     }
 
-    new_doc = [[token.text, token.pos_, token.dep_] for token in doc]
+    new_doc = [[token.text, token.pos_, token.dep_, token.lemma_, token.morph, token.ancestors, token.children] for token in doc]
     for token in new_doc:
         token_text = token[0].lower()
         if token_text in errors:
@@ -157,15 +217,17 @@ def spacy_asyllabic(doc):
                    '-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li',
                    '-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
 
-    new_doc = [(text, pos_, dep_) for text, pos_, dep_ in doc]
+    new_doc = [(text, pos_, dep_, lemma_, morph, [x.text for x in ancestors], [x.text for x in children]) for text, pos_, dep_, lemma_, morph, ancestors, children in doc]
     i = 0
     while i < len(new_doc) - 1:
         token = new_doc[i]
         if token[0].lower() in asyllabic_L:
-            new_doc[i + 1] = (f"{token[0]}{new_doc[i + 1][0]}", new_doc[i + 1][1], new_doc[i + 1][2])
+            # merge left into next
+            new_doc[i + 1] = (f"{token[0]}{new_doc[i + 1][0]}", new_doc[i + 1][1], new_doc[i + 1][2], new_doc[i + 1][3], new_doc[i + 1][4], new_doc[i + 1][5], new_doc[i + 1][6])
             new_doc.pop(i)
         elif token[0].lower() in asyllabic_R:
-            new_doc[i - 1] = (f"{new_doc[i - 1][0]}{token[0]}", new_doc[i - 1][1], new_doc[i - 1][2])
+            # merge right into previous
+            new_doc[i - 1] = (f"{new_doc[i - 1][0]}{token[0]}", new_doc[i - 1][1], new_doc[i - 1][2], new_doc[i - 1][3], new_doc[i - 1][4], new_doc[i - 1][5], new_doc[i - 1][6])
             new_doc.pop(i)
         else:
             i += 1
@@ -192,23 +254,96 @@ def inicials(text: str):
     return ' '.join([replacements[word] if word in replacements else word for word in text.split()])
 
 
+# python
+from spacy.tokens import Doc, Token
+
 def posTagger(nlp, text: str):
     """
-    Tags the words in a given text with their grammatical categories.
-
-    Args:
-        nlp: The SpaCy language model.
-        text (str): The input text to be tagged.
-
-    Returns:
-        doc: The SpaCy document with POS tags.
+    Tags the words in a given text and returns a list of SpaCy Token objects
+    containing corrected annotations (stored in token.pos_ when possible and
+    in token._.* extensions for other fields).
     """
-
     text = clean_text(text)
     text = ortho_repair(text)
-    #text = inicials(text)
+    # text = inicials(text)
     doc = nlp(text)
     doc = ocr_errors(doc)
     doc = spacy_asyllabic(doc)
     doc = correct_spacy(doc)
-    return doc
+
+    # Ensure token extensions exist for corrected metadata
+    ext_names = {
+        "upos_corr": None,
+        "lemma_corr": None,
+        "morph_corr": None,
+        "dep_corr": None,
+        "ancestors": None,
+        "children_text": None,
+    }
+    for name, default in ext_names.items():
+        if not Token.has_extension(name):
+            Token.set_extension(name, default=default)
+
+    # `doc` is a list of normalized tokens: [text, pos_, dep_, lemma_, morph, ancestors, children]
+    tokens = doc
+    words = []
+    for tok in tokens:
+        # Safe unpack / pad
+        if isinstance(tok, (list, tuple)):
+            parts = list(tok) + [None] * (7 - len(tok))
+            text_, pos_, dep_, lemma_, morph, ancestors, children = parts[:7]
+            if ancestors is None:
+                ancestors = []
+            if children is None:
+                children = []
+        else:
+            # fallback (shouldn't happen because correct_spacy normalizes), treat as str
+            text_ = str(tok)
+            pos_ = dep_ = lemma_ = morph = None
+            ancestors = []
+            children = []
+
+        words.append(text_ or "")
+
+    # Build a new Doc from corrected token texts
+    new_doc = Doc(nlp.vocab, words=words)
+
+    # Assign corrected annotations onto tokens
+    for i, tok in enumerate(tokens):
+        # pad/unpack again to get fields
+        if isinstance(tok, (list, tuple)):
+            parts = list(tok) + [None] * (7 - len(tok))
+            text_, pos_, dep_, lemma_, morph, ancestors, children = parts[:7]
+            if ancestors is None:
+                ancestors = []
+            if children is None:
+                children = []
+        else:
+            text_, pos_, dep_, lemma_, morph, ancestors, children = tok, None, None, None, None, [], []
+
+        token = new_doc[i]
+        # Set universal POS if plausible (may raise for unknown tags; ignore failures)
+        if pos_:
+            try:
+                token.pos_ = pos_
+            except Exception:
+                pass
+        # Store corrected metadata on extensions
+        token._.upos_corr = pos_
+        token._.lemma_corr = lemma_
+        token._.morph_corr = morph
+        token._.dep_corr = dep_
+        token._.ancestors = ancestors
+        token._.children_text = children
+
+    # Return a list of SpaCy Token objects
+    return list(new_doc)
+
+
+if __name__ == "__main__":
+    text = "D'astre ignorat m'adreç passos retuts?"
+    import spacy
+    nlp = spacy.load("ca_core_news_md")
+    words = posTagger(nlp, text)
+    for w in words:
+        print(w.text, w.lower_, w.i, w.pos_, w.dep, w.ancestors, w.children, w.morph)

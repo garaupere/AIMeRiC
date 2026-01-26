@@ -8,7 +8,7 @@ from .fonetica_sintactica import join_syllables, split_syllable, best_sinalefa, 
 from .stress import get_stress_index, secondary_stress
 
 
-def llicencies(self, permit) -> str:
+def llicencies(self, permit, doc) -> str:
     """
     Applies metrical licenses to a given verse.
 
@@ -27,7 +27,7 @@ def llicencies(self, permit) -> str:
                 resol_contactes_vocalics(self, best_mode='sinalefa')
                 result = f'sinalefa {diff}'
             else:
-                dialefa(self, abs(diff))
+                dialefa(self, abs(diff), doc)
                 result = f'dialefa {abs(diff)}'
 
             self.__actualitza__()
@@ -52,6 +52,7 @@ def sineresi(self):
     Applies synaeresis to a given verse. Synaeresis combines two syllables into one within a word.
     Example: his.tò.ri.a -> his.tò.ria
     """
+    counter = 0  # Comptador de vegades que s'ha aplicat la sineresi
     best = best_sineresi(self)
     if best:
         diff = self.recompte_sillabes_metriques - self.objectiu
@@ -65,8 +66,107 @@ def sineresi(self):
                         word.stress.remove(change[1])
                         word.stress_index = get_stress_index(word)
                         secondary_stress(word)
+                        counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])
+    return counter  # Retorna el nombre de vegades que s'ha aplicat la sineresi
+
+def dialefa(self, diferencia, doc):
+    # print("Dialefa")
+    counter = 0
+    if len(self.words) > 1:
+        self.words.append(Word(doc[0], len(self.words)))
+        # print([word.plain() for word in self.words])
+        len_words = len(self.words)
+        i = 0
+        while i < len_words - 1:
+            i = i
+            if i < len_words - 1:
+                j = i + 1
+            else:
+                j = i
+            trif_in = next(
+                (self.words[j].stress.index(syllable) for syllable in self.words[j].stress if syllable.triftong), None)
+
+            if trif_in is not None:
+                """Mètode 0: un triftong"""
+                # print("Dialefa Mètode 0: un triftong")
+                result = split_syllable(self.words[j].stress[trif_in])
+                self.words[i].stress.append(result[0])
+                self.words[j].stress[0] = result[1]
+
+                counter += 1
+                if counter == diferencia:
+                    del self.words[-1]
+                    return counter  # Retorna el comptador
+
+            elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "1":
+                """Mètode 1: dos mots monosil·làbics"""
+                word1_syll = self.words[i].stress[-1]
+                result = split_syllable(word1_syll)
+                self.words.insert(j, Word(doc[0], len(self.words)))
+                self.words[i].stress[-1] = result[0]
+                self.words[j].stress[0] = result[1]
+
+                len_words += 1
+                i += 1
+                j += 1
+                counter += 1
+                if counter == diferencia:
+                    del self.words[-1]
+                    return counter
+
+            elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "2":
+                """Mètode 2: monosil·lab i polisil·lab"""
+                word1_syll = self.words[i].stress[0]
+                result = split_syllable(word1_syll)
+                self.words.insert(i, Word(doc[0], len(self.words)))
+                self.words[i].stress[-1] = result[0]
+                self.words[j].stress[0] = result[1]
+
+                len_words += 1
+                i += 1
+                j += 1
+                counter += 1
+                if counter == diferencia:
+                    del self.words[-1]
+                    return counter
+
+            elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "3":
+                """Mètode 3: polisil·lab i monosil·lab"""
+                word1_syll = self.words[i].stress[-1]
+                result = split_syllable(word1_syll)
+                self.words.insert(j, Word(doc[0], len(self.words)))
+                self.words[i].stress[-1] = result[0]
+                self.words[j].stress[0] = result[1]
+                len_words += 1
+                i += 1
+                j += 1
+                counter += 1
+                if counter == diferencia:
+                    del self.words[-1]
+                    return counter
+
+            elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "4":
+                """Mètode 4: dos polisil·labs"""
+                word1_syll = self.words[i].stress[0]
+                result = split_syllable(word1_syll)
+                if word1_syll.triftong:
+                    self.words.insert(i, Word(doc[0], len(self.words)))
+                    self.words[i].stress.append(result[0])
+                else:
+                    self.words[i - 1].stress.append(result[0])
+
+                self.words[i].stress[0] = result[1]
+                counter += 1
+                if counter == diferencia:
+                    del self.words[-1]
+                    return counter
+
+            i += 1
+        else:
+            del self.words[-1]
+    return counter  # Retorna el nombre de vegades que s'ha aplicat la dialefa
 
 
 def dieresi(self, times):
@@ -112,108 +212,6 @@ def dieresi(self, times):
             j += 1
         i += 1
 
-
-def dialefa(self, diferencia):
-    # print("Dialefa")
-    counter = 0
-    if len(self.words) > 1:
-        self.words.append(Word("mpt", self.words[-1].upos, len(self.words), len(self.words)))
-        # print([word.plain() for word in self.words])
-        len_words = len(self.words)
-        i = 0
-        while i < len_words - 1:
-            i = i
-            if i < len_words - 1:
-                j = i + 1
-            else:
-                j = i
-            trif_in = next(
-                (self.words[j].stress.index(syllable) for syllable in self.words[j].stress if syllable.triftong), None)
-
-            if trif_in is not None:
-                """Mètode 0: un triftong"""
-                # print("Dialefa Mètode 0: un triftong")
-                result = split_syllable(self.words[j].stress[trif_in])
-                # print(result[0].text, result[1].text)
-                self.words[i].stress.append(result[0])
-                self.words[j].stress[0] = result[1]
-                # print([w.plain() for w in self.words])
-
-                counter += 1
-                if counter == diferencia:
-                    del self.words[-1]
-                    return True
-
-            elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "1":
-                """Mètode 1: dos mots monosil·làbics"""
-                word1_syll = self.words[i].stress[-1]
-                result = split_syllable(word1_syll)
-                self.words.insert(j, Word("empt", self.words[i].upos, j, len(self.words)))
-                self.words[i].stress[-1] = result[0]
-                self.words[j].stress[0] = result[1]
-
-                len_words += 1
-                i += 1
-                j += 1
-                counter += 1
-                if counter == diferencia:
-                    del self.words[-1]
-                    return True
-
-
-            elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "2":
-                """Mètode 2: monosil·lab i polisil·lab"""
-                # print("Dialefa Mètode 2: monosil·lab i polisil·lab")
-                word1_syll = self.words[i].stress[0]
-                result = split_syllable(word1_syll)
-                self.words.insert(i, Word("empt", self.words[i].upos, i - 1, len(self.words)))
-                self.words[i].stress[-1] = result[0]
-                self.words[j].stress[0] = result[1]
-
-                len_words += 1
-                i += 1
-                j += 1
-                counter += 1
-                if counter == diferencia:
-                    del self.words[-1]
-                    return True
-
-            elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "3":
-                """Mètode 3: polisil·lab i monosil·lab"""
-                word1_syll = self.words[i].stress[-1]
-                result = split_syllable(word1_syll)
-                # print("Dialefa Mètode 3: polisil·lab i monosil·lab")
-                self.words.insert(j, Word("empt", self.words[i].upos, j - 1, len(self.words)))
-                self.words[i].stress[-1] = result[0]
-                self.words[j].stress[0] = result[1]
-                len_words += 1
-                i += 1
-                j += 1
-                counter += 1
-                if counter == diferencia:
-                    del self.words[-1]
-                    return True
-
-            elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "4":
-                """Mètode 4: dos polisil·labs"""
-                # print("Dialefa Mètode 4: dos polisil·labs")
-                word1_syll = self.words[i].stress[0]
-                result = split_syllable(word1_syll)
-                if word1_syll.triftong:
-                    self.words.insert(i, Word("mpt", self.words[i].upos, i, len(self.words)))
-                    self.words[i].stress.append(result[0])
-                else:
-                    self.words[i - 1].stress.append(result[0])
-
-                self.words[i].stress[0] = result[1]
-                counter += 1
-                if counter == diferencia:
-                    del self.words[-1]
-                    return True
-
-            i += 1
-        else:
-            del self.words[-1]
 
 
 def epenthesis(self):

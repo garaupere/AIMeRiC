@@ -5,14 +5,8 @@ import re
 def anota_vers(self):
     """
     Annotates each word in the verse with its syllables' text and weight.
-
-    Returns:
-        list: A list of tuples where each tuple contains a list of syllables (each syllable is represented as a tuple of its text and weight) and the word's POS tag.
     """
-    return [
-        ([(syllable.save_metadata()["text"], syllable.save_metadata()["pes"]) for syllable in word.stress], word.upos)
-        for word in self.words]
-
+    return [{f"{word.text.lower()}_{word.w_index}": word.save_metadata()} for word in self.words]
 
 def scansion_array(self):
     """
@@ -21,7 +15,9 @@ def scansion_array(self):
     Returns:
         list: A list of lists where each inner list contains the weights of the syllables in a word.
     """
-    return [[(syllable.text, int(syllable.pes), syllable.fusionada, syllable.fono_info) for syllable in word.stress] for word in self.words]
+    return [[(syllable.text, int(syllable.pes), syllable.fusionada, syllable.fono_info) for syllable in word.stress] for
+            word in self.words]
+
 
 def escansio_plana(self):
     """
@@ -44,7 +40,7 @@ def escansio_accentual(self):
     return '#'.join(
         ['.'.join(
             [syllable.text.upper() if int(syllable.pes) > 1 else syllable.text.lower() for syllable in word.stress]) for
-         word in self.words]).replace('_', '‿')
+            word in self.words]).replace('_', '‿')
 
 
 def metronome(self):

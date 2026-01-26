@@ -12,20 +12,57 @@ from AIMeRiC.escansio.modules.utils.syllabify import hyphenate_word as syllabify
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
 
-
-
-
 class Word:
     """Aquesta classe representa una paraula amb les seves característiques."""
 
-    def __init__(self, word, word_pos, index, verse_wlength: int = 0):
-        self.w_index = index
-        self.verse_wlength = verse_wlength
-        self.text = word.lower()
-        self.upos = word_pos
+    def __init__(self, token, length):
+        self.w_index = token.i
+        self.lower = token.lower_
+        self.verse_wlength = length
+        self.text = token.text
+
+        # helper to read extension safely
+        def ext(name):
+            try:
+                return getattr(token._, name)
+            except Exception:
+                return None
+
+        # prefer corrected values stored in token._.* extensions, fallback to token attributes
+        self.upos = getattr(token, "pos_", None) or ext("upos_corr")
+        self.dep = getattr(token, "dep_", None) or ext("dep_corr")
+        self.lemma = getattr(token, "lemma_", None) or ext("lemma_corr")
+
+        # morph: prefer ext if present, else build from token.morph
+        morph_ext = ext("morph_corr")
+        if morph_ext:
+            self.morph = morph_ext
+        else:
+            try:
+                self.morph = token.morph
+            except Exception:
+                self.morph = None
+
+        # ancestor: use first ancestor from extension if available, else token.head.text fallback
+        anc_ext = ext("ancestors")
+        if anc_ext:
+            # store first ancestor string or None
+            self.ancestor = anc_ext[0] if len(anc_ext) > 0 else None
+        else:
+            self.ancestor = token.head.text if getattr(token, "head", token) != token else None
+
+        # children: prefer extension (list of strings) else build from token.children
+        children_ext = ext("children_text")
+        if children_ext:
+            self.children = children_ext
+        else:
+            try:
+                self.children = [child.text for child in token.children]
+            except Exception:
+                self.children = []
         self.syllables = syllabify(self.text)  # Mòdul independent: escansio/utils/syllabes.py
         self.correct_DET()
-        self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?, no ho sé)
+        self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?)
         self.word_ment = self.word_ment()
         self.n_syllables = len(self.syllables)  # Número de síl·labes
         self.stress = get_stress(self)
@@ -71,8 +108,6 @@ class Word:
     def plain(self):
         return '.'.join([syll.text.upper() if int(syll.pes) > 1 else syll.text.lower() for syll in self.stress])
 
-
-
     def monosyllabic(self):
         """Aquesta funció retorna l'accentuació de monosíl·labs"""
         solution = self.syllables[0]
@@ -103,7 +138,8 @@ class Word:
             return syllabify(self.text.replace("ment", ""))
 
     def print_metadata(self):
-        for attr in ["text", "upos", "word_ment", "syllables", "n_syllables", "print_stress",
+        for attr in ["text", "lower", "w_index", "upos", "dep", "lemma", "morph", "ancestor", "children", "word_ment",
+                     "syllables", "n_syllables", "print_stress",
                      "starts_with_vowel",
                      "ends_with_vowel", "plain_syllables", "is_compost"]:
             print(f"\t\t\t\t{attr}:", getattr(self, attr))
@@ -111,6 +147,24 @@ class Word:
             syllable.print_metadata()
 
         print("\n")
+
+    def save_metadata(self):
+        return {
+            "lower": self.lower,
+            "index": self.w_index,
+            "text": self.text,
+            "upos": self.upos,
+            "dep": self.dep,
+            "lemma": self.lemma,
+            "morph": self.morph.to_dict(),
+            "ancestor": self.ancestor,
+            "children": self.children,
+            "bivalent": self.is_bivalent(),
+            "syllables": {
+                f"{syllable.text}_{syllable.s_index}": syllable.save_metadata()
+                for syllable in self.stress
+            }
+        }
 
     def compost(self):
         """Un mètode per assignar l'accent secundari als mots composts."""
@@ -124,9 +178,9 @@ class Word:
                                                        "ADJ",
                                                        "ADP"]:  # Si el mot no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
                 word_1 = Word(''.join(self.syllables[0:div_index]), doc2[0].pos_,
-                          0)  # Cream el primer component del mot compost.
+                              0)  # Cream el primer component del mot compost.
                 word_1.syllables = self.syllables[
-                               0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
+                    0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                 get_stress(word_1)
                 get_stress_index(word_1)
                 # print([(syl.text, syl.pes) for syl in word_1.stress])
@@ -138,9 +192,9 @@ class Word:
                                                            "ADJ",
                                                            "ADP"]:  # Si el segon component del mot compost no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
                     word_2 = Word(''.join(self.syllables[div_index:]), doc3[0].pos_,
-                              0)  # Cream el segon component del mot compost.
+                                  0)  # Cream el segon component del mot compost.
                     word_2.syllables = self.syllables[
-                                   div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
+                        div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                     get_stress(word_2)
                     get_stress_index(word_2)
                     # print([(syl.text, syl.pes) for syl in word_2.stress])
@@ -160,17 +214,18 @@ class Word:
             else:  # Si el mot és 'estrany'
                 div_index -= 1  # Decreixem l'índex de divisió
                 doc2 = nlp(''.join(self.syllables[
-                                   0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
+                                       0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
 
 
 if __name__ == "__main__":
     start = time.time()
-    sentence = ("deliquis")
+    sentence = "sol i de dol i amb vetusta gonella"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     doc = nlp(sentence)
-    doc = [tok.pos_ for tok in doc]
-    for mot in sentence.split():
-        mot = Word(mot, doc[sentence.split().index(mot)], 0)
-        mot.print_metadata()
+    print(doc)
+    for token in doc:
+        word = (Word(token, len(doc)))
+        word.print_metadata()
+        print(word.save_metadata())
 
     print(time.time() - start)

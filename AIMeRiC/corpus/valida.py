@@ -77,7 +77,7 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> (pd.DataFrame, lis
 
     # Genera un df amb els versos no coincidents marcats amb un booleà
     df_comp['match'] = accuracy
-    df_comp.to_csv('validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
+    df_comp.to_csv('AiMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
 
     return df_comp
 
@@ -106,7 +106,7 @@ def plot_comparison(comparison_df):
     plt.grid(False)
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
-    plt.savefig('validacio/comparison.svg')
+    plt.savefig('AiMeRiC/corpus/validacio/comparison.png', dpi=600)
     plt.close()
 
     # Calcula la distància total entre els valors automàtics i manuals
@@ -116,7 +116,7 @@ def plot_comparison(comparison_df):
     # Desa les dades de la comparació en un fitxer xlsx
     difference = abs(auto_mean - manual_mean)
     df = pd.DataFrame({'Automàtic': auto_mean, 'Manual': manual_mean, 'Diferència': difference})
-    df.to_excel('validacio/comparison.xlsx', index=False)
+    df.to_excel('AiMeRiC/corpus/validacio/comparison.xlsx', index=False)
     plt.figure(figsize=(3, 3))
     plt.bar(df.index, df['Diferència'], color='skyblue', edgecolor='black')
     plt.xlabel('síl·labes')
@@ -127,7 +127,7 @@ def plot_comparison(comparison_df):
     plt.xticks(np.arange(0, 11))
     plt.grid(False)
     plt.tight_layout()
-    plt.savefig('validacio/difference.svg')
+    plt.savefig('AiMeRiC/corpus/validacio/difference.png', dpi=600)
 
 
 if __name__ == '__main__':

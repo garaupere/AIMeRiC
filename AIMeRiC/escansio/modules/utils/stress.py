@@ -166,3 +166,4 @@ def get_stress_index(self):
             return stress_index
         elif self.monosyllabic():
             return 0
+

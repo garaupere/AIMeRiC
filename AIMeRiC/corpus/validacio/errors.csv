@@ -98,7 +98,7 @@ L'antic museu, les madones borroses,;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;Tru
 I el pintar extrem d'avui! Càndid rampell:;0;0;1;1;0;1;1;0;0;1;0;0;1;1;0;1;1;0;0;1;True
 M'exalta el nou i m'enamora el vell.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Jo tem la nit, però la nit m'emporta;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-"Ert, pels verals, vora la mar sutjosa;";1;0;0;1;1;0;0;1;0;1;1;0;0;1;1;0;0;1;0;1;True
+"Ert, pels verals, vora la mar sutjosa;";1;0;0;1;0;0;0;1;0;1;1;0;0;1;1;0;0;1;0;1;False
 En llum morent la cobla es sent, confosa,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Em trob amb mi, tot sol, i això em conforta.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Negres carbons esbossen la mar morta,;1;0;0;1;0;1;0;0;1;1;1;0;0;1;0;1;0;0;1;1;True
@@ -129,14 +129,14 @@ Amb ulls carnals opòs núvols i mars;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;Tr
 I n'hec l'encís que em treu de tants de llots,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 I de l'advers renasc. I amb tants de brots,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Aigua i clarors, i el fosc i el roig de l'arç;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
-Faig l'U divers i múltiples les arts.;1;0;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;False
+Faig l'U divers i múltiples les arts.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Però la ment no cobeja els bells mots:;0;1;0;1;0;0;1;0;1;1;0;1;0;1;0;0;1;0;1;1;True
 De cadascú què sap? Presa de tots,;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
 Ignora el joc dels meus deliquis cars.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Tants de glans, doncs, i un sol Gla i del vinyet;1;0;1;1;0;1;1;0;0;1;1;0;1;1;0;1;1;0;0;1;True
 "Un Cep etern; i ni boira ni fred";0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
 Foren ni són! Això em fa el viure esquiu.;1;0;0;1;0;0;1;1;0;1;1;0;0;1;0;0;1;1;0;1;True
-"Sóc, doncs, Adam; i ets Eva! I tenim set,";0;1;0;1;1;1;0;0;1;1;0;1;0;1;1;1;0;0;1;1;True
+"Sóc, doncs, Adam; i ets Eva! I tenim set,";0;1;0;1;0;1;0;0;1;1;0;1;0;1;1;1;0;0;1;1;False
 I allò que olor i palp qui sap si viu,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 I ens banyarem tot temps al mateix riu.;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 Per clares fonts i forests remoroses,;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
@@ -147,7 +147,7 @@ Vull i no vull. Refús les amoroses;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 Sol·licituds, i acaç els homes fers;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 De llur voler, mestres de naus i acers,;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;True
 —I caic vençut en faldes generoses!;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-Vull ésser sant i heroi, duc i senyor;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
+Vull ésser sant i heroi, duc i senyor;1;0;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;False
 Del meu país i la més vasta Espanya,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 I les colors i els sons em fan llangor,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Em dolc i plany, i m'anega dolor;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
@@ -199,7 +199,7 @@ Quatre colors aparien el món;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;True
 "On em dissolc i on la beutat consir;";0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Si de la mar faig el meu elixir,;0;1;0;1;1;0;1;0;0;1;0;1;0;1;1;0;1;0;0;1;True
 Dels quatre tints assaig el joc pregon.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-Bru del teu nu i del teu ésser abscon,;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
+Bru del teu nu i del teu ésser abscon,;1;0;0;1;0;0;1;1;0;1;1;0;0;1;0;1;0;1;0;1;False
 Blau de la mar i dels ulls on em mir,;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;True
 Blanc de l'hostal i, puix que em plau el gir,;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 L'ardent vermell que el teu llavi difon.;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
@@ -277,7 +277,7 @@ Qui era adés? ¿On sou antres obscurs;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;T
 De l'urbs absent, bromalls i fums i llurs;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Caus fantasmals? I les dures fornals?;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;True
 I la sangassa i la fam entre murs?;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
-Veig d'ací estant, presents, els símbols purs:;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
+Veig d'ací estant, presents, els símbols purs:;1;0;1;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;False
 L'Home i el Bou i l'Arada immortals.;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;True
 On són, oh mar, els déus i llurs imatges;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Que et feren immortal? El tron espars;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
@@ -563,7 +563,7 @@ En les cales secretes dels teus ulls.;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;0;1;0;1;Tr
 Que ens som estranys en ignorat jardí;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 I rebutgem, sedents, nèctars i vi;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
 Enyoradissos d'una deu incerta?;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-¿Quin gai tremir de veus en nit coberta;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
+¿Quin gai tremir de veus en nit coberta;1;0;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;False
 Ens ajuntà clement, com si el morir;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 Fos per tu i jo integrats, llindar i camí;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 D'alba latent dellà l'angoixa oberta?;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
@@ -639,7 +639,7 @@ Com un orat, què dic, on vaig?, m'han pres;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;
 Els encantalls dels teus ulls: la mar, ela!;0;1;0;1;0;0;1;0;1;1;0;1;0;1;0;0;1;0;1;1;True
 "Nauta en mars teus, tu dels meus senys, nauxer;";1;0;1;1;0;1;0;1;0;1;1;0;1;1;0;1;0;1;0;1;True
 No sóc eslau, ni íber, ni semita,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-Entre bromalls, tu ets. Doncs, venceré!;1;0;0;1;0;1;1;0;0;1;1;0;0;1;0;1;1;0;0;1;True
+Entre bromalls, tu ets. Doncs, venceré!;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;1;1;0;0;1;False
 Oh llebetjol, oh dolça faç, —ni buç:;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 Sóc pirenenc, del cim clarós. Invita,;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 Oh mar, — oh mars! — l'Invicte, no el cuguç.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
@@ -651,7 +651,7 @@ Bramula el mar i exalta la cabila;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Dels nus a pèl, amb cants: llarg cantarell;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
 De llums i sons. Amb tu fins al niell;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
 I el seu nimfeu, tot sols: Cap déu vigila!;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-Colri's cascú, ets formosa i adorn;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;True
+Colri's cascú, ets formosa i adorn;1;0;0;1;1;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;False
 El cos encès amb tebi codolell,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 "I terra i cel i mar són flam — (Botorn;";0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Boneix l'abell.) Ets negra i sang: Cap born;0;1;0;1;1;1;0;1;0;1;0;1;0;1;1;1;0;1;0;1;True
@@ -671,7 +671,7 @@ Amb sals de mar és dolç el teu carmí.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1
 Però la nit em fa estrany el camí;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
 I la calanca m'és la vasta platja;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 On et perds, nacre i ombra, i en imatge.;0;0;1;1;0;1;0;1;0;1;0;0;1;1;0;1;0;1;0;1;True
-Bufeu, vents seculars, — oh quin brogit —,;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;0;1;0;1;True
+Bufeu, vents seculars, — oh quin brogit —,;0;1;1;0;0;1;0;1;0;1;0;0;1;0;0;1;0;1;0;1;False
 I quin cabreig, oh Laura, el mar. Desfulles;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Març fredós ombra i colors. (— Com me mulles,;1;0;1;1;0;0;1;0;0;1;1;0;1;1;0;0;1;0;0;1;True
 "No xipollegis tant; i quin despit.)";1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
@@ -685,7 +685,7 @@ Dolça en el son, i cruent: Quin destí!;1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1
 "Del segle deu; o del vintè, t'afanyes";0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Com jo, per l'U i l'Incert. I vols partir;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Per recalar, de nit, en mars estranyes.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
-Fútil joc: dius, i te'n rius, que ets d'Atenes;1;0;1;1;0;0;1;0;0;1;1;0;1;1;0;0;1;0;0;1;True
+Fútil joc: dius, i te'n rius, que ets d'Atenes;1;0;1;1;0;0;1;1;0;1;1;0;1;1;0;0;1;0;0;1;False
 Pels teus ulls clars. Oidà, jo sóc romà,;0;0;1;1;0;1;0;1;0;1;0;0;1;1;0;1;0;1;0;1;True
 Dic, i en ric. Dona: — qui del call dirà;1;0;1;1;0;1;0;1;0;1;1;0;1;1;0;1;0;1;0;1;True
 "(Turc?), ""Del meu burg?"" Per les teves rehenes";1;0;0;1;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;True
@@ -694,7 +694,7 @@ Flota de caracuits, el ball. (Hi ha;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 "Dofins cualluents al fons; ençà,";0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Tot de velers ambigus.) M'anomenes:;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 Per a tu sóc l'absent, d'ara i d'antany.;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
-"(D'Atenes! Rius. I dius: ""— Sóc hodierna"".)";0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
+"(D'Atenes! Rius. I dius: ""— Sóc hodierna"".)";0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;0;1;0;1;False
 Jo enyor Sisímitris i la caverna,;0;1;0;1;0;0;1;1;0;1;0;1;0;1;0;0;1;1;0;1;True
 L'urbs de cer i ciment i l'averany;1;0;1;0;0;1;0;1;0;1;1;0;1;0;0;1;0;1;0;1;True
 Que obre camins al cel al meu afany.;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
@@ -751,7 +751,7 @@ I afanya't a colrar monyó i aixella,;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;Tr
 Que jo sóc Dionís i sóc Narcís.;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;0;1;0;1;True
 Sota l'ombrel·la em plau veure com pella;1;0;0;1;0;1;1;0;0;1;1;0;0;1;0;1;1;0;0;1;True
 La teva cuixa d'or en l'areny llis,;0;1;0;1;0;1;0;0;1;1;0;1;0;1;0;1;0;0;1;1;True
-I del cel del teu front ésser l'estrella!;0;0;1;0;1;1;0;0;0;1;0;0;1;0;0;1;1;0;0;1;False
+I del cel del teu front ésser l'estrella!;0;0;1;0;1;0;1;0;0;1;0;0;1;0;0;1;1;0;0;1;False
 Oh la doble natura: Jo, com ella,;1;0;1;0;0;1;0;1;0;1;1;0;1;0;0;1;0;1;0;1;True
 "Opòs Usura i Aventura; bis:";0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Que jo sóc Dionís i sóc Narcís.;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;0;1;0;1;True
@@ -787,7 +787,7 @@ Fugiré carrer enllà, oí! Finestra:;0;0;1;0;1;0;1;1;0;1;0;0;1;0;1;0;1;1;0;1;Tr
 "Darrera teu veig l'home geperut;";0;1;0;1;1;1;0;1;0;1;0;1;0;1;1;1;0;1;0;1;True
 A casa tinc un maniquí forçut;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 Que amb mig Hacpé només, pica amb la destra.;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;1;0;0;1;True
-Geperut!, Geperut!: Vaig a la platja,;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;0;1;0;1;True
+Geperut!, Geperut!: Vaig a la platja,;0;0;1;0;0;1;1;0;0;1;0;0;1;0;0;1;0;1;0;1;False
 L'hora és ardent i: trenta-dos genolls,;1;0;0;1;0;1;0;1;0;1;1;0;0;1;0;1;0;1;0;1;True
 I els mamellons i setze llavis folls...;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 La Madroneta es despulla al garatge.;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
@@ -937,7 +937,7 @@ Escarceller de la meva mentida.;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
 Us clam per tot on Us voldria absent;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True
 I em faig un pler del meu propi lament;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
 Quan, a camp ras, trob la inútil eixida.;1;0;1;1;1;0;1;0;0;1;1;0;1;1;1;0;1;0;0;1;True
-A l'endeví vaig per falsa drecera,;0;1;0;1;0;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;True
+A l'endeví vaig per falsa drecera,;0;1;0;1;1;0;1;0;0;1;0;1;0;1;0;0;1;0;0;1;False
 "I en juny encès avanç amb el cos balb;";0;1;0;1;0;1;0;0;1;1;0;1;0;1;0;1;0;0;1;1;True
 Us fan present, Senyor, mes no tinc palp;0;1;0;1;0;1;0;0;1;1;0;1;0;1;0;1;0;0;1;1;True
 I el llavi clos ignora la preguera.;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;0;1;True

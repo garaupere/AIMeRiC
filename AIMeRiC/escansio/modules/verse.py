@@ -2,6 +2,8 @@
 import re
 import time
 from copy import deepcopy
+
+import spacy
 from colorama import Fore
 import pandas as pd
 
@@ -44,13 +46,13 @@ class Vers:
             self.llicencies = None
             self.__disposa_tall__()
         else:
-            self.llicencies = llicencies(self, permet_llicencies)
+            self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
 
     def __prepara__(self, nlp):
         self.pos = posTagger(nlp, self.text)
-        self.words = [Word(token[0], token[1], self.pos.index(token), len(self.pos)) for token in self.pos if token]
+        self.words = [Word(token, len(self.pos)) for token in self.pos]
         safe_words(self)
-        self.original = deepcopy(self.words)
+        self.original = self.words.copy()
         self.__uneix_mots__()
         self.__patrons__()
         self.__anota__()
@@ -129,9 +131,10 @@ class Vers:
             self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[
                                                                                         self.posicio_tall:]
             self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
-            self.escansio_text = self.escansio_text.split('.')
-            self.escansio_text = '.'.join(
-                self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
+            #self.escansio_text = self.escansio_text.split('.')
+
+            #self.escansio_text = '.'.join(
+            #    self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
 
     def __actualitza__(self):
         """Aquesta funció actualitza el vers després d'aplicar-hi llicències."""
@@ -272,10 +275,9 @@ class Vers:
 
 
 if __name__ == "__main__":
-    import spacy
-
     start = time.time()
+    sentence = "Sol, i de dol, i amb vetusta gonella"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
-    vers = Vers(nlp, "Sol, i de dol, i amb vetusta gonella,", 10)
+    vers = Vers(nlp, sentence, 10, permet_llicencies=True)
     vers.mostra()
-    print(time.time() - start)
+    print(vers.save)
