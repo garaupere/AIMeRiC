@@ -83,7 +83,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                  'escansió plana'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
                  'mots al còlon 1', 'mots al còlon 2',
-                 'patró comparatiu', 'encavalcament', 'metronome'])
+                 'patró', 'patró rítmic', 'encavalcament', 'metronome'])
 
         rows = []
         for book_title in author.books:  # Per a cada llibre de l'autor

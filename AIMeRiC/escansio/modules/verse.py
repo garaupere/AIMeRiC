@@ -238,58 +238,8 @@ class Vers:
                                                            self.subdivisio,
                                                            self.llicencies,
                                                            self.mots_colon1, self.mots_colon2,
-                                                           str(self.contorn_accentual), self.encavalcament,
+                                                           str(self.contorn_accentual), str(self.contorn_cru), self.encavalcament,
                                                            self.metronome]
-
-    def desa_prosa(self):
-        return {self.text:
-                    {"string": self.string,
-                     "string_stress": self.escansio_text,
-                     "annotated": self.anotat,
-                     "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
-                     "pattern": self.patro,
-                     "n_words": self.n_mots,
-                     "comparative_pattern": self.contorn_cru,
-                     "cv_info": self.contactes_vocalics,
-                     "encavalcament": self.encavalcament,
-                     "metronome": self.metronome
-                     }
-                }
-
-    def desa_prosa_2(self):
-        """Guarda el vers en format prosa."""
-        if self.recompte_sillabes_metriques > 9:
-            data = {
-                "text": [self.text],
-                "string": [self.string],
-                "string_stress": [self.escansio_text],
-                "annotated": [self.anotat],
-                "no_words": [[syllable.save_metadata() for syllable in self.nomes_sillabes]],
-                "pattern": [self.patro],
-                "n_words": [self.n_mots],
-                "comparative_pattern": [self.contorn_cru],
-                "cv_info": [self.contactes_vocalics],
-                "encavalcament": [self.encavalcament],
-                "metronome": [self.metronome],
-                "first_10_patro": [self.patro[:10]],
-                "first_10_comparative_pattern": [self.contorn_cru[:10]],
-                "last_10_patro": [self.patro[-10:]],
-                "last_10_comparative_pattern": [self.contorn_cru[-10:]]
-            }
-            return pd.DataFrame(data)
-        return None
-
-    def desa_prosa_3(self):
-        """Guarda el vers en format prosa simplificat per a CSV."""
-        return {
-            "text": self.text,
-            "string": self.string,
-            "string_stress": self.escansio_text,
-            "n_words": self.n_mots,
-            "array": [[syllable.save_metadata() for syllable in mot.stress] for mot in self.words],
-            "comparative_pattern": self.contorn_cru,
-            "metronome": self.metronome
-        }
 
     def prosa_to_csv(self):
         return [self.text, self.escansio_text,
