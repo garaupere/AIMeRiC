@@ -18,7 +18,7 @@ from AIMeRiC.escansio.modules.utils import prose
 from AIMeRiC.escansio.modules.verse import Vers
 
 
-def nucli_escansio_prosa(sring, goal):
+def nucli_escansio_prosa(nlp, sring, goal):
     dict_first = {}
     dict_last = {}
     dict_medial = {}
@@ -64,19 +64,18 @@ def paragrafs_prosa(nlp, text, goal):
     rows = []
     for paragraf in paragrafs:
         if len(paragraf) > 20:
-            escaneig = escaneja_minim(nlp, paragraf, goal, permet_llicencies=False)
             if paragraf is not None:
                 try:
-                    res_first, res_medial, res_last = nucli_escansio_prosa(paragraf, goal)[0]
+                    res_first, res_medial, res_last = nucli_escansio_prosa(nlp, paragraf, goal)[0]
                     if res_first:
                         results['first_10'].update(res_first)
-                        rows.append(nucli_escansio_prosa(paragraf, goal)[1][0])
+                        rows.append(nucli_escansio_prosa(nlp, paragraf, goal)[1][0])
                     if res_last:
                         results['last_10'].update(res_last)
-                        rows.append(nucli_escansio_prosa(paragraf, goal)[1][2])
+                        rows.append(nucli_escansio_prosa(nlp, paragraf, goal)[1][2])
                     if res_medial:
                         results['medial_10'].update(res_medial)
-                        rows.append(nucli_escansio_prosa(paragraf, goal)[1][1])
+                        rows.append(nucli_escansio_prosa(nlp, paragraf, goal)[1][1])
                 except Exception as e:
                     print(f"Error en l'escaneig del paràgraf: {e}")
 
@@ -85,29 +84,28 @@ def paragrafs_prosa(nlp, text, goal):
 
 def itera_narrativa(nlp, file_path, goal):
     global corpus_dict, rows
-    for file in os.listdir(file_path):
-        author = Author(os.path.join(file_path, file))  # Crea un objecte Autor
-        corpus_dict = author.save_metadata()  # Guarda la metadata de l'autor
-        rows = []
-        for book_title in author.books:  # Per a cada llibre de l'autor
-            book = Book(book_title, author.content)  # Crea un objecte Llibre
-            corpus_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
-            for poem_title in book.poems:  # Per cada poema del llibre
-                if book.poems[poem_title]:  # Si el poema no és buit
-                    pagina = Poem(poem_title, book.book_content)  # Crea un objecte Poema
-                    corpus_dict['books'][book_title]['poems'].update(pagina.save_metadata())
-                    for paragraf in pagina.verses:  # Per cada vers del poema
-                        if isinstance(paragraf, str) and len(paragraf) > 20:
-                            page_results = paragrafs_prosa(nlp, paragraf, goal)
-                            dict_results = page_results[0]
-                            csv_results = page_results[1]
-                            for dict_result in dict_results.values():
-                                corpus_dict['books'][book_title]['poems'][poem_title]['verses'].update(dict_result)
-                            for csv_result in csv_results:
-                                rows.append([author.id, author.name, author.born_date, author.death_date, author.gender, author.city,
-                             author.dialect, author.wiki_id, author.viaf,
-                             book.title, book.year, book.translation, book.font,
-                             pagina.verses.index(paragraf)] + csv_result)
+    author = Author(file_path)  # Crea un objecte Autor
+    corpus_dict = author.save_metadata()  # Guarda la metadata de l'autor
+    rows = []
+    for book_title in author.books:  # Per a cada llibre de l'autor
+        book = Book(book_title, author.content)  # Crea un objecte Llibre
+        corpus_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
+        for poem_title in book.poems:  # Per cada poema del llibre
+            if book.poems[poem_title]:  # Si el poema no és buit
+                pagina = Poem(poem_title, book.book_content)  # Crea un objecte Poema
+                corpus_dict['books'][book_title]['poems'].update(pagina.save_metadata())
+                for paragraf in pagina.verses:  # Per cada vers del poema
+                    if isinstance(paragraf, str) and len(paragraf) > 20:
+                        page_results = paragrafs_prosa(nlp, paragraf, goal)
+                        dict_results = page_results[0]
+                        csv_results = page_results[1]
+                        for dict_result in dict_results.values():
+                            corpus_dict['books'][book_title]['poems'][poem_title]['verses'].update(dict_result)
+                        for csv_result in csv_results:
+                            rows.append([author.id, author.name, author.born_date, author.death_date, author.gender, author.city,
+                         author.dialect, author.wiki_id, author.viaf,
+                         book.title, book.year, book.translation, book.font,
+                         pagina.verses.index(paragraf)] + csv_result)
 
     head = (['autor_id', 'autor', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
              'obra', 'any', 'traducció', 'font', 'poema',
@@ -116,9 +114,7 @@ def itera_narrativa(nlp, file_path, goal):
              'mots al còlon 1', 'mots al còlon 2',
              'patró', 'patró_rítmic', 'encavalcament', 'metronome', 'posició'])
 
-    corpus_csv = pd.DataFrame(rows, columns=head)
-
-    return corpus_dict, corpus_csv
+    return corpus_dict, pd.DataFrame(rows, columns=head)
 
 
 def prosa(nlp):
@@ -303,20 +299,31 @@ if __name__ == "__main__":
     print("--" * 40)
     for corpus_folder in os.listdir(root):
         if corpus_folder == 'prosa':
-            print("S'ha activat el mode d'etiquetatge de prosa.")
-            corpus_path = f"{root}{corpus_folder}/sense_etiquetar/json/"
-            results_path = f"{root}{corpus_folder}/etiquetat/"
-            corpus_result = itera_narrativa(nlp, corpus_path, goal)
-            # crea la carpeta si no existeix
-            os.makedirs(f"{results_path}json/", exist_ok=True)
-            with open(f"{results_path}json/prosa.json", 'w', encoding='utf-8') as f:
-                json.dump(corpus_result[0], f, indent=4, ensure_ascii=False)
-            # Desa un CSV amb els resultats
-            print("Desant els resultats en format CSV...")
-            print(corpus_result[1])
-            os.makedirs(f"{results_path}csv/", exist_ok=True)
-            corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
-                      lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+            for file in os.listdir(f"{root}{corpus_folder}/sense_etiquetar/json/"):
+                # comprova si els fitxers json són vàlids
+                file_path = f"{root}{corpus_folder}/sense_etiquetar/json/{file}"
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        json.load(f)
+                except json.JSONDecodeError as e:
+                    print(f"Error: Format JSON invàlid en {file_path} (línia {e.lineno}, columna {e.colno}).")
+                    continue  # Salta aquest fitxer i continua amb el següent
+            into = input("Voleu continuar amb l'etiquetatge del corpus de prosa? (s/n): ")
+            if into.lower() == 's':
+                print("S'ha activat el mode d'etiquetatge de prosa.")
+                corpus_path = f"{root}{corpus_folder}/sense_etiquetar/json/"
+                results_path = f"{root}{corpus_folder}/etiquetat/"
+                corpus_result = itera_narrativa(nlp, corpus_path, goal)
+                # crea la carpeta si no existeix
+                os.makedirs(f"{results_path}json/", exist_ok=True)
+                with open(f"{results_path}json/prosa.json", 'w', encoding='utf-8') as f:
+                    json.dump(corpus_result[0], f, indent=4, ensure_ascii=False)
+                # Desa un CSV amb els resultats
+                print("Desant els resultats en format CSV...")
+                print(corpus_result[1])
+                os.makedirs(f"{results_path}csv/", exist_ok=True)
+                corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
+                          lineterminator='\n', header=True, decimal=',', float_format='%.2f')
 
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)

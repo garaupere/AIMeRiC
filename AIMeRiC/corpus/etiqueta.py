@@ -3,20 +3,16 @@ import json
 import os
 import re
 import time
-
-import winsound
-from tqdm import tqdm
 from datetime import datetime
 
 import pandas as pd
-
 import spacy
+from tqdm import tqdm
 
-from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.author import Author
 from AIMeRiC.corpus.modules.book import Book
+from AIMeRiC.corpus.modules.getUSB import getUSB
 from AIMeRiC.corpus.modules.poem import Poem
-
 from AIMeRiC.escansio.escansor import escaneja
 
 usb = getUSB()

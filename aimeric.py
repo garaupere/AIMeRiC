@@ -1,10 +1,14 @@
+import json
+
 import pandas as pd
 from colorama import Fore
+from tqdm import tqdm
+
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.dictionary_scan import escaneja_diccionari, escaneja_diccionari_frequencies
 from AIMeRiC.corpus.etiqueta import etiqueta_corpus
-from AIMeRiC.corpus.prosa import prosa
+from AIMeRiC.corpus.prosa import prosa, itera_narrativa
 from AIMeRiC.corpus.valida import valida
 from AIMeRiC.escansio.escansor import escaneja, __version__
 from AIMeRiC.corpus.modules.getUSB import getUSB
@@ -16,7 +20,6 @@ __version__ = __version__
 import os
 import time
 import spacy
-
 
 
 def compile(raw_files_path, corpus):
@@ -88,9 +91,11 @@ def help():
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test (" + Fore.GREEN, "-test" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan",
           Fore.RED + "vers" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa (" + Fore.GREEN + "-prosa" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa (" + Fore.GREEN + "-etiqprosa" + Fore.RESET,
+          Fore.RED + "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Escaneja un diccionari (" + Fore.GREEN + "-scandic" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Escaneja un diccionari amb freqüències (" + Fore.GREEN + "-scandic-fq" + Fore.RESET + ")")
+    print(Fore.CYAN, f"\t➥", Fore.RESET,
+          "Escaneja un diccionari amb freqüències (" + Fore.GREEN + "-scandic-fq" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Còpia de seguretat del corpus (" + Fore.GREEN + "-bkp" + Fore.RESET + ")\n")
     print("Per accedir al menú d'ajuda, usau '" + Fore.GREEN + "-help" + Fore.RESET + "'.")
     print("Per tancar el programa, premeu Intro.\n")
@@ -129,8 +134,9 @@ def compara_corpus(corpus1, corpus2):
 def scan_dictionary_frequencies():
     """Escaneja prosòdicament els mots d'un diccionari amb freqüències. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
     escaneja_diccionari_frequencies(nlp).to_csv(f'{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv',
-                                               index=False, encoding='utf-8', sep=';')
-    print(f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv'.")
+                                                index=False, encoding='utf-8', sep=';')
+    print(
+        f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv'.")
 
 
 def main():
@@ -163,11 +169,7 @@ def main():
             minutes = int(elapsed_time // 60)
             seconds = int(elapsed_time % 60)
             print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
-        elif option == '-prosa':
-            try:
-                prosa(nlp)
-            except FileNotFoundError:
-                print("No disposau d'un corpus de prosa compilat.")
+
         elif option == '-scandic':
             start = time.time()
             scan_dictionary()
@@ -211,6 +213,36 @@ def main():
                     print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
                 except FileNotFoundError:
                     print('El corpus seleccionat no existeix.')
+
+            elif options[0] == '-etiqprosa':
+                corpus = options[1]
+                print("S'ha activat el mode d'etiquetatge de prosa.")
+                start = time.time()
+                corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
+                results_path = f"{root}{corpus}/etiquetat/"
+                for json_file in tqdm(os.listdir(corpus_path), desc="Etiquetant fitxers JSON de prosa"):
+                    if json_file.endswith('.json'):
+                        try:
+                            json_file_path = os.path.join(corpus_path, json_file)
+                            name = json_file.replace('.json', '')
+                            corpus_result = itera_narrativa(nlp, json_file_path, 10)
+                            # crea la carpeta si no existeix
+                            os.makedirs(f"{results_path}json/", exist_ok=True)
+                            with open(f"{results_path}json/{name}.json", 'w', encoding='utf-8') as f:
+                                json.dump(corpus_result[0], f, indent=4, ensure_ascii=False)
+                            # Desa un CSV amb els resultats
+                            print("Desant els resultats en format CSV...")
+                            print(corpus_result[1])
+                            os.makedirs(f"{results_path}csv/", exist_ok=True)
+                            corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';', encoding='utf-8',
+                                                    lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+                        except FileNotFoundError:
+                            print('El corpus seleccionat no existeix.')
+                elapsed_time = time.time() - start
+                minutes = int(elapsed_time // 60)
+                seconds = int(elapsed_time % 60)
+                print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
+                print("Fi de l'etiquetatge.")
 
             elif options[0] == "-compara":
                 try:
