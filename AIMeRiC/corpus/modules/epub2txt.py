@@ -67,4 +67,8 @@ if __name__ == "__main__":
     for file in os.listdir(path):
         if os.path.isfile(os.path.join(path, file)):
             if file.endswith(".epub"):
-                convert_epub_to_txt(path, file)
+                print(file)
+                try:
+                    convert_epub_to_txt(path, file)
+                except Exception as e:
+                    print(f"Error processant {file}: {e}")

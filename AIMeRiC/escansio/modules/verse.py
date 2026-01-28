@@ -1,52 +1,61 @@
 """Un mòdul per a la gestió mètrica dels versos"""
-import re
 import time
-from copy import deepcopy
 
+import pandas as pd
 import spacy
 from colorama import Fore
-import pandas as pd
 
-from AIMeRiC.escansio.modules.utils.syntax import encavalcament
-from AIMeRiC.escansio.modules.word import Word
-from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
-from AIMeRiC.escansio.modules.utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
-    maximal_comparison_pattern
-from AIMeRiC.escansio.modules.utils.prosody import accents_prosodics, cim_maxim
 from AIMeRiC.escansio.modules.utils.decasyllable import tall, subdivideix
 from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, escansio_accentual, metronome, \
     scansion_array
+from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.utils.licenses import llicencies
+from AIMeRiC.escansio.modules.utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
+    maximal_comparison_pattern
+from AIMeRiC.escansio.modules.utils.prosody import accents_prosodics, cim_maxim
+from AIMeRiC.escansio.modules.utils.syntax import encavalcament
 from AIMeRiC.escansio.modules.utils.word_info import quants_mots, safe_words
+from AIMeRiC.escansio.modules.word import Word
 
 
 class Vers:
-    def __init__(self, nlp, text: str, objectiu: int, permet_llicencies):
-        self.objectiu = objectiu
-        self.text = text
-        self.encavalcament = encavalcament(self.text)
-        self.__prepara__(nlp)
+    def __init__(self, nlp, text: str, objectiu: int = 10, permet_llicencies: bool = True, minimal: bool = False):
+        if not minimal:
+            self.objectiu = objectiu
+            self.text = text
+            self.encavalcament = encavalcament(self.text)
+            self.__prepara__(nlp)
 
-        resol_contactes_vocalics(self, best_mode='natural')
-        self.ajustat = metre_ajustat(self)
+            resol_contactes_vocalics(self, best_mode='natural')
+            self.ajustat = metre_ajustat(self)
 
-        if self.ajustat:
-            self.__subdivisio__()
+            if self.ajustat:
+                self.__subdivisio__()
+                self.__disposicio__()
+
+                self.__prosodia__()
+                self.__patrons__()
+                self.__anota__()
+
+                self.__mot_info__()
+                self.__contactes_vocalics__()
+                self.__metronome__()
+                self.__rima__()
+                self.llicencies = None
+                self.__disposa_tall__()
+            else:
+                self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
+        else:
+            # Minimal mode for faster processing without full analysis
+            self.objectiu = objectiu
+            self.text = text
+            self.encavalcament = encavalcament(self.text)
+            self.__prepara__(nlp)
+            resol_contactes_vocalics(self, best_mode='natural')
             self.__disposicio__()
-
-            self.__prosodia__()
             self.__patrons__()
             self.__anota__()
-
-            self.__mot_info__()
-            self.__contactes_vocalics__()
-            self.__metronome__()
-            self.__rima__()
-            self.llicencies = None
-            self.__disposa_tall__()
-        else:
-            self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
 
     def __prepara__(self, nlp):
         self.pos = posTagger(nlp, self.text)
@@ -124,12 +133,13 @@ class Vers:
 
     def __metronome__(self):
         self.metronome = metronome(self)
+
     def __disposa_tall__(self):
         if self.subdivisio is None:
             self.subdivisio = 'Cap'
         elif self.subdivisio != 'Cap':
             self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[
-                                                                                        self.posicio_tall:]
+                self.posicio_tall:]
             self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
             #self.escansio_text = self.escansio_text.split('.')
 
@@ -269,9 +279,63 @@ class Vers:
             return pd.DataFrame(data)
         return None
 
+    def desa_prosa_3(self):
+        """Guarda el vers en format prosa simplificat per a CSV."""
+        return {
+            "text": self.text,
+            "string": self.string,
+            "string_stress": self.escansio_text,
+            "n_words": self.n_mots,
+            "array": [[syllable.save_metadata() for syllable in mot.stress] for mot in self.words],
+            "comparative_pattern": self.contorn_cru,
+            "metronome": self.metronome
+        }
+
     def prosa_to_csv(self):
-        return [self.text, self.escansio_text, self.recompte_sillabes_metriques, self.recompte_sillabes_extrametriques,
-                self.patro, self.contorn_accentual, self.metronome]
+        return [self.text, self.escansio_text,
+                self.recompte_sillabes_metriques,
+                self.recompte_sillabes_extrametriques,
+                self.subdivisio,
+                self.llicencies,
+                self.mots_colon1, self.mots_colon2,
+                str(self.contorn_accentual), str(self.contorn_cru), self.encavalcament,
+                self.metronome]
+
+    def save_minimal(self):
+        """Retorna un diccionari amb la informació mínima del vers."""
+        return {self.text:
+                    {"string": self.string,
+                     "string_stress": self.escansio_text,
+                     "pattern": self.patro,
+                     "sillabes_metriques": self.sillables_metriques,
+                     "sillabes_extrametriques": self.recompte_sillabes_extrametriques,
+                     "n_words": self.n_mots,
+                     "comparative_pattern": self.contorn_cru,
+                     "array": [[syllable.save_metadata() for syllable in mot.stress] for mot in self.words]
+                     }
+                }
+
+    def mostra_minimal(self):
+        """Mostra la informació mínima del vers."""
+
+        def color_tonic(pattern):
+            return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
+
+        for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
+                     "recompte_sillabes_extrametriques",
+                     "n_words"]:
+            if attr == "escansio_text":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Escansió: {(getattr(self, attr))}")
+            elif attr == "contorn_accentual":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Contorn accentual:", f"{color_tonic(getattr(self, attr))}")
+            elif attr == "recompte_sillabes_metriques":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes mètriques:", Fore.CYAN, f"{getattr(self, attr)}",
+                      Fore.RESET)
+            elif attr == "recompte_sillabes_extrametriques":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes extramètriques:", Fore.CYAN, f"{getattr(self, attr)}",
+                      Fore.RESET)
+            elif attr == "n_mots":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Número de mots:", f"{getattr(self, attr)}")
 
 
 if __name__ == "__main__":
