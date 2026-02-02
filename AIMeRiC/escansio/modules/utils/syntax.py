@@ -9,3 +9,4 @@ def encavalcament(text):
     meitat = re.search("[.?!]", text)
     if not final and meitat:
         return True
+    return None

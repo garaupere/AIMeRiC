@@ -39,7 +39,7 @@ def compile(raw_files_path, corpus):
     print(f'Temps d\'execució: {minutes} minuts i {seconds} segons')
 
 
-def etiq(corpus):
+def etiq(nlp, corpus):
     """Etiquetar un corpus"""
     usb = getUSB()
     root = f"{usb}/corpora/"
@@ -55,6 +55,7 @@ def scan(nlp, verse, goal: int = 10):
 
 def check_jsons(corpus):
     """Comprova que tots els fitxers .json d'un directori estiguin ben formats."""
+    global json
     usb = getUSB()
     path = f"{usb}/corpora/{corpus}/sense_etiquetar/json/"
     for filename in os.listdir(path):
@@ -69,7 +70,7 @@ def check_jsons(corpus):
                 print(f"\t >> Error de format en {filename}: {e}")
 
 
-def scan_dictionary():
+def scan_dictionary(nlp):
     """Escaneja prosòdicament els mots d'un diccionari. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
     resultats = escaneja_diccionari(nlp)
     resultats.to_csv(f'{getUSB()}/corpora/diccionari/diccionari_prosodic.csv', index=False, encoding='utf-8', sep=';')
@@ -130,7 +131,7 @@ def compara_corpus(corpus1, corpus2):
     print(f"Resultat guardat a 'comparison_results_{corpus1}_{corpus2}.xlsx'")
 
 
-def scan_dictionary_frequencies():
+def scan_dictionary_frequencies(nlp):
     """Escaneja prosòdicament els mots d'un diccionari amb freqüències. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
     escaneja_diccionari_frequencies(nlp).to_csv(f'{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv',
                                                 index=False, encoding='utf-8', sep=';')
@@ -138,7 +139,7 @@ def scan_dictionary_frequencies():
         f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv'.")
 
 
-def main():
+def main(nlp):
     global options
     usb = getUSB()
     raw_files_path = rf"{usb}/compile_files/"
@@ -171,7 +172,7 @@ def main():
 
         elif option == '-scandic':
             start = time.time()
-            scan_dictionary()
+            scan_dictionary(nlp)
             elapsed_time = time.time() - start
             minutes = int(elapsed_time // 60)
             seconds = int(elapsed_time % 60)
@@ -179,7 +180,7 @@ def main():
 
         elif option == '-scandic-fq':
             start = time.time()
-            scan_dictionary_frequencies()
+            scan_dictionary_frequencies(nlp)
             elapsed_time = time.time() - start
             minutes = int(elapsed_time // 60)
             seconds = int(elapsed_time % 60)
@@ -205,7 +206,7 @@ def main():
                     corpus = options[1]
                     try:
                         start = time.time()
-                        etiq(corpus)
+                        etiq(nlp, corpus)
                         elapsed_time = time.time() - start
                         minutes = int(elapsed_time // 60)
                         seconds = int(elapsed_time % 60)
@@ -233,8 +234,10 @@ def main():
                                 print("Desant els resultats en format CSV...")
                                 print(corpus_result[1])
                                 os.makedirs(f"{results_path}csv/", exist_ok=True)
-                                corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';', encoding='utf-8',
-                                                        lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+                                corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';',
+                                                        encoding='utf-8',
+                                                        lineterminator='\n', header=True, decimal=',',
+                                                        float_format='%.2f')
                             except FileNotFoundError:
                                 print('El corpus seleccionat no existeix.')
                     elapsed_time = time.time() - start
@@ -260,6 +263,7 @@ def main():
                 verse = ' '.join(options[0:])
                 scan(nlp, verse)
 
+
 if __name__ == "__main__":
     from cfonts import render
 
@@ -276,10 +280,11 @@ if __name__ == "__main__":
     print("Model carregat correctament.")
     print("--" * 40)
 
-    main()
+    main(nlp)
 
     print("--" * 40)
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
-    print(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}")
+    print(
+        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}")
     print("--" * 40)

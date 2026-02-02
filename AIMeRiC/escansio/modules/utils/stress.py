@@ -4,25 +4,39 @@ from copy import deepcopy
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 
+
 def bivalents(result, cat):
+    """Assigna un accent especial per a mots bivalents segons la seva categoria gramatical.
+    Args:
+        result (list): Llista de tuples (síl·laba, pes).
+        cat (str): Categoria gramatical del mot.
+    Returns:
+        list: Llista de tuples (síl·laba, pes) amb l'accentuació ajustada.
+        """
     for syllable in result:
-        if syllable[1] == 4.0:
-            if cat in ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]:
+        if syllable[1] == 4.0: # Només modifica la síl·laba amb accent primari
+            if cat in ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]: # Categories amb accent bivalent (3)
                 o_syllable = syllable
-                syllable = (syllable[0], 3.0)
+                syllable = (syllable[0], 3.0) # Canvia l'accent primari (4) per un accent bivalent (3)
                 result[result.index(o_syllable)] = syllable
-            if cat in ['ADPa', 'DET', 'CCONJ', 'SCONJ']:
+            if cat in ['ADPa', 'DET', 'CCONJ', 'SCONJ']: # Categories amb accent secundari (2)
                 o_syllable = syllable
-                syllable = (syllable[0], 2.0)
+                syllable = (syllable[0], 2.0) # Canvia l'accent primari (4) per un accent secundari (2)
                 result[result.index(o_syllable)] = syllable
-        else:
+        else: # Les altres síl·labes esdevenen àtones (0)
             o_syllable = syllable
-            syllable = (syllable[0], 0.0)
+            syllable = (syllable[0], 0.0) # Assegura que és una síl·laba àtona (0)
             result[result.index(o_syllable)] = syllable
     return result
 
 
 def identify_pronom_assillabic(syllables):
+    """Identifica si la darrera síl·laba conté un pronom assil·làbic i el separa.
+    Args:
+        syllables (list): Llista de síl·labes d'una paraula.
+    Returns:
+        tuple: Llista de síl·labes sense el pronom assil·làbic i el pronom separat, o None si no n'hi ha.
+        """
     if syllables and "'" in syllables[-1]:
         for pronoun in ["'t", "'s", "'m", "'n", "'l", "'ls", "'ns"]:
             if pronoun in syllables[-1]:
@@ -32,7 +46,18 @@ def identify_pronom_assillabic(syllables):
 
 
 def get_stress(self):
-    """Aquesta funció retorna la paraula amb l'accentuació"""
+    """Aquesta funció retorna la paraula amb l'accentuació.
+    Segons les regles de l'accentuació catalana:
+    - Paraules amb accent gràfic: la síl·laba amb accent rep un pes de 4.0, la resta 0.0.
+    - Paraules sense accent gràfic:
+        - Monosíl·labes: pes 1.0.
+        - Paraules amb dues o més síl·labes:
+            - Si acaba en vocal, 's' o diftong ascendent: paraula aguda (última síl·laba 4.0, penúltima 0.0).
+            - En cas contrari: paraula plana (penúltima síl·laba 4.0, última 0.0).
+    - Mots bivalents: ajusta l'accent segons la categoria gramatical
+    Returns:
+        list: Llista de Syllable amb l'accentuació assignada.
+    """
     stressed = self.syllables.copy()
     clean = identify_pronom_assillabic(stressed)
     if clean:
@@ -71,8 +96,8 @@ def get_stress(self):
             if self.word_ment is not None:
                 w_ment = result + [("ment", 4.0)]
                 w_ment = forced_rhythmic_alternation(self, w_ment)
-                return [Syllable(0, w_ment[0], 1.0), Syllable(1, w_ment[1], 4.0)]
-            return [Syllable(0, result[0], 1.0)]
+                return [Syllable(0, syllable=w_ment[0], len_word=2), Syllable(1, syllable=w_ment[1], len_word=2)]
+            return [Syllable(0, syllable=result[0], len_word=1)]
 
         elif n >= 2:
             """Si el mot té dues o més de dues síl·labes"""

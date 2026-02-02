@@ -1,4 +1,13 @@
-"""A module for the Syllable class."""
+"""
+Mòdul: syllable.py
+
+Classe principal:
+- Syllable: representa una síl·laba amb metadades fonològiques i propietats
+  útils per a l'escansió mètrica (pes, tonicitat, diftong, triftong, límits vocàlics).
+"""
+__autor__ = "Pere Garau"
+__all__ = ["Syllable"]
+
 import re
 from copy import deepcopy
 
@@ -103,12 +112,6 @@ class Syllable:
 
 
 if __name__ == '__main__':
-    syl = Syllable(0, ('sóc', 3.0), 1)
+    syl = Syllable(0, ('güer', 4.0), 1)
     syl.print_metadata()
-    print(syl.fono_info)
-    print(syl.diftong)
-    print(syl.starts_with_vowel)
-    print(syl.ends_with_vowel)
-    print(syl.is_diftong())
-    print(syl.save_metadata())
-    print(syl.fono())
+

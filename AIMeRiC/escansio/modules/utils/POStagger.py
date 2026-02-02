@@ -3,22 +3,20 @@
 """Un mòdul per a l'etiquetatge morfosintàctic de textos en català."""
 import re
 import string
-from types import SimpleNamespace
+
+from spacy.tokens import Doc, Token
 
 from AIMeRiC.escansio.modules.utils.preprocess import clean_text
-from AIMeRiC.escansio.modules.word import Word
 
 
 def correct_spacy(doc):
     """
-    Corrects the POS tags in the given SpaCy document based on predefined corrections.
-
-    Accepts a mix of:
-    - spacy Token objects,
-    - 6-field lists/tuples: (text, pos_, dep_, lemma_, morph, head),
-    - 3-field tuples produced by `spacy_asyllabic`: (text, pos_, dep_).
-
-    Normalizes each item to a 7-field list before applying corrections.
+    Corregeix les etiquetes POS i altres metadades en un document donat de Spacy
+    a partir d'un conjunt de correccions predefinides.
+    Args:
+        doc (list): Una llista de tokens amb les seves etiquetes POS i dependències.
+    Returns:
+        list: Una llista corregida de tokens amb etiquetes actualitzades.
     """
     corrections = {
         'el': 'DET', 'la': 'DET', 'els': 'DET', 'les': 'DET', 'e': 'CCONJ', 'y': 'CCONJ', 'puix': 'SCONJ',
@@ -91,9 +89,9 @@ def correct_spacy(doc):
 
         normalized.append([text, pos_, dep_, lemma_, morph, head])
 
-    # now apply original correction logic on normalized (which has 7 fields per token)
+    # Aplica les correccions definides a cada token
     new_doc = normalized
-    for token in new_doc[:]:  # iterate over a shallow copy to allow removals
+    for token in new_doc[:]:  # itera sobre una còpia per permetre-hi modificacions
         token_text = (token[0] or "").lower()
         if token_text in corrections:
             token[1] = corrections[token_text]
@@ -109,7 +107,7 @@ def correct_spacy(doc):
             token[1] = 'ADPa'
         if token[1] not in ["PRON", "PRONe", "VERB", 'PUNCT'] and '-' in (token[0] or ""):  # Mosts compostos / ordinals
             if not (token[0] and token[0].startswith('-')):
-                # split repeatedly on first hyphen
+                # split repetidament fins que no hi hagi més guions
                 while token[0] and '-' in token[0]:
                     split = re.split('-', token[0], 1)
                     left = split[0]
@@ -135,7 +133,7 @@ def correct_spacy(doc):
                     new_doc.insert(index, left_item)
                     new_doc.insert(index + 1, right_item)
 
-                    # advance token reference to what was inserted as right_item
+                    # avança l'índex al següent token
                     if index + 1 < len(new_doc):
                         token = new_doc[index + 1]
                     else:
@@ -145,13 +143,11 @@ def correct_spacy(doc):
 
 def ortho_repair(text: str):
     """
-    Repairs orthographic errors in the given text based on predefined regex patterns.
-
+    Repara errors ortogràfics comuns en el text donat utilitzant patrons regex predefinits.
     Args:
-        text (str): The input text to be corrected.
-
+        text (str): El text d'entrada.
     Returns:
-        str: The corrected text.
+        str: El text amb errors ortogràfics corregits.
     """
     regex_patterns = {
         r'ý': r'í', r"ÿ": r"ï", r'ehi([ae][snmu]?)\b': r'ei\1', r'([aeiou])(h)u': r'\1ü',
@@ -167,13 +163,11 @@ def ortho_repair(text: str):
 
 def ocr_errors(doc):
     """
-    Corrects OCR errors in the given document based on predefined corrections.
-
+   Corregeix errors comuns d'OCR en un document donat.
     Args:
-        doc (list): A list of tokens with their POS tags and dependencies.
-
+        doc (list): Una llista de tokens amb les seves etiquetes POS i dependències.
     Returns:
-        list: A corrected list of tokens with updated text.
+        list: Una llista corregida de tokens amb errors d'OCR solucionats.
     """
     errors = {
         'cm': 'em', 'ct': 'et', 'cn': 'en', 'cl': 'el',
@@ -190,13 +184,11 @@ def ocr_errors(doc):
 
 def spacy_asyllabic(doc):
     """
-    Joins asyllabic words with the word they phonologically depend on.
-
+   Ajunta tokens asil·làbics en un document donat.
     Args:
-        doc (list): A list of tokens with their POS tags and dependencies.
-
+        doc (list): Una llista de tokens amb les seves etiquetes POS i dependències.
     Returns:
-        list: A corrected list of tokens with joined asyllabic words.
+        list: Una llista de tokens amb asil·làbics ajuntats.
     """
     asyllabic_L = ["d'", "l'", "s'", "m'", "n'", "t'", "qu'", "qu", "qu·", "d", "p", "L", "m·", "t·", "l·", "s·", "n·",
                    "l'", "ll'", "ll·", "c'", "c·", "[^aàáeéèíìióòóúùuüïâêîôûyý]['·]"]
@@ -224,13 +216,13 @@ def spacy_asyllabic(doc):
 
 def inicials(text: str):
     """
-    Replaces initials and abbreviations in the text with their full forms.
-
+    Substitueix inicials i algunes abreviatures comunes en català per la seva forma completa en un text donat.
     Args:
-        text (str): The input text.
-
+        text (str): El text d'entrada.
     Returns:
-        str: The text with initials and abbreviations replaced.
+        str: El text amb les inicials substituïdes.
+    Nota:
+    Mòdul inactiu actualment, ja que genera més problemes que solucions en l'etiquetatge POS.
     """
     replacements = {
         "B.": "be", "C.": "ce", "D.": "de", "F.": "efa", "G.": "ge", "H.": "hac", "J.": "jota", "K.": "ka", "L.": "ela",
@@ -242,24 +234,25 @@ def inicials(text: str):
     return ' '.join([replacements[word] if word in replacements else word for word in text.split()])
 
 
-# python
-from spacy.tokens import Doc, Token
+
 
 def posTagger(nlp, text: str):
     """
-    Tags the words in a given text and returns a list of SpaCy Token objects
-    containing corrected annotations (stored in token.pos_ when possible and
-    in token._.* extensions for other fields).
+    Realitza l'etiquetatge morfosintàctic d'un text en català utilitzant SpaCy i diverses correccions específiques.
+    Args:
+        nlp: Un objecte SpaCy carregat amb el model de català.
+        text (str): El text d'entrada a etiquetar.
+    Returns:
+        list: Una llista de SpaCy Token objects amb les etiquetes morfosintàctiques corregides.
     """
     text = clean_text(text)
     text = ortho_repair(text)
-    # text = inicials(text)
     doc = nlp(text)
     doc = ocr_errors(doc)
     doc = spacy_asyllabic(doc)
     doc = correct_spacy(doc)
 
-    # Ensure token extensions exist for corrected metadata
+    # Assegura que les extensions de Token existeixen
     ext_names = {
         "upos_corr": None,
         "lemma_corr": None,
@@ -271,7 +264,7 @@ def posTagger(nlp, text: str):
         if not Token.has_extension(name):
             Token.set_extension(name, default=default)
 
-    # `doc` is a list of normalized tokens: [text, pos_, dep_, lemma_, morph, head]
+    # `doc`és ara una llista de tuples corregides
     tokens = doc
     words = []
     for tok in tokens:
@@ -289,9 +282,9 @@ def posTagger(nlp, text: str):
     # Build a new Doc from corrected token texts
     new_doc = Doc(nlp.vocab, words=words)
 
-    # Assign corrected annotations onto tokens
+    # Assigna les etiquetes corregides als tokens del nou Doc
     for i, tok in enumerate(tokens):
-        # pad/unpack again to get fields
+        # pad/unpack els tuples
         if isinstance(tok, (list, tuple)):
             parts = list(tok) + [None] * (6 - len(tok))
             text_, pos_, dep_, lemma_, morph, head = parts[:6]
@@ -299,20 +292,20 @@ def posTagger(nlp, text: str):
             text_, pos_, dep_, lemma_, morph, head = tok, None, None, None, None, None
 
         token = new_doc[i]
-        # Set universal POS if plausible (may raise for unknown tags; ignore failures)
+        # Assigna les etiquetes corregides POS si es pot
         if pos_:
             try:
                 token.pos_ = pos_
             except Exception:
                 pass
-        # Store corrected metadata on extensions
+        # Desa les etiquetes corregides com a extensions
         token._.upos_corr = pos_
         token._.lemma_corr = lemma_
         token._.morph_corr = morph
         token._.dep_corr = dep_
         token._.head_corr = head
 
-    # Return a list of SpaCy Token objects
+    # Retorna el nou Doc amb les correccions aplicades
     return list(new_doc)
 
 

@@ -1,4 +1,21 @@
-"""Un mòdul per gestionar particularitats mètriques del decasíl·lab"""
+"""
+Resum
+Aquest mòdul gestiona particularitats mètriques del decasíl·lab en el procés d'escansió: detecta i aplica el `tall`, calcula la subdivisió del vers i inclou una funció en desenvolupament per la cesura femenina.
+
+## Dependències
+- Mòduls interns:
+  - `AIMeRiC.escansio.modules.utils.fonetica_sintactica.split_syllable`
+  - `AIMeRiC.escansio.modules.utils.tools.seguent`
+- Llibreria estàndard: `re`
+
+## Propòsit
+Proporcionar utilitats per:
+- identificar la posició del tall en versos decasíl·labs,
+- marcar la síl·laba de tall amb pes màxim (5.0),
+- obtenir la subdivisió en còlons (`5+5`, etc.),
+- gestionar casos especials de cesura femenina (funció en desenvolupament).
+"""
+
 import re
 
 from .fonetica_sintactica import split_syllable
@@ -42,7 +59,7 @@ def tall(self) -> int | None:
             if cerca is True:  # Si el tall és vàlid
                 pos = tall + 1
                 return pos if pos != 10 else None  # Evita retornar la darrera posició absoluta
-            if cerca == 'not-best' and i + 1 < len(talls):
+            elif cerca == 'not-best' and i + 1 < len(talls):
                 # Si no és l'opció millor, però es poden cercar més talls
                 cerca = find_tall(self, talls[i + 1], True)
                 if cerca is True:  # Si el següent tall és vàlid
@@ -62,11 +79,11 @@ def tall(self) -> int | None:
 
 def subdivideix(self):
     """Aquesta funció subdivideix el vers en còlons si conté un tall."""
-    return f'{self.recompte_sillabes_metriques - self.posicio_tall}+{self.posicio_tall}' if self.posicio_tall is not None else None
+    return f'{self.posicio_tall}+{self.recompte_sillabes_metriques - self.posicio_tall}' if self.posicio_tall is not None else None
 
 
 def cesura_femenina(self):
-    """Aquesta funció aplica la cesura femenina al vers."""
+    """Aquesta funció aplica la cesura femenina al vers. [FUNCIÓ EN DESENVOLUPAMENT, INACTIVA]"""
     if len(self.sillables_metriques) == 11:
         # if len(re.findall("[_:]", ''.join([x.text for x in self.no_words[4:6]]))) < 0:
         if int(self.nomes_sillabes[4].pes) >= 4:

@@ -5,11 +5,12 @@
     Ned Batchelder, July 2007.
     This Python code is in the public domain.
 """
-
-import re
-
+__author__ = 'Ned Batchelder'
+__year__ = '2007'
+__license__ = 'Public Domain'
 __version__ = '1.0.20070709'
 
+import re
 
 class Hyphenator:
     def __init__(self, patterns, exceptions=''):

@@ -26,10 +26,10 @@ def abstract_pattern(words):
     return pattern  # Retorna el patró abstracte
 
 
-def maximal_comparison_pattern(self):
+def maximal_comparison_pattern(self) -> str:
+    result = self.patro_ritmic
     if self.objectiu == 10 and self.recompte_sillabes_metriques == self.objectiu:
         if self.recompte_sillabes_metriques == self.objectiu:
-            result = self.patro_ritmic
             dictionary = {r"5[43]": "5c",
                           r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
                           r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
@@ -37,9 +37,9 @@ def maximal_comparison_pattern(self):
                           r"0$": "4", r"[01]": "0", r"[432]": "1", r"c": "1"}
             for pattern, solution in dictionary.items():
                 result = re.sub(pattern, solution, result)
-            return result[0:10]
+            return result[0:self.objectiu]
+        return result
     else:
-        result = self.patro_ritmic
         dictionary = {r"[56789]": "4", r"[23]4": "04", r"4[23](.)": r"40\1", r"[43]2": "40", "2[34]": "04",
                       r"1([2345])": r"0\g<1>", r"([2345])1": r"\g<1>0",
                       r"0[23]0": "040", r"4[23]": "40",

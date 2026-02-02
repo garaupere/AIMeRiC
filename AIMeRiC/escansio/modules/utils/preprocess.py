@@ -1,11 +1,13 @@
-"""A module to preprocess the text input to prepare it for automatic scansion analysis"""
+"""Un mòdul per netejar el text d'entrada abans de l'anàlisi automàtica de l'escansió."""
 import re
 
 
 def clean_text(line: str) -> str:
-    """A function to supress all non-linguistic symbols from text (colons, dots, marks, etc.).
-    :param line: a string to be cleansed
-    :return: a cleansed string
+    """Una funció per netejar el text d'entrada abans de l'anàlisi automàtica de l'escansió.
+    Args:
+        line (str): La línia de text a netejar.
+    Returns:
+        str: La línia de text netejada.
     """
 
     cleansed_text = re.sub(r"l·l", "ŀl", line)  # First correct <l·l> dygraph to <ŀl>

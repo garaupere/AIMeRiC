@@ -1,4 +1,4 @@
-
+"""Un mòdul per extreure fragments de text basats en síl·labes sense tallar paraules de texts de prosa escandits."""
 
 def sillabes_fins_tonica(paraula) -> int:
     sillabes = paraula.split(".")

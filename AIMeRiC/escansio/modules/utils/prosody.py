@@ -1,19 +1,22 @@
 """Un mòdul per gestionar funcions prosòdiques del vers"""
-from .decasyllable import tall
 from .meter import recompte_metric
 
 
 def accents_prosodics(self):
     """
-    Adjusts the prosodic accents of the syllables in the verse.
+    Ajusta els accents prosòdics de les síl·labes del vers segons regles específiques.
+    Args:
+        self: Objecte que conté les síl·labes i paraules del vers.
+    Returns:
+        None: Modifica les síl·labes in situ.
     """
 
     def iterate_no_words(self):
         """
-        Generator function to iterate through syllables without words.
+        Funció generadora per iterar sobre les síl·labes sense considerar les paraules.
 
         Yields:
-            tuple: Previous, current, and next syllable values.
+            tuple: Una tupla amb la síl·laba anterior, la síl·laba actual, la síl·laba següent i la síl·laba anterior a l'anterior.
         """
         for i in range(len(self.nomes_sillabes)):
             current_value = self.nomes_sillabes[i]
@@ -24,11 +27,13 @@ def accents_prosodics(self):
 
     def change_pes(current_value, pes: float):
         """
-        Changes the weight (pes) of the given syllable and updates the corresponding word stress.
+        Canvia el pes d'una síl·laba i actualitza les paraules corresponents.
 
         Args:
-            current_value: The current syllable whose weight is to be changed.
-            pes (float): The new weight to be assigned.
+            current_value: La síl·laba actual.
+            pes (float): El nou pes a assignar.
+        Returns:
+            None: Modifica la síl·laba i les paraules in situ.
         """
         current_value.pes = pes
         for word in self.words:
