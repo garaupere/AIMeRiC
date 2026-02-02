@@ -26,7 +26,7 @@ def ends_with_vowel(self):
                 return False
 
     if re.search("([^aeiouàáèéíìóòúùïü]*[aeiouàáèéíìóòúùïüy]|[qg]u[aeioàáèéíìóòúùïü]|^y)r?-?$", self.text):
-        if self.text[-1] == "r" and self.upos == "ADP":
+        if self.text[-1] == "r" and self.pos_ == "ADP":
             return False
         else:
             if len(self.text) > 1:

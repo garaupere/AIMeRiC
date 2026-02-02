@@ -38,8 +38,6 @@ class Poem:
 
         # Obtenim els versos del poema, eliminant els valors nuls
         self.verses = list(filter(None, self.book_content.get('poems', {}).get(self.poem, [])))
-        if not self.verses:
-            print(f"Advertència: El poema '{self.poem}' no té versos disponibles.")
 
         self.n_verses = len(self.verses)
         self.page = re.sub(r"(\d+)(\.txt)", r"\1", self.poem)  # Extracció del número de pàgina del títol del poema

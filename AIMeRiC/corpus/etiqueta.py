@@ -46,16 +46,6 @@ def clean_results_folders(results_path):
         for f in files:
             if f.endswith(".log"):
                 os.remove(f)
-    if os.path.exists(f"{results_path}/svg/"):
-        files = glob.glob(f"{results_path}/svg/*")
-        for f in files:
-            if f.endswith(".svg"):
-                os.remove(f)
-    if os.path.exists(f"{results_path}/xlsx/"):
-        files = glob.glob(f"{results_path}/xlsx/*")
-        for f in files:
-            if f.endswith(".xlsx"):
-                os.remove(f)
 
 
 def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
@@ -80,10 +70,10 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
         head = (['autor_id', 'autor', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
                  'obra', 'any', 'traducció', 'font', 'poema',
                  'núm. de vers', 'text del vers',
-                 'escansió plana'] + scansion_cols +
+                 'escansió'] + scansion_cols +
                 ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
                  'mots al còlon 1', 'mots al còlon 2',
-                 'patró', 'patró rítmic', 'encavalcament', 'metronome'])
+                 'patró', 'patró_rítmic', 'encavalcament', 'metronome'])
 
         rows = []
         for book_title in author.books:  # Per a cada llibre de l'autor
@@ -113,7 +103,9 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                                             results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
                                                 vers.save)  # Guarda la metadata del vers
                                             rows.append(
-                                                [author.id, author.name, author.born_date, author.death_date, author.gender, author.city, author.dialect, author.wiki_id, author.viaf,
+                                                [author.id, author.name, author.born_date, author.death_date,
+                                                 author.gender, author.city, author.dialect, author.wiki_id,
+                                                 author.viaf,
                                                  book.title, book.year, book.translation, book.font,
                                                  poem_title, i + 1] + vers.to_csv())
                                             i += 1
@@ -164,9 +156,6 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
             with open(f"{results_path}log/{author.id}_outsiders.log", 'a', encoding='utf-8') as f:
                 for verse in outsiders:
                     f.write(str(verse) + '\n')
-            os.makedirs(f"{results_path}svg/", exist_ok=True)
-            os.makedirs(f"{results_path}xlsx/", exist_ok=True)
-            os.makedirs(f"{results_path}ot/", exist_ok=True)
 
             counts = {}
             for value in df['subdivisió']:
@@ -193,11 +182,8 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                 dades_autors.write(
                     f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{len(rows)}\n")
 
-            #print(f"Resultats de l'autor {author.id} desats en {results_path}json/{author.id}.json")
-            #print(f"Resultats de l'autor {author.id} desats en {results_path}csv/{author.id}.csv")
-            #print(f"Versos no processats de l'autor {author.id} desats en {results_path}log/outsiders_log.log")
+    print(f"Corpus '{corpus_name}' etiquetat!")
 
-    merge_tables(results_path, corpus_name)
 
 if __name__ == "__main__":
     # Carrega el model de Spacy en català

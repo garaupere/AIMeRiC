@@ -8,7 +8,7 @@ from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.dictionary_scan import escaneja_diccionari, escaneja_diccionari_frequencies
 from AIMeRiC.corpus.etiqueta import etiqueta_corpus
-from AIMeRiC.corpus.prosa import prosa, itera_narrativa
+from AIMeRiC.corpus.prosa import etiqueta_prosa
 from AIMeRiC.corpus.valida import valida
 from AIMeRiC.escansio.escansor import escaneja, __version__
 from AIMeRiC.corpus.modules.getUSB import getUSB
@@ -79,6 +79,7 @@ def scan_dictionary():
 def help():
     print("--" * 40)
     print("Aquesta és l'ajuda de l'aplicació AIMeRiC:")
+    print(Fore.CYAN, f"\t➥", Fore.RESET, "Escriviu un vers per a analitzar-lo.")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Llista de corpus disponibles (" + Fore.GREEN + "-list" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Compilar un corpus (" + Fore.GREEN + "-comp" + Fore.RED,
           "corpus" + Fore.RESET + ")")
@@ -89,8 +90,6 @@ def help():
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Etiquetar un corpus (" + Fore.GREEN + "-etiq", Fore.RED,
           "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Validar les dades __test (" + Fore.GREEN, "-test" + Fore.RESET + ")")
-    print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitzar un vers (" + Fore.GREEN + "-scan",
-          Fore.RED + "vers" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Analitza un corpus de prosa (" + Fore.GREEN + "-etiqprosa" + Fore.RESET,
           Fore.RED + "corpus" + Fore.RESET + ")")
     print(Fore.CYAN, f"\t➥", Fore.RESET, "Escaneja un diccionari (" + Fore.GREEN + "-scandic" + Fore.RESET + ")")
@@ -102,7 +101,7 @@ def help():
     print("--" * 40)
     print(
         "Si necessitau més ajuda, podeu consultar el web de l'aplicació: https://github.com/garaupere/AIMeRiC, o contactar amb l'autor a p.garau@uib.cat.")
-    print("Gràcies per utilitzar l'aplicació.")
+    print("Gràcies per utilitzar l'aplicació.\n Versió:", __version__)
     print("--" * 40)
 
 
@@ -194,73 +193,72 @@ def main():
             except AttributeError:
                 print("Opció no vàlida. Si us plau, selecciona una opció vàlida.")
                 continue
+            if len(options) < 3:
+                if options[0] == '-comp':
+                    corpus = options[1]
+                    try:
+                        compile(raw_files_path, corpus)
+                    except FileNotFoundError:
+                        print('El corpus seleccionat no existeix.')
 
-            if options[0] == '-comp':
-                corpus = options[1]
-                try:
-                    compile(raw_files_path, corpus)
-                except FileNotFoundError:
-                    print('El corpus seleccionat no existeix.')
+                elif options[0] == '-etiq':
+                    corpus = options[1]
+                    try:
+                        start = time.time()
+                        etiq(corpus)
+                        elapsed_time = time.time() - start
+                        minutes = int(elapsed_time // 60)
+                        seconds = int(elapsed_time % 60)
+                        print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
+                    except FileNotFoundError:
+                        print('El corpus seleccionat no existeix.')
 
-            elif options[0] == '-etiq':
-                corpus = options[1]
-                try:
+                elif options[0] == '-etiqprosa':
+                    corpus = options[1]
+                    print(Fore.RED + "S'ha activat el mode d'etiquetatge de prosa." + Fore.RESET)
                     start = time.time()
-                    etiq(corpus)
+                    corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
+                    results_path = f"{root}{corpus}/etiquetat/"
+                    for json_file in tqdm(os.listdir(corpus_path), desc=f"Etiquetant fitxers JSON de '{corpus}'"):
+                        if json_file.endswith('.json'):
+                            try:
+                                json_file_path = os.path.join(corpus_path, json_file)
+                                name = json_file.replace('.json', '')
+                                corpus_result = etiqueta_prosa(nlp, json_file_path, 10)
+                                # crea la carpeta si no existeix
+                                os.makedirs(f"{results_path}json/", exist_ok=True)
+                                with open(f"{results_path}json/{name}.json", 'w', encoding='utf-8') as f:
+                                    json.dump(corpus_result[0], f, indent=4, ensure_ascii=False)
+                                # Desa un CSV amb els resultats
+                                print("Desant els resultats en format CSV...")
+                                print(corpus_result[1])
+                                os.makedirs(f"{results_path}csv/", exist_ok=True)
+                                corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';', encoding='utf-8',
+                                                        lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+                            except FileNotFoundError:
+                                print('El corpus seleccionat no existeix.')
                     elapsed_time = time.time() - start
                     minutes = int(elapsed_time // 60)
                     seconds = int(elapsed_time % 60)
                     print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
-                except FileNotFoundError:
-                    print('El corpus seleccionat no existeix.')
+                    print("Fi de l'etiquetatge.")
 
-            elif options[0] == '-etiqprosa':
-                corpus = options[1]
-                print("S'ha activat el mode d'etiquetatge de prosa.")
-                start = time.time()
-                corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
-                results_path = f"{root}{corpus}/etiquetat/"
-                for json_file in tqdm(os.listdir(corpus_path), desc="Etiquetant fitxers JSON de prosa"):
-                    if json_file.endswith('.json'):
-                        try:
-                            json_file_path = os.path.join(corpus_path, json_file)
-                            name = json_file.replace('.json', '')
-                            corpus_result = itera_narrativa(nlp, json_file_path, 10)
-                            # crea la carpeta si no existeix
-                            os.makedirs(f"{results_path}json/", exist_ok=True)
-                            with open(f"{results_path}json/{name}.json", 'w', encoding='utf-8') as f:
-                                json.dump(corpus_result[0], f, indent=4, ensure_ascii=False)
-                            # Desa un CSV amb els resultats
-                            print("Desant els resultats en format CSV...")
-                            print(corpus_result[1])
-                            os.makedirs(f"{results_path}csv/", exist_ok=True)
-                            corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';', encoding='utf-8',
-                                                    lineterminator='\n', header=True, decimal=',', float_format='%.2f')
-                        except FileNotFoundError:
-                            print('El corpus seleccionat no existeix.')
-                elapsed_time = time.time() - start
-                minutes = int(elapsed_time // 60)
-                seconds = int(elapsed_time % 60)
-                print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
-                print("Fi de l'etiquetatge.")
+                elif options[0] == "-compara":
+                    try:
+                        compara_corpus(options[1], options[2])
+                    except FileNotFoundError:
+                        print('Un dels corpus seleccionats no existeix.')
 
-            elif options[0] == "-compara":
-                try:
-                    compara_corpus(options[1], options[2])
-                except FileNotFoundError:
-                    print('Un dels corpus seleccionats no existeix.')
+                elif options[0] == '-check':
+                    corpus = options[1]
+                    try:
+                        check_jsons(corpus)
+                    except FileNotFoundError:
+                        print('El corpus seleccionat no existeix.')
 
-            elif options[0] == '-check':
-                corpus = options[1]
-                try:
-                    check_jsons(corpus)
-                except FileNotFoundError:
-                    print('El corpus seleccionat no existeix.')
-
-            elif options[0] == '-scan':
-                verse = ' '.join(options[1:])
+            else:
+                verse = ' '.join(options[0:])
                 scan(nlp, verse)
-
 
 if __name__ == "__main__":
     from cfonts import render
@@ -268,7 +266,7 @@ if __name__ == "__main__":
     text = render("AIMeRiC", font='chrome', colors=['system', 'gray', 'system'], align='center')
     print(text)
     print(render(
-        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}",
+        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n ©2026, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}",
         font='console', colors=['system'], align='center'))
 
     # Carrega el model de Spacy en català
@@ -283,8 +281,5 @@ if __name__ == "__main__":
     print("--" * 40)
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
-    print(text)
-    print(render(
-        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}",
-        font='console', colors=['system'], align='center'))
+    print(f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}")
     print("--" * 40)

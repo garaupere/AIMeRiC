@@ -2,14 +2,14 @@
 import re
 from copy import deepcopy
 
-from .utils.fonologia import get_vowel
+from AIMeRiC.escansio.modules.utils.fonologia import get_vowel
 
 
 class Syllable:
     def __init__(self, index: int, syllable: tuple, len_word: int, fusion_direction=None):
         self.text = syllable[0]
         self.s_index = index
-        self.pes = syllable[1]
+        self.pes = float(syllable[1])
         self.old_pes = deepcopy(self.pes)
         self.tonic = True if int(self.pes) > 3 else False
         self.len_word = len_word
@@ -103,7 +103,7 @@ class Syllable:
 
 
 if __name__ == '__main__':
-    syl = Syllable(0, ('sóc', '3'), 1)
+    syl = Syllable(0, ('sóc', 3.0), 1)
     syl.print_metadata()
     print(syl.fono_info)
     print(syl.diftong)

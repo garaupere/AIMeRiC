@@ -15,7 +15,7 @@ def correct_spacy(doc):
 
     Accepts a mix of:
     - spacy Token objects,
-    - 7-field lists/tuples: (text, pos_, dep_, lemma_, morph, ancestors, children),
+    - 6-field lists/tuples: (text, pos_, dep_, lemma_, morph, head),
     - 3-field tuples produced by `spacy_asyllabic`: (text, pos_, dep_).
 
     Normalizes each item to a 7-field list before applying corrections.
@@ -62,7 +62,7 @@ def correct_spacy(doc):
         'sobre': 'ADP', 'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP', 'fe': 'NOUN',
         'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
         'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP',
-        "d'ex": 'ADP', 'pro': 'ADP'
+        "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN'
     }
 
     normalized = []
@@ -74,34 +74,22 @@ def correct_spacy(doc):
             dep_ = getattr(item, "dep_", None)
             lemma_ = getattr(item, "lemma_", None)
             morph = getattr(item, "morph", None)
-            ancestors = [a.text for a in getattr(item, "ancestors", [])] if getattr(item, "ancestors", None) is not None else []
-            children = [c.text for c in getattr(item, "children", [])] if getattr(item, "children", None) is not None else []
+            head = getattr(item, "head", None)
         elif isinstance(item, (list, tuple)):
-            if len(item) >= 7:
-                text, pos_, dep_, lemma_, morph, ancestors, children = item[:7]
+            if len(item) >= 6:
+                text, pos_, dep_, lemma_, morph, head = item[:6]
             elif len(item) == 3:
                 text, pos_, dep_ = item
-                lemma_, morph = None, None
-                ancestors, children = [], []
+                lemma_, morph, head = None, None, None
             else:
                 # pad shorter sequences
-                parts = list(item) + [None] * (7 - len(item))
-                text, pos_, dep_, lemma_, morph, ancestors, children = parts
-                if ancestors is None:
-                    ancestors = []
-                if children is None:
-                    children = []
+                parts = list(item) + [None] * (6 - len(item))
+                text, pos_, dep_, lemma_, morph, head = parts
         else:
             # unknown item type, skip
             continue
 
-        # ensure lists for ancestors/children
-        if ancestors is None:
-            ancestors = []
-        if children is None:
-            children = []
-
-        normalized.append([text, pos_, dep_, lemma_, morph, ancestors, children])
+        normalized.append([text, pos_, dep_, lemma_, morph, head])
 
     # now apply original correction logic on normalized (which has 7 fields per token)
     new_doc = normalized
@@ -136,8 +124,8 @@ def correct_spacy(doc):
                     except IndexError:
                         break
 
-                    left_item = [left, token[1], token[2], token[3], token[4], token[5], token[6]]
-                    right_item = [right, token[1], token[2], token[3], token[4], token[5], token[6]]
+                    left_item = [left, token[1], token[2], token[3], token[4], token[5]]
+                    right_item = [right, token[1], token[2], token[3], token[4], token[5]]
 
                     if left_item[0] in corrections:
                         left_item[1] = corrections[left_item[0]]
@@ -192,7 +180,7 @@ def ocr_errors(doc):
         'juhý': 'juí', 'juhi': 'juí', 'juhy': 'juí'
     }
 
-    new_doc = [[token.text, token.pos_, token.dep_, token.lemma_, token.morph, token.ancestors, token.children] for token in doc]
+    new_doc = [[token.text, token.pos_, token.dep_, token.lemma_, token.morph, token.head] for token in doc]
     for token in new_doc:
         token_text = token[0].lower()
         if token_text in errors:
@@ -217,17 +205,17 @@ def spacy_asyllabic(doc):
                    '-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li',
                    '-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
 
-    new_doc = [(text, pos_, dep_, lemma_, morph, [x.text for x in ancestors], [x.text for x in children]) for text, pos_, dep_, lemma_, morph, ancestors, children in doc]
+    new_doc = [(text, pos_, dep_, lemma_, morph, head) for text, pos_, dep_, lemma_, morph, head in doc]
     i = 0
     while i < len(new_doc) - 1:
         token = new_doc[i]
         if token[0].lower() in asyllabic_L:
             # merge left into next
-            new_doc[i + 1] = (f"{token[0]}{new_doc[i + 1][0]}", new_doc[i + 1][1], new_doc[i + 1][2], new_doc[i + 1][3], new_doc[i + 1][4], new_doc[i + 1][5], new_doc[i + 1][6])
+            new_doc[i + 1] = (f"{token[0]}{new_doc[i + 1][0]}", new_doc[i + 1][1], new_doc[i + 1][2], new_doc[i + 1][3], new_doc[i + 1][4], new_doc[i + 1][5])
             new_doc.pop(i)
         elif token[0].lower() in asyllabic_R:
             # merge right into previous
-            new_doc[i - 1] = (f"{new_doc[i - 1][0]}{token[0]}", new_doc[i - 1][1], new_doc[i - 1][2], new_doc[i - 1][3], new_doc[i - 1][4], new_doc[i - 1][5], new_doc[i - 1][6])
+            new_doc[i - 1] = (f"{new_doc[i - 1][0]}{token[0]}", new_doc[i - 1][1], new_doc[i - 1][2], new_doc[i - 1][3], new_doc[i - 1][4], new_doc[i - 1][5])
             new_doc.pop(i)
         else:
             i += 1
@@ -277,31 +265,24 @@ def posTagger(nlp, text: str):
         "lemma_corr": None,
         "morph_corr": None,
         "dep_corr": None,
-        "ancestors": None,
-        "children_text": None,
+        "head_corr": None
     }
     for name, default in ext_names.items():
         if not Token.has_extension(name):
             Token.set_extension(name, default=default)
 
-    # `doc` is a list of normalized tokens: [text, pos_, dep_, lemma_, morph, ancestors, children]
+    # `doc` is a list of normalized tokens: [text, pos_, dep_, lemma_, morph, head]
     tokens = doc
     words = []
     for tok in tokens:
         # Safe unpack / pad
         if isinstance(tok, (list, tuple)):
-            parts = list(tok) + [None] * (7 - len(tok))
-            text_, pos_, dep_, lemma_, morph, ancestors, children = parts[:7]
-            if ancestors is None:
-                ancestors = []
-            if children is None:
-                children = []
+            parts = list(tok) + [None] * (6 - len(tok))
+            text_, pos_, dep_, lemma_, morph, head = parts[:6]
         else:
             # fallback (shouldn't happen because correct_spacy normalizes), treat as str
             text_ = str(tok)
-            pos_ = dep_ = lemma_ = morph = None
-            ancestors = []
-            children = []
+            pos_ = dep_ = lemma_ = morph = head = None
 
         words.append(text_ or "")
 
@@ -312,14 +293,10 @@ def posTagger(nlp, text: str):
     for i, tok in enumerate(tokens):
         # pad/unpack again to get fields
         if isinstance(tok, (list, tuple)):
-            parts = list(tok) + [None] * (7 - len(tok))
-            text_, pos_, dep_, lemma_, morph, ancestors, children = parts[:7]
-            if ancestors is None:
-                ancestors = []
-            if children is None:
-                children = []
+            parts = list(tok) + [None] * (6 - len(tok))
+            text_, pos_, dep_, lemma_, morph, head = parts[:6]
         else:
-            text_, pos_, dep_, lemma_, morph, ancestors, children = tok, None, None, None, None, [], []
+            text_, pos_, dep_, lemma_, morph, head = tok, None, None, None, None, None
 
         token = new_doc[i]
         # Set universal POS if plausible (may raise for unknown tags; ignore failures)
@@ -333,17 +310,16 @@ def posTagger(nlp, text: str):
         token._.lemma_corr = lemma_
         token._.morph_corr = morph
         token._.dep_corr = dep_
-        token._.ancestors = ancestors
-        token._.children_text = children
+        token._.head_corr = head
 
     # Return a list of SpaCy Token objects
     return list(new_doc)
 
 
 if __name__ == "__main__":
-    text = "D'astre ignorat m'adreç passos retuts?"
+    text = "Joan compra pa blanc."
     import spacy
     nlp = spacy.load("ca_core_news_md")
     words = posTagger(nlp, text)
     for w in words:
-        print(w.text, w.lower_, w.i, w.pos_, w.dep, w.ancestors, w.children, w.morph)
+        print(w.i, w.text, w.lower_, w.pos_, w.dep_, w.head.i, w.has_head())

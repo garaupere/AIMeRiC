@@ -29,10 +29,10 @@ class Word:
                 return None
 
         # prefer corrected values stored in token._.* extensions, fallback to token attributes
-        self.upos = getattr(token, "pos_", None) or ext("upos_corr")
-        self.dep = getattr(token, "dep_", None) or ext("dep_corr")
-        self.lemma = getattr(token, "lemma_", None) or ext("lemma_corr")
-
+        self.pos_ = getattr(token, "pos_", None) or ext("upos_corr")
+        self.dep_ = getattr(token, "dep_", None) or ext("dep_corr")
+        self.lemma_ = getattr(token, "lemma_", None) or ext("lemma_corr")
+        self.head = getattr(token, "head", None) or ext("head_corr")
         # morph: prefer ext if present, else build from token.morph
         morph_ext = ext("morph_corr")
         if morph_ext:
@@ -43,13 +43,6 @@ class Word:
             except Exception:
                 self.morph = None
 
-        # ancestor: use first ancestor from extension if available, else token.head.text fallback
-        anc_ext = ext("ancestors")
-        if anc_ext:
-            # store first ancestor string or None
-            self.ancestor = anc_ext[0] if len(anc_ext) > 0 else None
-        else:
-            self.ancestor = token.head.text if getattr(token, "head", token) != token else None
 
         # children: prefer extension (list of strings) else build from token.children
         children_ext = ext("children_text")
@@ -67,9 +60,10 @@ class Word:
         self.n_syllables = len(self.syllables)  # Número de síl·labes
         self.stress = get_stress(self)
         self.stress_index = get_stress_index(self)
+        self.is_compost = False
         if self.stress_index is not None and self.stress_index > 2:
             self.compost()
-        self.is_compost = False
+
 
         secondary_stress(self)
         self.starts_with_vowel = starts_with_vowel(self)
@@ -83,14 +77,14 @@ class Word:
         self.print_stress = self.print_stress()
 
     def is_bivalent(self):
-        if self.upos in ["AUX", "NUM", "ADP", "ADPa", "PRON", "PRONe", "INTJ", "DET"]:
+        if self.pos_ in ["AUX", "NUM", "ADP", "ADPa", "PRON", "PRONe", "INTJ", "DET"]:
             return True
         else:
             return False
 
     def correct_DET(self):
-        if self.upos == 'DET' and len(self.syllables) > 2:
-            self.upos = 'NOUN'
+        if self.pos_ == 'DET' and len(self.syllables) > 2:
+            self.pos_ = 'NOUN'
 
     def print_stress(self):
         return [(syllable.text, syllable.pes) for syllable in self.stress]
@@ -115,21 +109,21 @@ class Word:
         tonics = ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]
         secondary = ["ADPa", "DET", 'CCONJ', 'SCONJ']
         semitonics = ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]
-        if self.upos is not None:
-            if self.upos in tonics:
-                response = [(solution, "4")]
-            elif self.upos in semitonics:
-                if self.upos == "PRONe":  # Gestiona els casos de pronoms febles enclítics a final de vers
+        if self.pos_ is not None:
+            if self.pos_ in tonics:
+                response = [(solution, 4.0)]
+            elif self.pos_ in semitonics:
+                if self.pos_ == "PRONe":  # Gestiona els casos de pronoms febles enclítics a final de vers
                     if self.w_index == self.verse_wlength - 1:
-                        response = [(solution, "0")]
+                        response = [(solution, 0.0)]
                     else:
-                        response = [(solution, "3")]
+                        response = [(solution, 3.0)]
                 else:
-                    response = [(solution, "3")]
-            elif self.upos in secondary:
-                response = [(solution, "2")]
+                    response = [(solution, 3.0)]
+            elif self.pos_ in secondary:
+                response = [(solution, 2.0)]
             else:
-                response = [(solution, "0")]
+                response = [(solution, 0.0)]
         return response
 
     def word_ment(self):
@@ -138,7 +132,7 @@ class Word:
             return syllabify(self.text.replace("ment", ""))
 
     def print_metadata(self):
-        for attr in ["text", "lower", "w_index", "upos", "dep", "lemma", "morph", "ancestor", "children", "word_ment",
+        for attr in ["text", "lower", "w_index", "pos_", "dep_", "lemma_", "morph", "head", "word_ment",
                      "syllables", "n_syllables", "print_stress",
                      "starts_with_vowel",
                      "ends_with_vowel", "plain_syllables", "is_compost"]:
@@ -153,12 +147,11 @@ class Word:
             "lower": self.lower,
             "index": self.w_index,
             "text": self.text,
-            "upos": self.upos,
-            "dep": self.dep,
-            "lemma": self.lemma,
+            "upos": self.pos_,
+            "dep_": self.dep_,
+            "lemma_": self.lemma_,
             "morph": self.morph.to_dict(),
-            "ancestor": self.ancestor,
-            "children": self.children,
+            "head": self.head.i,
             "bivalent": self.is_bivalent(),
             "syllables": {
                 f"{syllable.text}_{syllable.s_index}": syllable.save_metadata()
@@ -202,8 +195,8 @@ class Word:
                     self.is_compost = True
                 else:
                     div_index -= 1  # Decreixem l'índex de divisió
-                # print([syl.pes for syl in self.stress])
-                if "2" not in [syl.pes for syl in self.stress]:
+                #print([syl.pes for syl in self.stress])
+                if 2.0 not in [syl.pes for syl in self.stress]:
                     self.is_compost = False
                     self.stress = original
                     secondary_stress(self)
@@ -213,13 +206,12 @@ class Word:
                     break  # Sortim de la funció.
             else:  # Si el mot és 'estrany'
                 div_index -= 1  # Decreixem l'índex de divisió
-                doc2 = nlp(''.join(self.syllables[
-                                       0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
+                doc2 = nlp(''.join(self.syllables[0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
 
 
 if __name__ == "__main__":
     start = time.time()
-    sentence = "sol i de dol i amb vetusta gonella"
+    sentence = "destra"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     doc = nlp(sentence)
     print(doc)

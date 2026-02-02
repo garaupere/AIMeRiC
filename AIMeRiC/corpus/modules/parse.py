@@ -32,12 +32,11 @@ def read_metadata(folder, level: str) -> dict:
         return metadata
 
 
-def extract_poem(txt_file: str) -> list[str]:
+def extract_poem(txt_file: str, corpus: str) -> list[str]:
     """Extracts the poem from the text file."""
-    try:
-        with open(txt_file, 'r', encoding='utf-8') as file:
-            content = file.read()
-
+    with open(txt_file, 'r', encoding='utf-8') as file:
+        content = file.read()
+        if corpus != 'viquipedia':
             # Comprova si el contingut està buit o només conté espais en blanc
             if content.isspace():
                 #print(f'\t\t\tSkipping file {txt_file} due to empty content or whitespaces only.')
@@ -49,12 +48,9 @@ def extract_poem(txt_file: str) -> list[str]:
             if should_ignore_page(content):
                 #print(f'\t\t\tSkipping file {txt_file} due to table of contents or index.')
                 return []
-
-            poem = re.sub("\d+", "", content)  # Removes numbers
-            poem = re.sub(r"<[ib]>.*</[ib]>", "", poem)  # Removes italicized text
-            poem = re.sub(r"(</?[ib>]|[<>])", "", poem)
-            poem = list(filter(None, poem.split('\n')))
+        poem = re.sub(r"\d+", "", content)  # Removes numbers
+        poem = re.sub(r"<[ib]>.*</[ib]>", "", poem)  # Removes italicized text
+        poem = re.sub(r"(</?[ib>]|[<>])", "", poem)
+        poem = re.sub(r"(<.*>|ENDOFARTICLE)", "", poem)  # Removes <doc> tags
+        poem = list(filter(None, poem.split('\n')))
         return poem
-    except FileNotFoundError:
-        pass
-        #print(f'File {txt_file} unable to decode it.')

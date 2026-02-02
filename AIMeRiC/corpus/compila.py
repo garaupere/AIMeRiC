@@ -105,7 +105,7 @@ def compile_corpus(path: str, corpus: str) -> None:
                     for file in os.listdir(book_path):
                         if file.endswith('.txt'):
                             file_path = book_path + '/' + file
-                            poem = extract_poem(file_path)
+                            poem = extract_poem(file_path, corpus)
                             corpus_dict['books'][subfolder]['poems'].update({file: poem})
 
             # Crea la carpeta 'corpora'
@@ -144,18 +144,11 @@ if __name__ == "__main__":
 
     enter = input('Quin corpus voleu compilar?\t')
 
-    if enter == "":
-        start_time = time.time()
-        for folder in os.listdir(raw_files_path):
-            compile_corpus(path=raw_files_path, corpus=folder)
-            print(f'Corpus {folder} compilat amb èxit.')
-
-    else:
-        start_time = time.time()
-        try:
-            compile_corpus(path=raw_files_path, corpus=enter)
-        except FileNotFoundError:
-            print(f'{FileNotFoundError}: No s\'ha seleccionat cap corpus.')
+    start_time = time.time()
+    try:
+        compile_corpus(path=raw_files_path, corpus=enter)
+    except FileNotFoundError:
+        print(f'{FileNotFoundError}: No s\'ha seleccionat cap corpus.')
 
     end_time = time.time()
     execution_time = end_time - start_time

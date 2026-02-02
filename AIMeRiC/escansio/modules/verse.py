@@ -6,7 +6,7 @@ import spacy
 from colorama import Fore
 
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
-from AIMeRiC.escansio.modules.utils.decasyllable import tall, subdivideix
+from AIMeRiC.escansio.modules.utils.decasyllable import tall, subdivideix, find_tall
 from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, escansio_accentual, metronome, \
     scansion_array
 from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
@@ -47,7 +47,7 @@ class Vers:
             else:
                 self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
         else:
-            # Minimal mode for faster processing without full analysis
+            # Mode mínim: només calcula patrons i informació bàsica
             self.objectiu = objectiu
             self.text = text
             self.encavalcament = encavalcament(self.text)
@@ -71,9 +71,9 @@ class Vers:
 
     def __patrons__(self):
         self.patro = abstract_pattern(self.words)
-        self.contorn_cru = ''.join([str(x) for x in self.patro]).rstrip('0')
+        self.patro_ritmic = ''.join([str(int(x)) for x in self.patro]).rstrip('0')
         self.recompte_sillabes_metriques = recompte_metric(self)
-        self.contorn_accentual = maximal_comparison_pattern(self)
+        self.patro_metric = maximal_comparison_pattern(self)
         self.recompte_sillabes_extrametriques = len(self.patro) - self.recompte_sillabes_metriques
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
 
@@ -81,8 +81,8 @@ class Vers:
         self.posicio_tall = tall(self)
         self.subdivisio = subdivideix(self)
         cim_maxim(self)
-        self.contorn_cru = ''.join([str(x) for x in self.patro]).rstrip('0')
-        self.contorn_accentual = maximal_comparison_pattern(self)
+        self.patro_ritmic = ''.join([str(int(x)) for x in self.patro]).rstrip('0')
+        self.patro_metric = maximal_comparison_pattern(self)
 
     def __anota__(self):
         self.anotat = anota_vers(self)
@@ -99,7 +99,8 @@ class Vers:
 
     def __prosodia__(self):
         cim_maxim(self)
-        accents_prosodics(self)
+        if self.ajustat:
+            accents_prosodics(self)
         self.anotat = anota_vers(self)
         self.escansio_array = scansion_array(self)
         self.escansio_text = escansio_accentual(self)
@@ -138,19 +139,16 @@ class Vers:
         if self.subdivisio is None:
             self.subdivisio = 'Cap'
         elif self.subdivisio != 'Cap':
-            self.contorn_accentual = self.contorn_accentual[:self.posicio_tall] + '|' + self.contorn_accentual[
+            self.patro_metric = self.patro_metric[:self.posicio_tall] + ' ' + self.patro_metric[
                 self.posicio_tall:]
-            self.contorn_cru = self.contorn_cru[:self.posicio_tall] + ' ' + self.contorn_cru[self.posicio_tall:]
-            #self.escansio_text = self.escansio_text.split('.')
-
-            #self.escansio_text = '.'.join(
-            #    self.escansio_text[:self.posicio_tall] + ['|'] + self.escansio_text[self.posicio_tall:]).replace('.|.', '|')
+            self.patro_ritmic = self.patro_ritmic[:self.posicio_tall] + ' ' + self.patro_ritmic[self.posicio_tall:]
 
     def __actualitza__(self):
         """Aquesta funció actualitza el vers després d'aplicar-hi llicències."""
         safe_words(self)
         self.__uneix_mots__()
         self.__patrons__()
+        self.__kill_cim_maxim__()
         self.__subdivisio__()
         self.__disposicio__()
         self.__prosodia__()
@@ -165,18 +163,30 @@ class Vers:
     def mostra(self):
         """Mostra la informació del vers."""
 
-        def color_tonic(pattern):
+        def color_metric(pattern):
             return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
 
-        for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
+        def color_ritmic(pattern):
+            # Processar el patró només una vegada
+            colored_pattern = ''.join(
+                Fore.CYAN + str(x) + Fore.RESET if int(x) == 2 else
+                Fore.RED + str(x) + Fore.RESET if int(x) > 2 else
+                Fore.YELLOW + str(x) + Fore.RESET if int(x) == 1 else
+                str(x)
+                for x in pattern
+            )
+            return colored_pattern
+
+        for attr in ["escansio_text", "patro", "patro_metric", "recompte_sillabes_metriques",
                      "recompte_sillabes_extrametriques",
-                     "ajustat", "subdivisio",
-                     "anotat", "n_mots", "mots_colon1", "mots_colon2",
+                     "ajustat", "subdivisio", "n_mots", "mots_colon1", "mots_colon2",
                      "llicencies"]:
             if attr == "escansio_text":
                 print(Fore.CYAN, f"\t➥", Fore.RESET, f"Escansió: {(getattr(self, attr))}")
-            elif attr == "contorn_accentual":
-                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Contorn accentual:", f"{color_tonic(getattr(self, attr))}")
+            elif attr == "patro":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró rítmic:", f"{color_ritmic(getattr(self, attr))}")
+            elif attr == "patro_metric":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:", f"{color_metric(getattr(self, attr))}")
             elif attr == "recompte_sillabes_metriques":
                 print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes mètriques:", Fore.CYAN, f"{getattr(self, attr)}",
                       Fore.RESET)
@@ -200,29 +210,28 @@ class Vers:
                       f"{getattr(self, attr)}")
 
     @property
-    def save(self):
+    def save(self) -> dict:
         """Retorna un diccionari amb la informació del vers."""
         return {self.text:
-                    {"ajustat": self.ajustat,
-                     "string": self.string,
-                     "string_stress": self.escansio_text,
-                     "annotated": self.anotat,
-                     "no_words": [syllable.save_metadata() for syllable in self.nomes_sillabes],
-                     "pattern": self.patro,
-                     "n_words": self.n_mots,
-                     "recompte_sillabes_metriques": self.recompte_sillabes_metriques,
-                     "posicio_tall": self.posicio_tall,
-                     "subdivision": self.subdivisio,
-                     "recompte_sillabes_extrametriques": self.recompte_sillabes_extrametriques,
-                     "llicencies": self.llicencies,
-                     "h1_words": self.mots_colon1,
-                     "h2_words": self.mots_colon2,
-                     "comparative_pattern": self.contorn_cru,
-                     "cv_info": self.contactes_vocalics,
-                     "encavalcament": self.encavalcament,
-                     "metronome": self.metronome
-                     }
-                }
+            {
+                "string": self.string,
+                "escansió": self.escansio_text,
+                "patró rítmic": self.patro_ritmic,
+                "patró mètric": self.patro_metric,
+                "síl·labes mètriques": self.recompte_sillabes_metriques,
+                "síl·labes extramètriques": self.recompte_sillabes_extrametriques,
+                "posició tall": self.posicio_tall,
+                "subdivisió": self.subdivisio,
+                "llicències": self.llicencies,
+                "mots": self.n_mots,
+                "mots al còlon 1": self.mots_colon1,
+                "mots al còlon 2": self.mots_colon2,
+                "cv_info": self.contactes_vocalics,
+                "encavalcament": self.encavalcament,
+                "metronome": self.metronome,
+                "etiquetatge": self.anotat
+            }
+        }
 
     def to_csv(self):
         """Retorna una llista amb la informació del vers per a guardar-la en un fitxer CSV."""
@@ -238,18 +247,9 @@ class Vers:
                                                            self.subdivisio,
                                                            self.llicencies,
                                                            self.mots_colon1, self.mots_colon2,
-                                                           str(self.contorn_accentual), str(self.contorn_cru), self.encavalcament,
+                                                           str(self.patro_metric), str(self.patro_ritmic),
+                                                           self.encavalcament,
                                                            self.metronome]
-
-    def prosa_to_csv(self):
-        return [self.text, self.escansio_text,
-                self.recompte_sillabes_metriques,
-                self.recompte_sillabes_extrametriques,
-                self.subdivisio,
-                self.llicencies,
-                self.mots_colon1, self.mots_colon2,
-                str(self.contorn_accentual), str(self.contorn_cru), self.encavalcament,
-                self.metronome]
 
     def save_minimal(self):
         """Retorna un diccionari amb la informació mínima del vers."""
@@ -260,7 +260,7 @@ class Vers:
                      "sillabes_metriques": self.sillables_metriques,
                      "sillabes_extrametriques": self.recompte_sillabes_extrametriques,
                      "n_words": self.n_mots,
-                     "comparative_pattern": self.contorn_cru,
+                     "comparative_pattern": self.patro_ritmic,
                      "array": [[syllable.save_metadata() for syllable in mot.stress] for mot in self.words]
                      }
                 }
@@ -271,13 +271,15 @@ class Vers:
         def color_tonic(pattern):
             return ''.join([Fore.CYAN + str(x) + Fore.RESET if x == '1' else str(x) for x in pattern])
 
-        for attr in ["escansio_text", "contorn_accentual", "recompte_sillabes_metriques",
+        for attr in ["escansio_text", "patro_ritmic", "patro_metric", "recompte_sillabes_metriques",
                      "recompte_sillabes_extrametriques",
                      "n_words"]:
             if attr == "escansio_text":
                 print(Fore.CYAN, f"\t➥", Fore.RESET, f"Escansió: {(getattr(self, attr))}")
-            elif attr == "contorn_accentual":
-                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Contorn accentual:", f"{color_tonic(getattr(self, attr))}")
+            elif attr == "patro_ritmic":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró rítmic:", f"{color_tonic(getattr(self, attr))}")
+            elif attr == "patro_metric":
+                print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:", f"{color_tonic(getattr(self, attr))}")
             elif attr == "recompte_sillabes_metriques":
                 print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes mètriques:", Fore.CYAN, f"{getattr(self, attr)}",
                       Fore.RESET)
@@ -286,6 +288,14 @@ class Vers:
                       Fore.RESET)
             elif attr == "n_mots":
                 print(Fore.CYAN, f"\t➥", Fore.RESET, f"Número de mots:", f"{getattr(self, attr)}")
+
+    def __kill_cim_maxim__(self):
+        """Elimina el cim màxim del vers després d'aplicar llicències."""
+        for word in self.words:
+            for syllable in word.stress:
+                if syllable.pes == 5.0:
+                    syllable.pes = 4.0
+        self.nomes_sillabes = sum([word.stress for word in self.words], [])
 
 
 if __name__ == "__main__":

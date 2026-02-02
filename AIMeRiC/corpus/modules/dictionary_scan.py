@@ -22,7 +22,7 @@ def escaneja_diccionari(nlp):
                 'mot': mot,
                 'escansio': prosodia.escansio_text,
                 'contorn_cru': prosodia.patro,
-                'contorn': prosodia.contorn_accentual
+                'contorn': prosodia.patro_metric
             })
         except:
             resultats.append({

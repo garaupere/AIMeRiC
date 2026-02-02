@@ -134,6 +134,7 @@ def join_syllables(syllable1, syllable2) -> Syllable:
         syllable1.text = f"{syllable1.text}_{syllable2.text}"
         syllable1.pes_fusion = f"{syllable1.pes}_{syllable2.pes}"
         syllable1.pes = syllable1.pes if int(syllable1.pes) > int(syllable2.pes) else syllable2.pes
+        syllable1.pes = 0 if syllable1.pes == 2.0 else syllable1.pes  # Si el pes és 2, es converteix en 0
         syllable1.fusion_direction = "dreta" if int(syllable1.pes) > int(syllable2.pes) else "esquerra"
         syllable1.fusionada = True
         if not re.findall(r"[aeiouyàáèéìíòóùú]", syllable1.text[-1]):

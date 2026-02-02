@@ -30,13 +30,13 @@ def read_csv(path):
 
 
 def normalitza(data):
-    sillabes = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    sillabes = [str(s) for s in range(1, 11)]
 
     data[sillabes] = data[sillabes].map(
         lambda x: 1 if x > 1 else 0)  # 1 si és major que 1, 0 si no ho és
 
     # Selecciona les columnes pertinents: autor, text del vers, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-    data = data[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
+    data = data[['text del vers'] + sillabes]
 
     return data
 
@@ -134,7 +134,9 @@ if __name__ == '__main__':
     print('Validació de les dades __test.')
     usb = getUSB()
     automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
+    print(automatic.head(2))
     manual = normalitza(read_csv('validacio/__test_manual.csv'))
+    print(manual.head(2))
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
     df = compare(automatic, manual)

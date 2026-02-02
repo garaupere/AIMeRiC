@@ -5,18 +5,23 @@ from .fonetica_sintactica import split_syllable
 from .tools import seguent
 
 
-def find_tall(self, tall) -> bool:
+def find_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
     """Aquesta funció cerca un tall en un vers donat i en substitueix el pes accentual per un cim màxim (5)."""
     result = False  # Resultat de la cerca
+    if 5.0 in self.patro[tall:]:  # Si ja hi ha un accent després del tall, no cal cercar-ne un altre
+        return result  # Retorna False
     if int(self.nomes_sillabes[tall].pes) > 2:  # Si el valor correspon a un accent
         #print(">> TALL:", tall+1, self.no_words[tall].text, ':', self.no_words[tall].pes) # Debug
+        if detect_nonBest:
+            if int(self.nomes_sillabes[tall].pes) < 4:  # Si l'accent no és principal
+                return 'not-best'  # Retorna 'not-best' per indicar que no és el millor cas
         for paraula in self.words:  # Recorre les paraules del vers
             if paraula.stress:
                 if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
-                    paraula.stress[-1].pes = '5'
+                    paraula.stress[-1].pes = 5.0
                     self.anotat[
                         self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
-                    self.nomes_sillabes[tall].pes = '5'  # Actualitza la llista de mots
+                    self.nomes_sillabes[tall].pes = 5.0  # Actualitza la llista de mots
                     self.patro[tall] = 5  # Actualitza el patró abstracte
                     self.words[
                         self.words.index(paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
@@ -27,29 +32,32 @@ def find_tall(self, tall) -> bool:
 
 
 # python
-def tall(self):
-    """Aquesta funció aplica la cesura al vers."""
-    if self.recompte_sillabes_metriques == 10:  # Si el vers és decasíl·lab
-        talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català (cal sumar-los-hi 1) = [4, 5, 6]
-        tall = talls[0]
-        cerca = find_tall(self, tall)  # Cerca el primer tall
-        hist = [cerca]  # Històric de cerques
-        i = 0  # Índex de tall
-        while cerca is not True and i < len(talls) - 1:  # Mentre no s'hagi trobat cap tall i no s'hagin provat tots els candidats
-            i += 1  # Següent tall
-            tall = talls[i]  # Següent tall
-            hist.append(cerca)  # Històric de cerques
-            cerca = find_tall(self, tall)  # Cerca el següent tall
-        hist.append(cerca)  # Històric de cerques
-        if True in hist:  # Si s'ha trobat un tall
-            pos = tall + 1
-            if pos == 10:
-                return None
-            return pos  # Retorna la posició del tall
-        else:  # Si no s'ha trobat cap tall
-            return None  # Retorna None
-    else:
-        return None
+def tall(self) -> int | None:
+    """Aquesta funció aplica el tall al vers decasil·làbic."""
+    if self.recompte_sillabes_metriques == 10:  # Comprova si el vers és un decasíl·lab
+        talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català (index + 1)
+        for i, tall in enumerate(talls):  # Itera pels talls candidats
+            # Cerca el tall. Si fallat, passa al següent candidat.
+            cerca = find_tall(self, tall, True)
+            if cerca is True:  # Si el tall és vàlid
+                pos = tall + 1
+                return pos if pos != 10 else None  # Evita retornar la darrera posició absoluta
+            if cerca == 'not-best' and i + 1 < len(talls):
+                # Si no és l'opció millor, però es poden cercar més talls
+                cerca = find_tall(self, talls[i + 1], True)
+                if cerca is True:  # Si el següent tall és vàlid
+                    pos = talls[i + 1] + 1
+                    return pos if pos != 10 else None
+
+        # Si arriba aquí, no hi ha talls clars; intenta-ho amb mots bivalents
+        for tall in talls:
+            cerca = find_tall(self, tall)  # Cerca el tall sense condició de millor opció
+            if cerca is True:
+                pos = tall + 1
+                return pos if pos != 10 else None
+
+    # Retorna None si no es compleix cap condició o el vers no és decasíl·lab
+    return None
 
 
 def subdivideix(self):
@@ -74,8 +82,8 @@ def cesura_femenina(self):
                                 word.stress[syllable.s_index + 1] = syl1
                                 self.words[word.w_index + 1].stress.insert(0, syl2)
                                 break
-                            syllable.pes = '5'
-                            self.nomes_sillabes[4].pes = '5'
+                            syllable.pes = 5.0
+                            self.nomes_sillabes[4].pes = 5.0
                             self.patro[4] = 5
                             ignore_syll = word.stress[word.stress.index(syllable) + 1]
                             del word.stress[word.stress.index(syllable) + 1:]
