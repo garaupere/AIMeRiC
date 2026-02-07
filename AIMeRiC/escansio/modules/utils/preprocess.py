@@ -21,6 +21,7 @@ def clean_text(line: str) -> str:
     cleansed_text = re.sub(r"\s+", " ", cleansed_text)  # Then delete all multiple spaces
     cleansed_text.replace(r"\r", "").replace(r"\t", "").replace("\0", "")  # Then delete all carriage returns, tabs and newlines
     cleansed_text = re.sub(r"(\d+)", "", cleansed_text)  # Then delete all numbers
+    cleansed_text = re.sub(r"-([^slmnheu])", r" \1", cleansed_text)
     return cleansed_text.lower()  # Return cleansed text
 
 

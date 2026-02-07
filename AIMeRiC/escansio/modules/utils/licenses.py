@@ -45,13 +45,24 @@ def llicencies(self, permit, doc) -> list[str] | None:
             if diff > 0:
                 # Si hi ha excés de síl·labes: intentem reduir amb sinalefa
                 resol_contactes_vocalics(self, best_mode='sinalefa')
-                result.append('sinalefa')
-                sinalefa_used = True
+                # comprova si s'ha aplicat la sinalefa (reducció de síl·labes)
+                self.__actualitza__()
+                new_diff = self.recompte_sillabes_metriques - self.objectiu
+                if new_diff < diff:  # Si la sinalefa ha reduït el nombre de síl·labes, actualitza el diff
+                    diff = new_diff
+                    sinalefa_used = True
+                    result.append('sinalefa')
             else:
-                # Si falten síl·labes: intentem augmentar amb dialefa
-                dialefa(self, abs(diff), doc)
-                result.append('dialefa')
-                dialefa_used = True
+                if initial_count < self.objectiu - 2: # permet evitar que forci versos menors, per exemple de 8 a 10 síl·labes.
+                    # Si falten síl·labes: intentem augmentar amb dialefa
+                    dialefa(self, abs(diff), doc, times=1)
+                    # comprova que s'ha aplicat la dialefa (augment de síl·labes)
+                    self.__actualitza__()
+                    new_diff = self.recompte_sillabes_metriques - self.objectiu
+                    if new_diff > diff:  # Si la dialefa ha augmentat el nombre de síl·labes, actualitza el diff
+                        diff = new_diff
+                        dialefa_used = True
+                        result.append('dialefa')
 
                 # Opcional: després de dialefa, es pot intentar aplicar dièresi per augmentar encara més,
                 # però només si està permès i no s'ha aplicat abans.
@@ -59,29 +70,32 @@ def llicencies(self, permit, doc) -> list[str] | None:
                     if hasattr(self, 'dieresi'):
                         try:
                             dieresi(self, times=1)
-                            dieresi_used = True
-                            result.append('dièresi')
+                            # comprova que s'ha aplicat la dièresi (augment de síl·labes)
+                            self.__actualitza__()
+                            new_diff = self.recompte_sillabes_metriques - self.objectiu
+                            if new_diff > diff:  # Si la dièresi ha augmentat el nombre de síl·labes, actualitza el diff
+                                diff = new_diff
+                                dieresi_used = True
+                                result.append('dièresi')
                         except Exception:
                             # Si dieresi falla, no interrompem el procés; seguim sense marcar-lo com usat
                             pass
-
-            # Actualitzar i recalcular diff
-            self.__actualitza__()
-            diff = self.recompte_sillabes_metriques - self.objectiu
 
             # Si encara sobra (diff > 0) podem intentar una sineresi, però només una vegada per vers i després de la sinalefa
             if diff > 0 and allow_sineresi_dieresi and (not sineresi_used) and sinalefa_used:
                 # intentem la sineresi (i marquem com aplicada encara que no canviï el recompte)
                 try:
                     sineresi(self, times=1)
+                    # comprova que s'ha aplicat la sineresi (reducció de síl·labes)
+                    self.__actualitza__()
+                    new_diff = self.recompte_sillabes_metriques - self.objectiu
+                    if new_diff < diff:  # Si la sineresi ha reduït el nombre de síl·labes, actualitza el diff
+                        diff = new_diff
+                        sineresi_used = True
+                        result.append('sinèresi')
                 except Exception:
                     # si sineresi no existeix o falla, continuem sense llançar excepció
                     pass
-                sineresi_used = True
-                result.append('sinèresi')
-                # actualitzar després de sineresi
-                self.__actualitza__()
-                diff = self.recompte_sillabes_metriques - self.objectiu
 
             iterations += 1
     else:
@@ -116,7 +130,7 @@ def sineresi(self, times):
     return counter  # Retorna el nombre de vegades que s'ha aplicat la sineresi
 
 
-def dialefa(self, diferencia, doc):
+def dialefa(self, diferencia, doc, times):
     # print("Dialefa")
     counter = 0
     if len(self.words) > 1:
@@ -124,7 +138,7 @@ def dialefa(self, diferencia, doc):
         # print([word.plain() for word in self.words])
         len_words = len(self.words)
         i = 0
-        while i < len_words - 1:
+        while i < len_words - 1 and counter < times:
             i = i
             if i < len_words - 1:
                 j = i + 1

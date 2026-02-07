@@ -1381,6 +1381,7 @@ qu·4í
 qu·4ò
 qu·4ó
 qu·4ú
+.ju4an
 .di4é4u
 re3lï3
 """)
@@ -1438,3 +1439,8 @@ class Syllabes():
                 syllabes_cache[text] = count
 
         return count
+
+
+if __name__ == "__main__":
+    word = 'veure-hi'
+    print(hyphenate_word(word))

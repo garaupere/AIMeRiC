@@ -1,4 +1,3 @@
-
 # AIMeRiC/escansio/modules/utils/POStagger.py
 """Un mòdul per a l'etiquetatge morfosintàctic de textos en català."""
 import re
@@ -60,7 +59,7 @@ def correct_spacy(doc):
         'sobre': 'ADP', 'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP', 'fe': 'NOUN',
         'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
         'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP',
-        "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN'
+        "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN', "d'en": 'DET', 'ben': 'ADJ', 'he': 'AUX', 'vaig': 'AUX', 'ha': 'AUX', 'han': 'AUX', 'vam': 'AUX', 'vau': 'AUX', 'van': 'AUX', 'vàrem': 'AUX', 'vàreu':'AUX', 'varen':'AUX', 'havia': 'AUX', 'havíem': 'AUX', 'havieu': 'AUX',
     }
 
     normalized = []
@@ -95,18 +94,19 @@ def correct_spacy(doc):
         token_text = (token[0] or "").lower()
         if token_text in corrections:
             token[1] = corrections[token_text]
-        if token[1] == "PUNCT" and token[0] in string.punctuation:
+
+        elif token[1] == "PUNCT" and token_text in string.punctuation:
             try:
                 new_doc.remove(token)
             except ValueError:
                 pass
             continue
-        if '-' in (token[0] or "") and token[1] == 'PRON':
+        elif '-' in token_text and token[1] == 'PRON':
             token[1] = 'PRONe'
-        if token[1] == 'PRON' and token[0] == 'que':
+        elif token[1] == 'PRON' and token_text == 'que':
             token[1] = 'ADPa'
-        if token[1] not in ["PRON", "PRONe", "VERB", 'PUNCT'] and '-' in (token[0] or ""):  # Mosts compostos / ordinals
-            if not (token[0] and token[0].startswith('-')):
+        elif token[1] not in ["PRON", "PRONe", "VERB", 'PUNCT'] and '-' in token_text:  # Mosts compostos / ordinals
+            if not (token_text and token_text.startswith('-')):
                 # split repetidament fins que no hi hagi més guions
                 while token[0] and '-' in token[0]:
                     split = re.split('-', token[0], 1)
@@ -140,6 +140,7 @@ def correct_spacy(doc):
                         break
 
     return new_doc
+
 
 def ortho_repair(text: str):
     """
@@ -203,11 +204,13 @@ def spacy_asyllabic(doc):
         token = new_doc[i]
         if token[0].lower() in asyllabic_L:
             # merge left into next
-            new_doc[i + 1] = (f"{token[0]}{new_doc[i + 1][0]}", new_doc[i + 1][1], new_doc[i + 1][2], new_doc[i + 1][3], new_doc[i + 1][4], new_doc[i + 1][5])
+            new_doc[i + 1] = (f"{token[0]}{new_doc[i + 1][0]}", new_doc[i + 1][1], new_doc[i + 1][2], new_doc[i + 1][3],
+                              new_doc[i + 1][4], new_doc[i + 1][5])
             new_doc.pop(i)
         elif token[0].lower() in asyllabic_R:
             # merge right into previous
-            new_doc[i - 1] = (f"{new_doc[i - 1][0]}{token[0]}", new_doc[i - 1][1], new_doc[i - 1][2], new_doc[i - 1][3], new_doc[i - 1][4], new_doc[i - 1][5])
+            new_doc[i - 1] = (f"{new_doc[i - 1][0]}{token[0]}", new_doc[i - 1][1], new_doc[i - 1][2], new_doc[i - 1][3],
+                              new_doc[i - 1][4], new_doc[i - 1][5])
             new_doc.pop(i)
         else:
             i += 1
@@ -232,8 +235,6 @@ def inicials(text: str):
     }
 
     return ' '.join([replacements[word] if word in replacements else word for word in text.split()])
-
-
 
 
 def posTagger(nlp, text: str):
@@ -275,12 +276,10 @@ def posTagger(nlp, text: str):
         else:
             # fallback (shouldn't happen because correct_spacy normalizes), treat as str
             text_ = str(tok)
-            pos_ = dep_ = lemma_ = morph = head = None
-
         words.append(text_ or "")
 
     # Build a new Doc from corrected token texts
-    new_doc = Doc(nlp.vocab, words=words)
+    new_doc = Doc(nlp.vocab, words=words) # valors buits
 
     # Assigna les etiquetes corregides als tokens del nou Doc
     for i, tok in enumerate(tokens):
@@ -310,8 +309,9 @@ def posTagger(nlp, text: str):
 
 
 if __name__ == "__main__":
-    text = "Joan compra pa blanc."
+    text = "veure-hi"
     import spacy
+
     nlp = spacy.load("ca_core_news_md")
     words = posTagger(nlp, text)
     for w in words:

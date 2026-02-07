@@ -1,6 +1,6 @@
 __author__ = "Pere Garau Borràs"
 __copyright__ = "Copyright © 2025, Pere Garau Borràs"
-__version__ = "0.7.5"
+__version__ = "0.7.8"
 
 import spacy
 
@@ -12,7 +12,7 @@ def escaneja(nlp, verse: str, goal: int, permet_llicencies: bool = True) -> Vers
     try:
         return Vers(nlp, verse, goal, permet_llicencies)
     except ValueError:
-        print(f"Error: {ValueError}, en el vers: {verse}")
+        pass
 
 
 def escaneja_minim(nlp, verse: str, goal: int, permet_llicencies: bool = False) -> Vers | None:
@@ -20,7 +20,7 @@ def escaneja_minim(nlp, verse: str, goal: int, permet_llicencies: bool = False) 
     try:
         return Vers(nlp, verse, goal, permet_llicencies, minimal=True)
     except ValueError:
-        print(f"Error: {ValueError}, en el vers: {verse}")
+        pass
 
 
 if __name__ == "__main__":

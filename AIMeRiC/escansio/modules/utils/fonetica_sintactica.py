@@ -162,14 +162,17 @@ def join_syllables(syllable1: Syllable, syllable2: Syllable) -> Optional[Syllabl
     """Uneix dues síl·labes en contacte vocàlic si procedeix; retorna Syllable o None."""
     if not (syllable1.ends_with_vowel and syllable2.starts_with_vowel):
         return None
-
+    if syllable1.fusionada or syllable2.fusionada:  # Evita generar fusions de síl·labes ja fusionades (triftongs sintàctics)
+        return None
     syllable1.text = f"{syllable1.text}_{syllable2.text}"
     syllable1.pes_fusion = f"{syllable1.pes}_{syllable2.pes}"
     # escollir pes major; tractar cas pes==2 => 0
     pes_sel = float(syllable1.pes) if float(syllable1.pes) >= float(syllable2.pes) else float(syllable2.pes)
-    syllable1.pes = 0 if pes_sel == 2.0 else pes_sel
+    # retorna el pes de la síL·laba amb major pes
+    syllable1.pes = syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
     syllable1.fusion_direction = "dreta" if float(syllable1.pes) >= float(syllable2.pes) else "esquerra"
     syllable1.fusionada = True
+    syllable1.is_PRONe = True if syllable1.is_PRONe or syllable2.is_PRONe else False
     # actualitzar flag d'acabament amb vocal
     syllable1.ends_with_vowel = bool(_RE_VOWEL_CHAR.search(syllable1.text[-1]))
     return syllable1
@@ -189,7 +192,8 @@ def split_syllable(syllable: Syllable) -> Optional[Tuple[Syllable, Syllable]]:
     pes1 = parts_pes[0] if parts_pes else syllable.pes
     pes2 = parts_pes[1] if len(parts_pes) > 1 else syllable.pes
     s1 = Syllable(index=syllable.s_index, syllable=(parts_text[0], pes1), len_word=syllable.len_word)
-    s2 = Syllable(index=syllable.s_index, syllable=("".join(parts_text[1:]) if len(parts_text) > 2 else parts_text[1], pes2),
+    s2 = Syllable(index=syllable.s_index,
+                  syllable=("".join(parts_text[1:]) if len(parts_text) > 2 else parts_text[1], pes2),
                   len_word=syllable.len_word)
     s1.fusionada = False
     s2.fusionada = syllable.triftong  # si era triftong, mantenim part de fusió en segona
@@ -199,6 +203,7 @@ def split_syllable(syllable: Syllable) -> Optional[Tuple[Syllable, Syllable]]:
 
 def resol_contactes_vocalics(self, best_mode: str):
     """Aplica successivament contactes vocàlics mentre el recompte mètric difereix de l'objectiu."""
+
     def get_best(mode: str):
         if mode == "natural":
             return best_contacte_vocalic(self)
@@ -207,7 +212,10 @@ def resol_contactes_vocalics(self, best_mode: str):
         return []
 
     best = get_best(best_mode)
-    if not best or self.recompte_sillabes_metriques <= self.objectiu:
+    if best:
+        if len(best) > 3 and self.recompte_sillabes_metriques - self.objectiu > 2:
+            return  # Evitar canvis dràstics que podrien desconfigurar el vers, evita detectar octosíl·labs com a decasíl·labs
+    elif not best or self.recompte_sillabes_metriques <= self.objectiu:
         return
 
     diff = self.recompte_sillabes_metriques - self.objectiu
@@ -226,15 +234,17 @@ def resol_contactes_vocalics(self, best_mode: str):
                     continue
                 next_word = self.words[wi + 1]
                 # Quatre mètodes per actualitzar llistes de síl·labes/paraules
-                if word.n_syllables == 1 and next_word.n_syllables == 1:
-                    next_word.stress[0] = res
-                    del self.words[wi]
-                elif word.n_syllables == 1 and next_word.n_syllables > 1:
+                if word.n_syllables == 1 and next_word.n_syllables == 1:  # Dos mots monosíl·labs: unir i assignar a un dels dos, eliminar l'altre
                     next_word.stress[0] = res
                     next_word.stress_index = get_stress_index(next_word)
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
-                elif word.n_syllables > 1 and next_word.n_syllables == 1:
+                elif word.n_syllables == 1 and next_word.n_syllables > 1:  # El primer és monosíl·lab i el segon polisíl·lab: assignar nova síl·laba al segon, eliminar la del primer
+                    next_word.stress[0] = res
+                    next_word.stress_index = get_stress_index(next_word)
+                    next_word.n_syllables = len(next_word.stress)
+                    del self.words[wi]
+                elif word.n_syllables > 1 and next_word.n_syllables == 1:  # El primer és polisíl·lab i el segon monosíl·lab: assignar nova síl·laba al primer, eliminar la del segon
                     word.stress[-1] = res
                     word.stress_index = get_stress_index(word)
                     word.n_syllables = len(word.stress)
@@ -257,6 +267,7 @@ def resol_contactes_vocalics(self, best_mode: str):
                 self.nomes_sillabes = [s for w in self.words for s in w.stress]
                 self.recompte_sillabes_metriques = recompte_metric(self)
                 diff = self.recompte_sillabes_metriques - self.objectiu
+                self.actualitza_w_index()
                 if diff <= 0:
                     break
         attempts += 1
@@ -331,7 +342,7 @@ def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
     temp = clean
     offset = 0
     for start, end, _ in candidates:
-        temp = temp[: start + offset] + "¤" + temp[end + offset :]
+        temp = temp[: start + offset] + "¤" + temp[end + offset:]
         offset += 1 - (end - start)
 
     # eliminar no-nuclis per obtenir només nuclis vocals i marcadors

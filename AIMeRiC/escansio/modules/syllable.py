@@ -32,6 +32,7 @@ class Syllable:
         self.ends_with_vowel = self.vowel_end()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
         self.first = True if self.s_index == 0 else False
         self.last = True if self.s_index == self.len_word - 1 else False
+        self.is_PRONe = True if '-' in self.text[0] else False
         self.fono_info = self.fono()  # Afegir a un mòdul independent: /escansio/utils/phonology.py
 
     def save_metadata(self):
@@ -73,7 +74,7 @@ class Syllable:
                 return False
 
     def print_metadata(self):
-        for attr in ["s_index", "len_word", "text", "pes", "fusionada", "fusion_direction", "starts_with_vowel",
+        for attr in ["s_index", "len_word", "is_PRONe", "text", "pes", "fusionada", "fusion_direction", "starts_with_vowel",
                      "ends_with_vowel", "fono_info"]:
             print(f"\t\t\t\t{attr}:", getattr(self, attr))
         print("\n")
@@ -112,6 +113,6 @@ class Syllable:
 
 
 if __name__ == '__main__':
-    syl = Syllable(0, ('güer', 4.0), 1)
+    syl = Syllable(0, ('-hi', 4.0), 1)
     syl.print_metadata()
 

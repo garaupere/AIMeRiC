@@ -11,9 +11,10 @@ patrons mètrics i rítmics, aplica regles de prosòdia i exporta resultats
 per visualització i serialització.
 
 """
+from AIMeRiC.escansio.modules.utils.tools import seguent
+
 _author_ = "Pere Garau"
 __all__ = ["Vers"]
-
 
 import time
 from typing import Dict, Any, List
@@ -61,13 +62,13 @@ class Vers:
         # Resol contactes i calcular si està ajustat (un cop després de preparar)
         resol_contactes_vocalics(self, best_mode='natural')
         self.ajustat = metre_ajustat(self)
-
         if not minimal:
             if self.ajustat:
                 self.__subdivisio__()
                 self.__disposicio__()
 
                 self.__prosodia__()
+                self.__subdivisio__()
                 self.__patrons__()  # Assegura patrons actualitzats
                 self.__anota__()
 
@@ -89,6 +90,7 @@ class Vers:
     def __prepara__(self, nlp) -> None:
         """Prepara el vers: etiquetatge POS, crear objects Word i neteja inicial."""
         self.pos = posTagger(nlp, self.text)
+
         self.words: List[Word] = [Word(token, len(self.pos)) for token in self.pos]
         safe_words(self)
         self.original = self.words.copy()
@@ -114,7 +116,6 @@ class Vers:
         """Calcula la subdivisió i actualitza el patró mètric."""
         self.posicio_tall = tall(self)
         self.subdivisio = subdivideix(self)
-        cim_maxim(self)
         # Actualitzar representacions derivades
         self.patro_ritmic = ''.join(str(int(x)) for x in self.patro).rstrip('0')
         self.patro_metric = maximal_comparison_pattern(self)
@@ -140,8 +141,10 @@ class Vers:
     def __prosodia__(self) -> None:
         """Càlculs prosòdics addicionals (accents prosòdics, cim màxim)."""
         cim_maxim(self)
-        if getattr(self, 'ajustat', False):
-            accents_prosodics(self)
+        #if getattr(self, 'ajustat', False):
+        accents_prosodics(self, debug=True)
+        #self.actualitza_pesos()
+        cim_maxim(self)
         # Actualitza anotacions i representacions
         self.anotat = anota_vers(self)
         self.escansio_array = scansion_array(self)
@@ -195,7 +198,9 @@ class Vers:
         self.__kill_cim_maxim__()
         self.__subdivisio__()
         self.__disposicio__()
+        self.ajustat = metre_ajustat(self)
         self.__prosodia__()
+        self.__subdivisio__()
         self.__patrons__()
         self.__anota__()
         self.__mot_info__()
@@ -375,11 +380,27 @@ class Vers:
     def __repr__(self) -> str:
         return f"<Vers text={self.text!r} n_words={len(getattr(self, 'words', []))}>"
 
+    def actualitza_w_index(self):
+        """Actualitza els w_index de les paraules després de canvis en la llista."""
+        for i, word in enumerate(self.words):
+            word.w_index = i
+
+    def actualitza_pesos(self):
+        """Actualitza el valor de pes de les síl·labes de mots.stress depsrés de canvis a self.nomes_sillabes."""
+        for word in getattr(self, 'words', []):
+            for syllable in getattr(word, 'stress', []):
+                # Cerca la síl·laba corresponent a self.nomes_sillabes i actualitza el pes
+                for s in getattr(self, 'nomes_sillabes', []):
+                    if syllable.text == s.text:
+                        syllable.pes = s.pes
+                        break
+
+
 
 # Exemple d'ús
 if __name__ == "__main__":
     start = time.time()
-    sentence = "Sol, i de dol, i amb vetusta gonella"
+    sentence = "somiar nus, besar-nos com a infants."
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     vers = Vers(nlp, sentence, 10, permet_llicencies=True)
     vers.mostra()

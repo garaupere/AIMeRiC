@@ -112,13 +112,9 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                                         else:
                                             outsiders.append(verse)
                                     except Exception as e:
-                                        print(f"Error: {e}")
-                                        print(verse)
                                         outsiders.append(verse)
                                         i += 1
                         except Exception as e:
-                            print(verse)
-                            print(f"Error: {e}")
                             outsiders.append(verse)
                             i += 1
 
