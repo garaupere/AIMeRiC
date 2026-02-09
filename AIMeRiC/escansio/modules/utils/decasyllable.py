@@ -65,7 +65,7 @@ def tall(self) -> int | None:
     if self.recompte_sillabes_metriques != 10:
         return None  # No és un decasíl·lab
 
-    talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català
+    talls = [3, 5, 4]  # Talls més freqüents en el decasíl·lab català
 
     # PRIMERA PASSADA: Cerca talls amb best=True
     i = 0
