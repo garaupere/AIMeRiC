@@ -158,12 +158,13 @@ def vallverdu_score(syllable1: Syllable, syllable2: Syllable) -> int:
     return 0
 
 
-def join_syllables(syllable1: Syllable, syllable2: Syllable) -> Optional[Syllable]:
+def join_syllables(self, syllable1: Syllable, syllable2: Syllable) -> Optional[Syllable]:
     """Uneix dues síl·labes en contacte vocàlic si procedeix; retorna Syllable o None."""
     if not (syllable1.ends_with_vowel and syllable2.starts_with_vowel):
         return None
     if syllable1.fusionada or syllable2.fusionada:  # Evita generar fusions de síl·labes ja fusionades (triftongs sintàctics)
-        return None
+        if not syllable1.fono_info.get("alta") and syllable2.fono_info.get("alta"):
+            return None
     syllable1.text = f"{syllable1.text}_{syllable2.text}"
     syllable1.pes_fusion = f"{syllable1.pes}_{syllable2.pes}"
     # escollir pes major; tractar cas pes==2 => 0
@@ -172,13 +173,14 @@ def join_syllables(syllable1: Syllable, syllable2: Syllable) -> Optional[Syllabl
     syllable1.pes = syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
     syllable1.fusion_direction = "dreta" if float(syllable1.pes) >= float(syllable2.pes) else "esquerra"
     syllable1.fusionada = True
-    syllable1.is_PRONe = True if syllable1.is_PRONe or syllable2.is_PRONe else False
+    syllable1.has_PRONe = True if syllable1.has_PRONe or syllable2.has_PRONe else False
     # actualitzar flag d'acabament amb vocal
     syllable1.ends_with_vowel = bool(_RE_VOWEL_CHAR.search(syllable1.text[-1]))
+    reindexa_sillabes_words(self)
     return syllable1
 
 
-def split_syllable(syllable: Syllable) -> Optional[Tuple[Syllable, Syllable]]:
+def split_syllable(self, syllable: Syllable) -> Optional[Tuple[Syllable, Syllable]]:
     """Separa una síl·laba fusionada (amb marcador '_' o ':') en dues síl·labes noves."""
     if not (syllable.fusionada or syllable.triftong):
         return None
@@ -198,7 +200,15 @@ def split_syllable(syllable: Syllable) -> Optional[Tuple[Syllable, Syllable]]:
     s1.fusionada = False
     s2.fusionada = syllable.triftong  # si era triftong, mantenim part de fusió en segona
     s1.triftong = False
+    reindexa_sillabes_words(self)
     return s1, s2
+
+
+def reindexa_sillabes_words(self):
+    """Reindexa les síl·labes i actualitza els indexes de paraula."""
+    for word in self.words:
+        for i in range(0, len(word.stress)):
+            word.stress[i].s_index = i
 
 
 def resol_contactes_vocalics(self, best_mode: str):
@@ -212,15 +222,13 @@ def resol_contactes_vocalics(self, best_mode: str):
         return []
 
     best = get_best(best_mode)
-    if best:
-        if len(best) > 3 and self.recompte_sillabes_metriques - self.objectiu > 2:
-            return  # Evitar canvis dràstics que podrien desconfigurar el vers, evita detectar octosíl·labs com a decasíl·labs
-    elif not best or self.recompte_sillabes_metriques <= self.objectiu:
+#    if len(best) > 4 and self.recompte_sillabes_metriques - self.objectiu > 4:
+#        return  # Evita aplicar contactes si hi ha massa candidats o la diferència és gran
+    if not best or self.recompte_sillabes_metriques <= self.objectiu:
         return
-
     diff = self.recompte_sillabes_metriques - self.objectiu
     attempts = 0
-    while diff > 0 and attempts < 10:
+    while diff > 0 and attempts < 5:
         cand_list = get_best(best_mode)
         if not cand_list:
             break
@@ -229,7 +237,7 @@ def resol_contactes_vocalics(self, best_mode: str):
         for wi in range(len(self.words) - 1):
             word = self.words[wi]
             if change[0] in word.stress:
-                res = join_syllables(change[0], change[1])
+                res = join_syllables(self, change[0], change[1])
                 if not res:
                     continue
                 next_word = self.words[wi + 1]
@@ -382,5 +390,15 @@ def best_sinalefa(self) -> List[Tuple[Syllable, Syllable, int]]:
 
 
 def best_sineresi(self) -> List[Tuple[Syllable, Syllable, int]]:
-    """Candidats per sineresi (comportament idèntic a sinalefa en l'actual implementació)."""
-    return best_sinalefa(self)
+    """Candidats per sineresi."""
+    candidats = []
+    for w in self.words:
+        for s in w.stress:
+            s1 = s
+            s2 = w.stress[s.s_index + 1] if s.s_index + 1 < len(w.stress) else None
+            if s2 and s1.ends_with_vowel and s2.starts_with_vowel:
+                pts = score(s1, w.stress) + score(s2, w.stress) + score_diftong(s1, s2)
+                s1.fusionable = pts
+                candidats.append((s1, s2, pts))
+    candidats.sort(key=lambda x: x[2], reverse=True)
+    return candidats

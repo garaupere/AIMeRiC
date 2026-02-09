@@ -24,77 +24,122 @@ from .tools import seguent
 
 def find_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
     """Aquesta funció cerca un tall en un vers donat i en substitueix el pes accentual per un cim màxim (5)."""
+
     result = False  # Resultat de la cerca
     if self.nomes_sillabes[tall].pes == 5.0:  # Si ja hi ha un tall, retorna'l
         result = True
         return result  # Retorna False
-    if int(self.nomes_sillabes[tall].pes) > 2:  # Si el valor correspon a un accent
-        next_syllable = self.nomes_sillabes[tall + 1] if tall + 1 < len(self.nomes_sillabes) else None
-        if next_syllable:
-            if not next_syllable.is_PRONe: # Assegura't que el mot de tall no té un pronom enclític.
-                #print(">> TALL:", tall+1, self.no_words[tall].text, ':', self.no_words[tall].pes) # Debug
-                if detect_nonBest:
-                    if int(self.nomes_sillabes[tall].pes) < 4:  # Si l'accent no és principal
-                        return 'not-best'  # Retorna 'not-best' per indicar que no és el millor cas
-                for paraula in self.words:  # Recorre les paraules del vers
-                    if paraula.stress:
-                        if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
-                            paraula.stress[-1].pes = 5.0
-                            self.anotat[
-                                self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
-                            self.nomes_sillabes[tall].pes = 5.0  # Actualitza la llista de mots
-                            self.patro[tall] = 5  # Actualitza el patró abstracte
-                            self.words[self.words.index(paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
-                            self.words[self.words.index(paraula)] = paraula  # Actualitza la paraula
-                            result = True  # Indica que s'ha trobat un tall
-                            return result  # Retorna True si s'ha trobat un tall
+    if self.nomes_sillabes[tall].pes > 2:  # Si el valor correspon a un accent
+
+        if not self.nomes_sillabes[
+            tall].has_PRONe:  # Assegura't que el mot de tall no té un pronom enclític ni és una síl·laba fusionada
+
+            if detect_nonBest:
+
+                if self.nomes_sillabes[tall].pes < 4:  # Si l'accent no és principal
+
+                    return 'not-best'  # Retorna 'not-best' per indicar que no és el millor cas
+
+            for paraula in self.words:  # Recorre les paraules del vers
+                if paraula.stress:
+                    if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[
+                        tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
+                        paraula.stress[-1].pes = 5.0
+                        self.anotat[
+                            self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
+                        self.nomes_sillabes[tall].pes = 5.0  # Actualitza la llista de mots
+                        self.patro[tall] = 5  # Actualitza el patró abstracte
+                        self.words[self.words.index(
+                            paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
+                        self.words[self.words.index(paraula)] = paraula  # Actualitza la paraula
+                        result = True  # Indica que s'ha trobat un tall
+
+                        return result  # Retorna True si s'ha trobat un tall
     return result  # Retorna False si no s'ha trobat cap tall
 
 
 # python
 def tall(self) -> int | None:
     """Aquesta funció aplica el tall al vers decasil·làbic."""
-    global next_word
-    pos = None  # Posició del tall, inicialment None
-    if self.recompte_sillabes_metriques == 10:  # Comprova si el vers és un decasíl·lab
-        talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català (index + 1)
-        for i, tall in enumerate(talls):  # Itera pels talls candidats
-            # Cerca el tall. Si fallat, passa al següent candidat.
-            cerca = find_tall(self, tall, True)
-            if cerca is True:  # Si el tall és vàlid
-                pos = tall + 1
-                return pos if pos != 10 else None  # Evita retornar la darrera posició absoluta
-            elif cerca == 'not-best' and i + 1 < len(talls):
-                # Si no és l'opció millor, però es poden cercar més talls
-                cerca = find_tall(self, talls[i + 1], True)
-                if cerca is True:  # Si el següent tall és vàlid
-                    next_syllable = self.nomes_sillabes[talls[i + 1] + 1] if talls[i + 1] + 1 < len(self.nomes_sillabes) else None
-                    # comprova el mot següent al tall
-                    for word in self.words:
-                        if self.nomes_sillabes[tall] in word.stress:
-                            next_word = self.words[word.w_index + 1] if word.w_index + 1 < len(self.words) else None
-                    if next_word:
-                        if next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
-                            return None # Evita talls que impliquen situar un cim màxim en un mot semitònic si després ve un mot tònic (que li guanya l'accent).
-                    if next_syllable and not next_syllable.is_PRONe:  #
-                        pos = talls[i + 1] + 1
-                        return pos if pos != 10 else None
 
-        # Si arriba aquí, no hi ha talls clars; intenta-ho amb mots bivalents
-        for tall in talls:
-            cerca = find_tall(self, tall)  # Cerca el tall sense condició de millor opció
-            if cerca is True:
-                # obté la següent paraula i comprova si és un mot tònic
-                for word in self.words:
-                    if self.nomes_sillabes[tall] in word.stress:
-                        next_word = self.words[word.w_index + 1] if word.w_index + 1 < len(self.words) else None
-                        if next_word:
-                            if next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
-                                pos = None  # Evita talls que impliquen situar un cim màxim en un mot semitònic si després ve un mot tònic (que li guanya l'accent).
-                            else:
-                                pos = tall + 1
+    if self.recompte_sillabes_metriques != 10:
+        return None  # No és un decasíl·lab
+
+    talls = [3, 4, 5]  # Talls més freqüents en el decasíl·lab català
+
+    # PRIMERA PASSADA: Cerca talls amb best=True
+    i = 0
+    while i < len(talls):
+        tall_actual = talls[i]
+        cerca = find_tall(self, tall_actual, True)
+        if cerca is True:
+            # Tall vàlid trobat
+            pos = tall_actual + 1
             return pos if pos != 10 else None
-    # Retorna None si no es compleix cap condició o el vers no és decasíl·lab
+
+        elif cerca == 'not-best' and i < len(talls):
+            # No és el millor tall, prova el següent
+            cerca_nonBest = find_tall(self, tall_actual, False)
+
+            if cerca_nonBest is True:
+
+                # Evita talls amb mot tònic després
+                #if next_word and next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
+                #    return None
+
+                if not self.nomes_sillabes[tall_actual].has_PRONe:
+                    pos = tall_actual + 1
+                    return pos if pos != 10 else None
+
+        i += 1  # Passa al següent tall candidat
+
+    # SEGONA PASSADA: Cerca talls amb mots bivalents (best=False)
+    i = 0
+    while i < len(talls):
+        tall_actual = talls[i]
+        cerca = find_tall(self, tall_actual, False)
+        if cerca is True:
+            word_at_tall = _get_word_at_position(self, tall_actual)
+            next_word = _get_next_word_at_position(self, tall_actual)
+
+            if word_at_tall and next_word:
+                # Cas especial: NOUN/VERB/PRON/ADJ/PROPN + VERB
+                if (word_at_tall.pos_ in ["NOUN", "VERB", "PRON", "ADJ", "PROPN"]
+                        and next_word.pos_ in ["VERB"]):
+                    pos = tall_actual + 1
+                    return pos if pos != 10 else None
+
+                # Evita talls amb mot tònic després
+                elif next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
+                    i += 1  # Continua cercant
+                    continue
+
+                else:
+                    pos = tall_actual + 1
+                    return pos if pos != 10 else None
+
+        i += 1  # Passa al següent tall candidat
+
+    return None  # No s'ha trobat cap tall vàlid
+
+
+def _get_word_at_position(self, pos: int):
+    """Retorna la paraula que conté la síl·laba a la posició donada."""
+    if pos >= len(self.nomes_sillabes):
+        return None
+
+    for word in self.words:
+        if self.nomes_sillabes[pos] in word.stress:
+            return word
+    return None
+
+
+def _get_next_word_at_position(self, pos: int):
+    """Retorna la paraula següent a la que conté la síl·laba a la posició donada."""
+    word_at_pos = _get_word_at_position(self, pos)
+
+    if word_at_pos and word_at_pos.w_index + 1 < len(self.words):
+        return self.words[word_at_pos.w_index + 1]
     return None
 
 
@@ -114,7 +159,7 @@ def cesura_femenina(self):
                         if seguent(syllable, word.stress) is not None:
                             if re.findall("[:_]", seguent(syllable, word.stress).text):
                                 # Gestiona els casos de sinalefa en la cesura, ex.: *jo som la page<sa_amb> els records honrats
-                                fsubs = split_syllable(seguent(syllable, word.stress))
+                                fsubs = split_syllable(self, seguent(syllable, word.stress))
                                 syl1 = fsubs[0]
                                 syl2 = fsubs[1]
                                 word.stress[syllable.s_index + 1] = syl1

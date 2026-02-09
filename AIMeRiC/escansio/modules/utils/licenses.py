@@ -5,7 +5,7 @@ from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.word import Word
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
     best_sineresi
-from .stress import get_stress_index, secondary_stress
+from .stress import get_stress_index, secondary_stress, forced_rhythmic_alternation
 
 
 def llicencies(self, permit, doc) -> list[str] | None:
@@ -31,7 +31,7 @@ def llicencies(self, permit, doc) -> list[str] | None:
         initial_count = getattr(self, 'recompte_sillabes_metriques', 0)
 
     # Permetre sineresi/dièresi només si el vers té més de 11 síl·labes inicialment
-    allow_sineresi_dieresi = (initial_count is not None) and (initial_count < self.objectiu + 2) # permet evitar que forci versos majors, exemple de 12 a 10 síl·labes.
+    allow_sineresi_dieresi = True
     sineresi_used = False
     dieresi_used = False
     sinalefa_used = False
@@ -39,8 +39,7 @@ def llicencies(self, permit, doc) -> list[str] | None:
     diff = self.recompte_sillabes_metriques - self.objectiu
     max_iterations = self.objectiu
     iterations = 0
-
-    if permit and initial_count < self.objectiu + 2:
+    if permit and initial_count < self.objectiu or initial_count > self.objectiu:
         while diff != 0 and iterations < max_iterations:
             if diff > 0:
                 # Si hi ha excés de síl·labes: intentem reduir amb sinalefa
@@ -53,7 +52,7 @@ def llicencies(self, permit, doc) -> list[str] | None:
                     sinalefa_used = True
                     result.append('sinalefa')
             else:
-                if initial_count < self.objectiu - 2: # permet evitar que forci versos menors, per exemple de 8 a 10 síl·labes.
+                if initial_count < self.objectiu: # permet evitar que forci versos menors, per exemple de 8 a 10 síl·labes.
                     # Si falten síl·labes: intentem augmentar amb dialefa
                     dialefa(self, abs(diff), doc, times=1)
                     # comprova que s'ha aplicat la dialefa (augment de síl·labes)
@@ -82,8 +81,8 @@ def llicencies(self, permit, doc) -> list[str] | None:
                             pass
 
             # Si encara sobra (diff > 0) podem intentar una sineresi, però només una vegada per vers i després de la sinalefa
-            if diff > 0 and allow_sineresi_dieresi and (not sineresi_used) and sinalefa_used:
-                # intentem la sineresi (i marquem com aplicada encara que no canviï el recompte)
+            if diff > 0 and allow_sineresi_dieresi:
+                # intenta la sineresi (i marca-la com aplicada encara que no canviï el recompte)
                 try:
                     sineresi(self, times=1)
                     # comprova que s'ha aplicat la sineresi (reducció de síl·labes)
@@ -96,7 +95,6 @@ def llicencies(self, permit, doc) -> list[str] | None:
                 except Exception:
                     # si sineresi no existeix o falla, continuem sense llançar excepció
                     pass
-
             iterations += 1
     else:
         result = []
@@ -118,12 +116,13 @@ def sineresi(self, times):
             change = best.pop(0)
             for word in self.words:
                 if change[0] in word.stress and change[1] in word.stress:
-                    result = join_syllables(change[0], change[1])
+                    result = join_syllables(self, change[0], change[1])
                     result.text = re.sub(r"_", "", result.text)
                     if result:
                         word.stress.remove(change[1])
                         word.stress_index = get_stress_index(word)
-                        secondary_stress(word)
+                        #secondary_stress(word)
+                        forced_rhythmic_alternation(self)
                         counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])
@@ -150,7 +149,7 @@ def dialefa(self, diferencia, doc, times):
             if trif_in is not None:
                 """Mètode 0: un triftong"""
                 # print("Dialefa Mètode 0: un triftong")
-                result = split_syllable(self.words[j].stress[trif_in])
+                result = split_syllable(self, self.words[j].stress[trif_in])
                 self.words[i].stress.append(result[0])
                 self.words[j].stress[0] = result[1]
 
@@ -162,7 +161,7 @@ def dialefa(self, diferencia, doc, times):
             elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "1":
                 """Mètode 1: dos mots monosil·làbics"""
                 word1_syll = self.words[i].stress[-1]
-                result = split_syllable(word1_syll)
+                result = split_syllable(self, word1_syll)
                 self.words.insert(j, Word(doc[0], len(self.words)))
                 self.words[i].stress[-1] = result[0]
                 self.words[j].stress[0] = result[1]
@@ -178,7 +177,7 @@ def dialefa(self, diferencia, doc, times):
             elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "2":
                 """Mètode 2: monosil·lab i polisil·lab"""
                 word1_syll = self.words[i].stress[0]
-                result = split_syllable(word1_syll)
+                result = split_syllable(self, word1_syll)
                 self.words.insert(i, Word(doc[0], len(self.words)))
                 self.words[i].stress[-1] = result[0]
                 self.words[j].stress[0] = result[1]
@@ -194,7 +193,7 @@ def dialefa(self, diferencia, doc, times):
             elif self.words[i].stress and self.words[i].stress[-1].fusion_direction == "3":
                 """Mètode 3: polisil·lab i monosil·lab"""
                 word1_syll = self.words[i].stress[-1]
-                result = split_syllable(word1_syll)
+                result = split_syllable(self, word1_syll)
                 self.words.insert(j, Word(doc[0], len(self.words)))
                 self.words[i].stress[-1] = result[0]
                 self.words[j].stress[0] = result[1]
@@ -209,7 +208,7 @@ def dialefa(self, diferencia, doc, times):
             elif self.words[i].stress and self.words[i].stress[0].fusion_direction == "4":
                 """Mètode 4: dos polisil·labs"""
                 word1_syll = self.words[i].stress[0]
-                result = split_syllable(word1_syll)
+                result = split_syllable(self, word1_syll)
                 if word1_syll.triftong:
                     self.words.insert(i, Word(doc[0], len(self.words)))
                     self.words[i].stress.append(result[0])

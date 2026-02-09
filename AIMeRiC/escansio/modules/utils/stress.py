@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 
+
 def bivalents(result, cat):
     for syllable in result:
         if syllable[1] == 4.0:
@@ -29,6 +30,14 @@ def identify_pronom_assillabic(syllables):
                 pronoun = "'" + ''.join(syllables[-1].split("'")[1:])
                 syllables[-1] = syllables[-1].split("'")[0]
                 return syllables, pronoun
+
+
+def resol_xoc_ment(paraula) -> list:
+    """Aquesta funció resol els casos de xoc entre el sufix -ment i l'accent de la paraula"""
+    if len(paraula) > 1:
+        if paraula[-2][1] > 0:
+            paraula[-2] = (paraula[-2][0], 0)
+    return paraula
 
 
 def get_stress(self):
@@ -71,8 +80,9 @@ def get_stress(self):
             result = self.monosyllabic()
             if self.word_ment is not None:
                 w_ment = result + [("ment", 4.0)]
-                w_ment = forced_rhythmic_alternation(self, w_ment)
+                w_ment = resol_xoc_ment(w_ment)
                 return [Syllable(0, w_ment[0], 2), Syllable(1, w_ment[1], 2)]
+
             return [Syllable(0, result[0], 1)]
 
         elif n >= 2:
@@ -87,7 +97,9 @@ def get_stress(self):
     if self.word_ment is not None:
         result = [(syllable[0], 2.0) if syllable[1] == 4.0 else (syllable[0], 0.0) for syllable in result]
         result = result + [("ment", 4.0)]
-        result = forced_rhythmic_alternation(self, result)
+        result = resol_xoc_ment(result)
+        self.stress = result
+        #result = forced_rhythmic_alternation(self)
     result = [Syllable(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
 
     if clean:
@@ -99,6 +111,7 @@ def secondary_stress(self):
     """
         Assigna un accent secundari (2) a la síl·laba que està 2 posicions abans de la síl·laba amb l'accent primari (>1).
         A partir de les regles d'Oliva (1992).
+    """
     """
     if not self.is_compost:
         if len(self.syllables) > 2 and 'des' in self.stress[0].text.lower():
@@ -130,22 +143,60 @@ def secondary_stress(self):
             while posicio_actual < len(result):
                 syll = result[posicio_actual]
                 if syll.pes < 2.0:
-                    result[posicio_actual] = Syllable(posicio_actual, (syll.text, 2), len_word=len(self.stress))
+                    result[posicio_actual] = Syllable(posicio_actual, (syll.text, 1.5), len_word=len(self.stress))
                 posicio_actual += 2
 
-        self.stress = result + [result_end] if self.word_ment is not None else result
+        self.stress = result + [result_end] if self.word_ment is not None else result"""
+    pass
 
 
-def forced_rhythmic_alternation(self, stressed):
-    resta = stressed
+def forced_rhythmic_alternation(self) -> list:
+    """Assigna un accent secundari (2) a la síl·laba que està 2 posicions abans de la síl·laba amb l'accent primari (>1)."""
+    result = deepcopy(self.stress)
+    stressed_syllable = None
+    for syllable in result:
+        if syllable.pes > 2.0:
+            #print(f"Accent primari trobat a la síl·laba: {syllable.text} amb pes {syllable.pes}")
+            stressed_syllable = syllable
+            break
+    # Assigna un accent secundari (2) a les síl·labes que estan 2 posicions abans i després de la síl·laba amb l'accent primari
+    if stressed_syllable:
+        index_accent_primari = result.index(stressed_syllable)
+        posicio_anterior = index_accent_primari - 2
+        posicio_posterior = index_accent_primari + 2
+
+        if posicio_anterior >= 0:
+            syllable_anterior = result[posicio_anterior]
+            #print(f"Assignat accent secundari a la síl·laba anterior: {syllable_anterior.text} amb pes {syllable_anterior.pes}")
+            result[posicio_anterior] = Syllable(posicio_anterior, (syllable_anterior.text, 2.0), len(self.stress))
+
+        if posicio_posterior < len(result):
+            syllable_posterior = result[posicio_posterior]
+            #print(f"Assignat accent secundari a la síl·laba posterior: {syllable_posterior.text} amb pes {syllable_posterior.pes}")
+            result[posicio_posterior] = Syllable(posicio_posterior, (syllable_posterior.text, 1.5), len(self.stress))
+
+    #print("Resultat després de l'assignació d'accents secundaris:", [(syllable.text, syllable.pes) for syllable in result])
+    self.stress = result
+    return result
+
+
+def aforced_rhythmic_alternation(self):
+    resta = self.stress
+    stressed = self.stress
     result = []
     if len(stressed) >= 2:
-        if stressed[-2][1] > 1.0 and stressed[-1][1] > 1.0:
-            result = [(stressed[-2][0], 0.25), (stressed[-1][0], 4.0)]
-            resta = [(syllable[0], 0.0) for syllable in stressed[:-2]]
-        elif stressed[-2][1] <= 1.0 and stressed[-1][1] <= 1.0:
-            result = [(stressed[-2][0], 4.0), (stressed[-1][0], 1.0)]
-            resta = [(syllable[0], 0.0) for syllable in stressed[:-2]]
+        if stressed[-2].pes > 1.0 and stressed[-1].pes > 1.0:
+            #result = [(stressed[-2][0], 0.25), (stressed[-1][0], 4.0)]
+            result = [Syllable(stressed[-2].s_index, (stressed[-2].text, 0.25), len(stressed)),
+                      Syllable(stressed[-1].s_index, (stressed[-1].text, 4.0), len(stressed))]
+            #resta = [(syllable[0], 0.0) for syllable in stressed[:-2]]
+            resta = [Syllable(syllable.s_index, (syllable.text, 0.0), len(stressed)) for syllable in stressed[:-2]]
+        elif stressed[-2].pes <= 1.0 and stressed[-1].pes <= 1.0:
+            #result = [(stressed[-2][0], 4.0), (stressed[-1][0], 1.0)]
+            result = [Syllable(stressed[-2].s_index, (stressed[-2].text, 4.0), len(stressed)),
+                      Syllable(stressed[-1].s_index, (stressed[-1].text, 1.0), len(stressed))]
+            #resta = [(syllable[0], 0.0) for syllable in stressed[:-2]]
+            resta = [Syllable(syllable.s_index, (syllable.text, 0.0), len(stressed)) for syllable in stressed[:-2]]
     return resta + result
 
 
@@ -156,3 +207,4 @@ def get_stress_index(self):
             return stress_index
         elif self.monosyllabic():
             return 0
+    return None

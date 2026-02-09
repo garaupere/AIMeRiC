@@ -7,7 +7,8 @@ import spacy
 
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.utils.fonologia import starts_with_vowel, ends_with_vowel
-from AIMeRiC.escansio.modules.utils.stress import get_stress, get_stress_index, secondary_stress
+from AIMeRiC.escansio.modules.utils.stress import get_stress, get_stress_index, secondary_stress, \
+    forced_rhythmic_alternation
 from AIMeRiC.escansio.modules.utils.syllabify import hyphenate_word as syllabify
 
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
@@ -44,7 +45,6 @@ class Word:
             except Exception:
                 self.morph = None
 
-
         # children: prefer extension (list of strings) else build from token.children
         children_ext = ext("children_text")
         if children_ext:
@@ -62,11 +62,11 @@ class Word:
         self.stress = get_stress(self)
         self.stress_index = get_stress_index(self)
         self.is_compost = False
-        if self.stress_index is not None and self.stress_index > 2:
-            self.compost()
+        #if self.stress_index is not None and self.stress_index > 2:
+        #    self.compost()
 
-
-        secondary_stress(self)
+        #secondary_stress(self)
+        forced_rhythmic_alternation(self)
         self.starts_with_vowel = starts_with_vowel(self)
         self.ends_with_vowel = ends_with_vowel(self)
         self.plain_syllables = self.plain()  # Afegir a un mòdul independent: escansio/utils/representation.py
@@ -96,13 +96,17 @@ class Word:
     def safe_syllables(self):
         """Aquesta funció elimina les síl·labes que no contenen vocals."""
         for syllable in self.syllables:
-            if '-' in syllable:
-                next_syll = self.syllables[self.syllables.index(syllable) + 1] if self.syllables.index(syllable) + 1 < len(self.syllables) else None
-                if next_syll:
-                    self.syllables[self.syllables.index(next_syll)] = '-' + next_syll
-                    self.syllables[self.syllables.index(syllable)] = syllable.replace('-', '')
+            #     if '-' in syllable:
+            #         print(">> SÍL·LABA FUSIONADA DETECTADA:", syllable, "en paraula:", self.text)  # Debug
+            #         next_syll = self.syllables[self.syllables.index(syllable) + 1] if self.syllables.index(
+            #             syllable) + 1 < len(self.syllables) else None
+            #         if next_syll:
+            #             self.syllables[self.syllables.index(next_syll)] = '-' + next_syll
+            #             self.syllables[self.syllables.index(syllable)] = syllable.replace('-', '')
+            #         else:
+            #             self.syllables[self.syllables.index(syllable)] = syllable
 
-            elif not re.search("[aeiouàáèéíìóòúùïüâêîôûy]", syllable.lower()):
+            if not re.search("[aeiouàáèéíìóòúùïüâêîôûy]", syllable.lower()):
                 self.syllables.remove(syllable)
         return True
 
@@ -123,6 +127,8 @@ class Word:
                 if self.pos_ == "PRONe":  # Gestiona els casos de pronoms febles enclítics a final de vers
                     if self.w_index == self.verse_wlength - 1:
                         response = [(solution, 0.0)]
+                    else:
+                        response = [(solution, 2.0)]
                 elif self.pos_ == "PRON":
                     response = [(solution, 2.5)]
                 elif self.pos_ == "AUX":
@@ -179,7 +185,8 @@ class Word:
             if not doc2[0].is_oov and doc2[0].pos_ in ["NOUN", "VERB", "ADV",
                                                        "ADJ",
                                                        "ADP"]:  # Si el mot no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
-                word_1 = Word(''.join(self.syllables[0:div_index]), doc2[0].pos_)  # Cream el primer component del mot compost.
+                word_1 = Word(''.join(self.syllables[0:div_index]),
+                              doc2[0].pos_)  # Cream el primer component del mot compost.
                 word_1.syllables = self.syllables[
                     0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                 get_stress(word_1)
@@ -192,7 +199,8 @@ class Word:
                 if not doc3[0].is_oov and doc3[0].pos_ in ["NOUN", "VERB", "ADV",
                                                            "ADJ",
                                                            "ADP"]:  # Si el segon component del mot compost no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
-                    word_2 = Word(''.join(self.syllables[div_index:]), doc3[0].pos_)  # Cream el segon component del mot compost.
+                    word_2 = Word(''.join(self.syllables[div_index:]),
+                                  doc3[0].pos_)  # Cream el segon component del mot compost.
                     word_2.syllables = self.syllables[
                         div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                     get_stress(word_2)
@@ -206,19 +214,21 @@ class Word:
                 if 2.0 not in [syl.pes for syl in self.stress]:
                     self.is_compost = False
                     self.stress = original
-                    secondary_stress(self)
+                    #secondary_stress(self)
+                    forced_rhythmic_alternation(self)
                     break
                 else:
                     self.is_compost = True
                     break  # Sortim de la funció.
             else:  # Si el mot és 'estrany'
                 div_index -= 1  # Decreixem l'índex de divisió
-                doc2 = nlp(''.join(self.syllables[0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
+                doc2 = nlp(''.join(
+                    self.syllables[0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
 
 
 if __name__ == "__main__":
 
-    sentence = "besar-nos"
+    sentence = "allunyament"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)

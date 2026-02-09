@@ -7,7 +7,7 @@ def recompte_metric(self):
     count = 0
     llista = [int(value.pes) for value in self.nomes_sillabes]
     for value in reversed(llista):
-        if value > 2:
+        if value >= 2:
             break
         count += 1
     return len(llista) - count

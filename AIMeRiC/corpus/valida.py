@@ -16,7 +16,7 @@ plt.rcParams["font.family"] = "Times New Roman"
 def valida():
     """Una funció per validar les dades __test."""
     usb = getUSB()
-    automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
+    automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/csv/foix.csv'))
     manual = normalitza(read_csv('AIMeRiC/corpus/validacio/__test_manual.csv'))
     manual = manual[['text del vers', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']]
 
@@ -133,7 +133,7 @@ def plot_comparison(comparison_df):
 if __name__ == '__main__':
     print('Validació de les dades __test.')
     usb = getUSB()
-    automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/__test.csv'))
+    automatic = normalitza(read_csv(f'{usb}/corpora/__test/etiquetat/csv/foix.csv'))
     print(automatic.head(2))
     manual = normalitza(read_csv('validacio/__test_manual.csv'))
     print(manual.head(2))

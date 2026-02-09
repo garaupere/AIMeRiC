@@ -59,7 +59,9 @@ def correct_spacy(doc):
         'sobre': 'ADP', 'vers': 'ADP', 'rere': 'ADP', 'dedins': 'ADP', 'quen': 'ADP', 'quel': 'ADP', 'fe': 'NOUN',
         'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
         'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP',
-        "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN', "d'en": 'DET', 'ben': 'ADJ', 'he': 'AUX', 'vaig': 'AUX', 'ha': 'AUX', 'han': 'AUX', 'vam': 'AUX', 'vau': 'AUX', 'van': 'AUX', 'vàrem': 'AUX', 'vàreu':'AUX', 'varen':'AUX', 'havia': 'AUX', 'havíem': 'AUX', 'havieu': 'AUX',
+        "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN', "d'en": 'DET', 'ben': 'DET', 'he': 'AUX',
+        'vaig': 'AUX', 'ha': 'AUX', 'han': 'AUX', 'vam': 'AUX', 'vau': 'AUX', 'van': 'AUX', 'vàrem': 'AUX', 'vàreu':'AUX', 'varen':'AUX', 'havia': 'AUX', 'havíem': 'AUX', 'havieu': 'AUX',
+        'urss': 'PROPN', 'front': 'NOUN', "dú": 'VERB'
     }
 
     normalized = []
@@ -152,7 +154,7 @@ def ortho_repair(text: str):
     """
     regex_patterns = {
         r'ý': r'í', r"ÿ": r"ï", r'ehi([ae][snmu]?)\b': r'ei\1', r'([aeiou])(h)u': r'\1ü',
-        r'no\-res': r'no-rès', r'\Bas$': r'es', r'(ç)([ie])': r'c\2', r'([dD])uu': r'\1u',
+        r'no\-res': r'no-rès', r'\Bas$': r'es', r'(ç)([ie])': r'c\2', r'([dD])uu': r'\1ú',
         r"qu'": r"qu·", r"\B([qg]u)'([aeiouàéèéìíòóúù])": r"\1\2 \2", r" +": r" ", r"(.') (.)": r"\1\2",
         r"([aeiouàéèéìíòóúù])·\1": r"\1 \1", r"([aeiouàéèéìíòóúù]) *· *([aeiouàéèéìíòóúù])": r"\1 \2", r"·": r"'",
         r"\b([sS][^aeiouàéèéìíòóúùyýÿhs]\B)": r"e\1", r"([aeiouy])h([iy]r)": r"\1\2", r"\Bch$": r"c", r"^ff": r"f"
@@ -195,7 +197,7 @@ def spacy_asyllabic(doc):
                    "l'", "ll'", "ll·", "c'", "c·", "[^aàáeéèíìióòóúùuüïâêîôûyý]['·]"]
     asyllabic_R = ["'ns", "'ns", "'l", "'m", "'n", "'s", "'ls", "'t", "'ts", "l", "ll", "lls", "'ll", "'lls", "ls", "s",
                    "·ns", "·l", "·ll", "·lls", "·m", "·n", "·s", "·ls", "·t", "·ts", "·ns", "·y", '-te', '-me', '-se',
-                   '-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li',
+                   '-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li', '-hi'
                    '-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
 
     new_doc = [(text, pos_, dep_, lemma_, morph, head) for text, pos_, dep_, lemma_, morph, head in doc]
@@ -309,7 +311,7 @@ def posTagger(nlp, text: str):
 
 
 if __name__ == "__main__":
-    text = "veure-hi"
+    text = "marquem-hi solcs pregons."
     import spacy
 
     nlp = spacy.load("ca_core_news_md")

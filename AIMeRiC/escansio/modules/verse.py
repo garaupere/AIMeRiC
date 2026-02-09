@@ -69,7 +69,7 @@ class Vers:
 
                 self.__prosodia__()
                 self.__subdivisio__()
-                self.__patrons__()  # Assegura patrons actualitzats
+                self.__patrons__()
                 self.__anota__()
 
                 self.__mot_info__()
@@ -81,6 +81,7 @@ class Vers:
             else:
                 # Si no està ajustat, calcula possibles llicències
                 self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
+
         else:
             # Mode mínim: només patrons i informació bàsica
             self.__disposicio__()
@@ -142,9 +143,9 @@ class Vers:
         """Càlculs prosòdics addicionals (accents prosòdics, cim màxim)."""
         cim_maxim(self)
         #if getattr(self, 'ajustat', False):
-        accents_prosodics(self, debug=True)
+        accents_prosodics(self, debug=False)
         #self.actualitza_pesos()
-        cim_maxim(self)
+        #cim_maxim(self)
         # Actualitza anotacions i representacions
         self.anotat = anota_vers(self)
         self.escansio_array = scansion_array(self)
@@ -396,11 +397,10 @@ class Vers:
                         break
 
 
-
 # Exemple d'ús
 if __name__ == "__main__":
     start = time.time()
-    sentence = "somiar nus, besar-nos com a infants."
+    sentence = "D'antics casals marquem-hi solcs pregons."
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     vers = Vers(nlp, sentence, 10, permet_llicencies=True)
     vers.mostra()
