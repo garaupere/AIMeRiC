@@ -39,16 +39,16 @@ def compile(raw_files_path, corpus):
     print(f'Temps d\'execució: {minutes} minuts i {seconds} segons')
 
 
-def etiq(nlp, corpus):
+def etiq(nlp, corpus, goal: int):
     """Etiquetar un corpus"""
     usb = getUSB()
     root = f"{usb}/corpora/"
     corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
     results_path = f"{root}{corpus}/etiquetat/"
-    etiqueta_corpus(corpus_path, results_path, __version__, nlp, mode=10)
+    etiqueta_corpus(corpus_path, results_path, __version__, nlp, mode=goal)
 
 
-def scan(nlp, verse, goal: int = 10):
+def scan(nlp, verse, goal):
     analisi = escaneja(nlp, verse, goal)
     return analisi.mostra()
 
@@ -204,15 +204,17 @@ def main(nlp):
 
                 elif options[0] == '-etiq':
                     corpus = options[1]
+                    goal = int(options[2]) if len(options) > 2 else 10
                     try:
                         start = time.time()
-                        etiq(nlp, corpus)
+                        etiq(nlp, corpus, goal)
                         elapsed_time = time.time() - start
                         minutes = int(elapsed_time // 60)
                         seconds = int(elapsed_time % 60)
                         print(f"Temps d'execució: {minutes} minuts i {seconds} segons")
                     except FileNotFoundError:
                         print('El corpus seleccionat no existeix.')
+
 
                 elif options[0] == '-etiqprosa':
                     corpus = options[1]
