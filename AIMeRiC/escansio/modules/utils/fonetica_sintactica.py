@@ -133,10 +133,10 @@ def vallverdu_score(syllable1: Syllable, syllable2: Syllable) -> int:
     # Tòniques / àtones combinacions
     if p1 >= 3 and p2 >= 3:
         return 0
-    if p1 >= 3 and p2 < 3:
+    if p1 >= 3 > p2:
         if v2.get("neutra"):
             return 2
-    if p1 < 3 and p2 >= 3:
+    if p1 < 3 <= p2:
         if p2 == 3 and v2.get("alta"):
             return 1
         if v1.get("alta") and not v2.get("alta"):
