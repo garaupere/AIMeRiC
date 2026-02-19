@@ -38,7 +38,7 @@ def nucli_escansio_prosa(nlp, sring, goal) -> dict:
         first_10_scan = escaneja(nlp, first_10_line, goal=10, permet_llicencies=True)
         if first_10_scan is not None:
             if first_10_scan.recompte_sillabes_metriques == goal:
-                dict_first.update(first_10_scan.save)
+                dict_first.update(first_10_scan.desa)
                 dict_first[first_10_scan.text].update({'position': 'first'})
                 row_first = [first_10_scan.text] + first_10_scan.to_csv() + ['first']
 
@@ -46,7 +46,7 @@ def nucli_escansio_prosa(nlp, sring, goal) -> dict:
         last_10_scan = escaneja(nlp, last_10_line, goal=10, permet_llicencies=True)
         if last_10_scan is not None:
             if last_10_scan.recompte_sillabes_metriques == goal:
-                dict_last.update(last_10_scan.save)
+                dict_last.update(last_10_scan.desa)
                 dict_last[last_10_scan.text].update({'position': 'last'})
                 row_last = [last_10_scan.text] + last_10_scan.to_csv() + ['last']
 
@@ -54,7 +54,7 @@ def nucli_escansio_prosa(nlp, sring, goal) -> dict:
         medial_10_scan = escaneja(nlp, medial_10_line, goal=10, permet_llicencies=True)
         if medial_10_scan is not None:
             if medial_10_scan.recompte_sillabes_metriques == goal:
-                dict_medial.update(medial_10_scan.save)
+                dict_medial.update(medial_10_scan.desa)
                 dict_medial[medial_10_scan.text].update({'position': 'medial'})
                 row_medial = [medial_10_scan.text] + medial_10_scan.to_csv() + ['medial']
 

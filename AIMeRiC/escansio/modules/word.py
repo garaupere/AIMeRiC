@@ -228,7 +228,7 @@ class Word:
 
 if __name__ == "__main__":
 
-    sentence = "allunyament"
+    sentence = "postmodernitat"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)

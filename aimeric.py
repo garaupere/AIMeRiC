@@ -263,7 +263,7 @@ def main(nlp):
 
             else:
                 verse = ' '.join(options[0:])
-                scan(nlp, verse)
+                scan(nlp, verse, goal=10)
 
 
 if __name__ == "__main__":

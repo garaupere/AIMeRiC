@@ -277,7 +277,7 @@ class Vers:
               attrs["llicencies"] if attrs["llicencies"] is not None else 'Cap')
 
     @property
-    def save(self) -> Dict[str, Any]:
+    def desa(self) -> Dict[str, Any]:
         """Retorna un diccionari amb la informació del vers"""
         return {
             self.text: {

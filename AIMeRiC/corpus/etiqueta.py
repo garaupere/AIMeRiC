@@ -101,7 +101,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                                         if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
                                             #vers.mostra()  # Imprimeix la metadata del vers
                                             results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
-                                                vers.save)  # Guarda la metadata del vers
+                                                vers.desa)  # Guarda la metadata del vers
                                             rows.append(
                                                 [author.id, author.name, author.born_date, author.death_date,
                                                  author.gender, author.city, author.dialect, author.wiki_id,

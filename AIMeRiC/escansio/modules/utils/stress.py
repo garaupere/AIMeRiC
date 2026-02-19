@@ -151,34 +151,45 @@ def secondary_stress(self):
 
 
 def forced_rhythmic_alternation(self) -> list:
-    """Assigna un accent secundari (2) a la síl·laba que està 2 posicions abans de la síl·laba amb l'accent primari (>1)."""
+    """
+    Alternança rítmica al llarg de tot el mot a partir de l'accent primari, amb asimetria:
+      - esquerra del primari: secundari = 2.0
+      - dreta del primari:   secundari = 1.5
+      - distància senar (1,3,5,...) sempre 0.0
+      - el primari (pes > 2.0) es manté
+    """
     result = deepcopy(self.stress)
-    stressed_syllable = None
-    for syllable in result:
+
+    # Trobar l'índex de l'accent primari
+    idx_primary = None
+    for i, syllable in enumerate(result):
         if syllable.pes > 2.0:
-            #print(f"Accent primari trobat a la síl·laba: {syllable.text} amb pes {syllable.pes}")
-            stressed_syllable = syllable
+            idx_primary = i
             break
-    # Assigna un accent secundari (2) a les síl·labes que estan 2 posicions abans i després de la síl·laba amb l'accent primari
-    if stressed_syllable:
-        index_accent_primari = result.index(stressed_syllable)
-        posicio_anterior = index_accent_primari - 2
-        posicio_posterior = index_accent_primari + 2
 
-        if posicio_anterior >= 0:
-            syllable_anterior = result[posicio_anterior]
-            #print(f"Assignat accent secundari a la síl·laba anterior: {syllable_anterior.text} amb pes {syllable_anterior.pes}")
-            result[posicio_anterior] = Syllable(posicio_anterior, (syllable_anterior.text, 2.0), len(self.stress))
+    if idx_primary is None:
+        self.stress = result
+        return result
 
-        if posicio_posterior < len(result):
-            syllable_posterior = result[posicio_posterior]
-            #print(f"Assignat accent secundari a la síl·laba posterior: {syllable_posterior.text} amb pes {syllable_posterior.pes}")
-            result[posicio_posterior] = Syllable(posicio_posterior, (syllable_posterior.text, 1.5), len(self.stress))
+    for i, syllable in enumerate(result):
+        if i == idx_primary:
+            continue  # mantenim el primari
 
-    #print("Resultat després de l'assignació d'accents secundaris:", [(syllable.text, syllable.pes) for syllable in result])
+        dist = abs(i - idx_primary)
+
+        if dist % 2 == 1:
+            new_weight = 0.0
+        else:
+            # distància parella: secundari
+            if i < idx_primary:
+                new_weight = 2.0
+            else:
+                new_weight = 1.5
+
+        result[i] = Syllable(i, (syllable.text, new_weight), len(self.stress))
+
     self.stress = result
     return result
-
 
 def aforced_rhythmic_alternation(self):
     resta = self.stress
