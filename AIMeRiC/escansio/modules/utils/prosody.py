@@ -585,12 +585,14 @@ class ReglaPrimeraSillabaFinal(ReglaAccent):
         nextnext = sillabes[ctx.index + 2]
 
         # Comprova si les dues següents són àtones
-        if next.pes != PesAccent.ATONA or nextnext.pes != PesAccent.ATONA:
+        if curr.pes < PesAccent.BIVALENT and next.pes == PesAccent.ATONA and nextnext.pes >= PesAccent.SECUNDARI:
+            self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+        elif next.pes != PesAccent.ATONA or nextnext.pes != PesAccent.ATONA:
             return False
 
         # Si la primera síl·laba ha estat desaccentuada o és àtona
         # i les dues següents són àtones, restaura a accent secundari
-        if curr.pes < PesAccent.BIVALENT:  # < 3.0
+        elif curr.pes < PesAccent.BIVALENT:  # < 3.0
             if curr.pes == PesAccent.ATONA:
                 # Restaura de 0 a 2 (accent secundari)
                 self.canvia_pes(ctx, curr, PesAccent.SECUNDARI, words)

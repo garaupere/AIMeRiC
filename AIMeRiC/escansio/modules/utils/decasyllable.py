@@ -58,7 +58,6 @@ def find_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
     return result  # Retorna False si no s'ha trobat cap tall
 
 
-# python
 def tall(self) -> int | None:
     """Aquesta funció aplica el tall al vers decasil·làbic."""
 

@@ -11,6 +11,8 @@ patrons mètrics i rítmics, aplica regles de prosòdia i exporta resultats
 per visualització i serialització.
 
 """
+from copy import deepcopy
+
 from AIMeRiC.escansio.modules.utils.tools import seguent
 
 _author_ = "Pere Garau"
@@ -142,7 +144,8 @@ class Vers:
     def __prosodia__(self) -> None:
         """Càlculs prosòdics addicionals (accents prosòdics, cim màxim)."""
         cim_maxim(self)
-        #if getattr(self, 'ajustat', False):
+        #self.prosodia_original = deepcopy(self)
+
         accents_prosodics(self, debug=False)
         #self.actualitza_pesos()
         #cim_maxim(self)
@@ -200,8 +203,9 @@ class Vers:
         self.__subdivisio__()
         self.__disposicio__()
         self.ajustat = metre_ajustat(self)
-        self.__prosodia__()
-        self.__subdivisio__()
+        if self.ajustat or self.words[-1].stress[-1].pes < 3:
+            self.__prosodia__()
+            self.__subdivisio__()
         self.__patrons__()
         self.__anota__()
         self.__mot_info__()
@@ -277,7 +281,7 @@ class Vers:
               attrs["llicencies"] if attrs["llicencies"] is not None else 'Cap')
 
     @property
-    def save(self) -> Dict[str, Any]:
+    def desa(self) -> Dict[str, Any]:
         """Retorna un diccionari amb la informació del vers"""
         return {
             self.text: {

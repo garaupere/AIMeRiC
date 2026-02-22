@@ -60,7 +60,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
 
     for file in tqdm(os.listdir(corpus_path), desc="Etiquetant el corpus", leave=True, position=0,
                      ncols=80):  # Per cada autor del corpus
-        #print(f'> Etiquetant el corpus de l\'autor {file}...')
+        # print(f'> Etiquetant el corpus de l\'autor {file}...')
         outsiders = []
         author = Author(os.path.join(corpus_path, file))  # Crea un objecte Autor
         author.print_metadata()  # Imprimeix la metadata de l'autor
@@ -99,9 +99,9 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                                 if verse is not None:
                                     try:
                                         if vers.recompte_sillabes_metriques == mode:  # Si el vers té el recompte de síl·labes correcte
-                                            #vers.mostra()  # Imprimeix la metadata del vers
+                                            # vers.mostra()  # Imprimeix la metadata del vers
                                             results_dict['books'][book_title]['poems'][poem_title]['verses'].update(
-                                                vers.save)  # Guarda la metadata del vers
+                                                vers.desa)  # Guarda la metadata del vers
                                             rows.append(
                                                 [author.id, author.name, author.born_date, author.death_date,
                                                  author.gender, author.city, author.dialect, author.wiki_id,
@@ -120,18 +120,44 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
 
         if len(rows) > 99:
             os.makedirs(f"{results_path}json/", exist_ok=True)
-            # Revisa si el fitxer f'{results_path}json/{author.id}.json ja existeix
-            if os.path.exists(f"{results_path}json/{author.id}.json"):
+            json_path = f"{results_path}json/{author.id}.json"
+
+            # Revisa si el fitxer JSON ja existeix
+            if os.path.exists(json_path):
                 # Si ja existeix, afegeix el nou book als books
-                with open(f"{results_path}json/{author.id}.json", 'r', encoding='utf-8') as f:
+                with open(json_path, 'r', encoding='utf-8') as f:
                     existing_data = json.load(f)
                     existing_data['books'].update(results_dict['books'])
-                with open(f"{results_path}json/{author.id}.json", 'w', encoding='utf-8') as f:
+
+                with open(json_path, 'w', encoding='utf-8') as f:
                     json.dump(existing_data, f, indent=4, ensure_ascii=False)
             else:
-                with open(f"{results_path}json/{author.id}.json", 'w',
-                          encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
+                with open(json_path, 'w', encoding='utf-8') as f:  # Guarda els resultats en un fitxer JSON
                     json.dump(results_dict, f, indent=4, ensure_ascii=False)
+
+            # -------------------------
+            # Exportació TEI (1 XML per autor)
+            # IMPORTANT: generam el TEI a partir del JSON FINAL (ja mergejat)
+            # -------------------------
+            try:
+                from AIMeRiC.corpus.modules.tei_xml import export_author_results_dict_to_tei
+
+                os.makedirs(f"{results_path}xml/", exist_ok=True)
+                xml_path = f"{results_path}xml/{author.id}.xml"
+
+                with open(json_path, "r", encoding="utf-8") as f:
+                    final_data = json.load(f)
+
+                export_author_results_dict_to_tei(
+                    final_data,
+                    output_path=xml_path,
+                    versio=versio
+                )
+            except Exception as e:
+                # Si falla l'exportació TEI, no aturam la resta d'exportacions
+                os.makedirs(f"{results_path}log/", exist_ok=True)
+                with open(f"{results_path}log/{author.id}_tei_export_error.log", "a", encoding="utf-8") as f:
+                    f.write(f"{str(e)}\n")
 
             # Comprova si ja existeix el fitxer CSV
             if os.path.exists(f"{results_path}csv/{author.id}.csv"):
@@ -156,13 +182,13 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
             counts = {}
             for value in df['subdivisió']:
                 counts[value] = counts.get(value, 0) + 1
-            #print(counts)
+            # print(counts)
             if '4+6' not in counts:
                 counts['4+6'] = 0
             if '5+5' not in counts:
                 counts['5+5'] = 0
             if "5'+5'" not in counts:
-                counts["5'+5"] = 0
+                counts["5'+5'"] = 0
             if '6+4' not in counts:
                 counts['6+4'] = 0
             if None not in counts:
@@ -179,7 +205,6 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                     f"{author.id};{author.gender};{author.born_date};{author.death_date};{author.city};{author.dialect};{len(rows)}\n")
 
     print(f"Corpus '{corpus_name}' etiquetat!")
-
 
 if __name__ == "__main__":
     # Carrega el model de Spacy en català

@@ -19,7 +19,7 @@ from typing import List, Tuple, Optional, Dict, Any
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.utils.meter import recompte_metric
-from AIMeRiC.escansio.modules.utils.stress import get_stress_index
+from AIMeRiC.escansio.modules.utils.stress import get_stress_index, forced_rhythmic_alternation
 
 # Caràcters vocals (majúscules/minúscules es tracten on calgui)
 _VOWELS = "aeiouyàáèéìíòóùúâêîôûüýÿï"
@@ -180,6 +180,17 @@ def join_syllables(self, syllable1: Syllable, syllable2: Syllable) -> Optional[S
     return syllable1
 
 
+def neutralitza_accents_secundaris(self):
+    """Resol casos de xocs d'accent secundari amb accent primari (24, 42) convertint secundaris a àtones. S'aplica després de la sinèresi."""
+    for word in self.words:
+        stresses = getattr(word, "stress", [])
+        for s in stresses:
+            if s.pes == 2 and any(s2.pes >= 3 and s2.s_index != s.s_index for s2 in stresses):
+                s.pes = 0  # convertir a àtona
+        forced_rhythmic_alternation(word) # aplicar alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
+
+
+
 def split_syllable(self, syllable: Syllable) -> Optional[Tuple[Syllable, Syllable]]:
     """Separa una síl·laba fusionada (amb marcador '_' o ':') en dues síl·labes noves."""
     if not (syllable.fusionada or syllable.triftong):
@@ -222,8 +233,8 @@ def resol_contactes_vocalics(self, best_mode: str):
         return []
 
     best = get_best(best_mode)
-#    if len(best) > 4 and self.recompte_sillabes_metriques - self.objectiu > 4:
-#        return  # Evita aplicar contactes si hi ha massa candidats o la diferència és gran
+    #    if len(best) > 4 and self.recompte_sillabes_metriques - self.objectiu > 4:
+    #        return  # Evita aplicar contactes si hi ha massa candidats o la diferència és gran
     if not best or self.recompte_sillabes_metriques <= self.objectiu:
         return
     diff = self.recompte_sillabes_metriques - self.objectiu
