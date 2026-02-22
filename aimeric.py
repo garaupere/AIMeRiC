@@ -266,6 +266,7 @@ def main(nlp):
                 scan(nlp, verse, goal=10)
 
 
+
 if __name__ == "__main__":
     from cfonts import render
 
