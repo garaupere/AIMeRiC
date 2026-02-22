@@ -1,6 +1,6 @@
 __author__ = "Pere Garau Borràs"
 __copyright__ = "Copyright © 2025, Pere Garau Borràs"
-__version__ = "0.7.8"
+__version__ = "0.7.9"
 
 import spacy
 

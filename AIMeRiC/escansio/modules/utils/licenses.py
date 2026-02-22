@@ -4,7 +4,7 @@ import re
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.word import Word
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
-    best_sineresi
+    best_sineresi, neutralitza_accents_secundaris
 from .stress import get_stress_index, secondary_stress, forced_rhythmic_alternation
 
 
@@ -121,8 +121,7 @@ def sineresi(self, times):
                     if result:
                         word.stress.remove(change[1])
                         word.stress_index = get_stress_index(word)
-                        #secondary_stress(word)
-                        forced_rhythmic_alternation(self)
+                        neutralitza_accents_secundaris(self)
                         counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])
