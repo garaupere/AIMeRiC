@@ -6,13 +6,25 @@ from AIMeRiC.escansio.modules.syllable import Syllable
 
 
 def bivalents(result, cat):
+    """Identifica els mots bivalents i assigna el nivell accentual corresponent segons la categoria gramatical"""
+    secondary = ["ADPa", "DET", 'CCONJ', 'SCONJ']
+    semitonics = ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]
     for syllable in result:
         if syllable[1] == 4.0:
-            if cat in ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]:
-                o_syllable = syllable
-                syllable = (syllable[0], 3.0)
-                result[result.index(o_syllable)] = syllable
-            if cat in ['ADPa', 'DET', 'CCONJ', 'SCONJ']:
+            if cat in semitonics:
+                if cat == 'PRONe':
+                    o_syllable = syllable
+                    syllable = (syllable[0], 2.5)
+                    result[result.index(o_syllable)] = syllable
+                elif cat == 'AUX':
+                    o_syllable = syllable
+                    syllable = (syllable[0], 3.5)
+                    result[result.index(o_syllable)] = syllable
+                else:
+                    o_syllable = syllable
+                    syllable = (syllable[0], 3.0)
+                    result[result.index(o_syllable)] = syllable
+            elif cat in secondary:
                 o_syllable = syllable
                 syllable = (syllable[0], 2.0)
                 result[result.index(o_syllable)] = syllable
@@ -110,7 +122,7 @@ def get_stress(self):
 def secondary_stress(self):
     """
         Assigna un accent secundari (2) a la síl·laba que està 2 posicions abans de la síl·laba amb l'accent primari (>1).
-        A partir de les regles d'Oliva (1992).
+        A partir de les regles d'Oliva (1992). ACTUALMENT NO S'APLICA: COSTÓS I POC EXHAUSTIU.
     """
     """
     if not self.is_compost:

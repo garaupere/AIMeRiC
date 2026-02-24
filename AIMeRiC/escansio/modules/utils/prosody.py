@@ -286,6 +286,7 @@ class ReglaXocAccentsSecundaris(ReglaAccent):
                 self.canvia_pes(ctx, target, PesAccent.ATONA, words)
                 return True
 
+
         # XOCS ENTRE PREV I CURR
         if ctx.prev is not None:
             prev, curr = ctx.prev, ctx.curr
@@ -481,9 +482,9 @@ class ReglaAccentsSecundaris(ReglaAccent):
         if (PesAccent.ATONA < curr.pes <= PesAccent.DESACCENTUADA
                 and next.pes < PesAccent.LLINDAR_SECUNDARI):
             if curr.pes > next.pes:
-                self.canvia_pes(ctx, next, PesAccent.ATONA, words)
+                self.canvia_pes(ctx, next, PesAccent.SECUNDARI_DESACCENTUADA, words)
             else:
-                self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+                self.canvia_pes(ctx, curr, PesAccent.SECUNDARI_DESACCENTUADA, words)
             canvis = True
 
         # Desaccentuada entre àtones
@@ -495,7 +496,7 @@ class ReglaAccentsSecundaris(ReglaAccent):
 
         # Desaccentuada després d'àtona
         if curr.pes < PesAccent.DESACCENTUADA < next.pes:
-            self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+            self.canvia_pes(ctx, curr, PesAccent.SECUNDARI_DESACCENTUADA, words)
             canvis = True
 
         # xXx
@@ -553,6 +554,11 @@ class ReglaPostProcessament(ReglaAccent):
                 self.canvia_pes(ctx, curr, PesAccent.SECUNDARI, words)
                 canvis = True
 
+            if curr.pes >= PesAccent.BIVALENT and (next.pes < PesAccent.BIVALENT and next.pes > PesAccent.ATONA):
+                self.canvia_pes(ctx, next, PesAccent.SECUNDARI_DESACCENTUADA, words)
+                ReglaAccentsSecundaris()
+                canvis = True
+
         return canvis
 
 
@@ -587,6 +593,8 @@ class ReglaPrimeraSillabaFinal(ReglaAccent):
         # Comprova si les dues següents són àtones
         if curr.pes < PesAccent.BIVALENT and next.pes == PesAccent.ATONA and nextnext.pes >= PesAccent.SECUNDARI:
             self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+        elif curr.pes < PesAccent.BIVALENT and next.pes < PesAccent.SECUNDARI <= nextnext.pes:
+            self.canvia_pes(ctx, curr, PesAccent.SECUNDARI_DESACCENTUADA, words)
         elif next.pes != PesAccent.ATONA or nextnext.pes != PesAccent.ATONA:
             return False
 

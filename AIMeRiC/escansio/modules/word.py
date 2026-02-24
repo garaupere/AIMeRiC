@@ -175,7 +175,7 @@ class Word:
         }
 
     def compost(self):
-        """Un mètode per assignar l'accent secundari als mots composts."""
+        """Un mètode per assignar l'accent secundari als mots composts. ACTUALMENT NO S'APLICA, MASSA COSTÓS I POC EXHAUSTIU."""
         original = deepcopy(self.stress)
         # Cream un índex de divisió del mot a la meitat + una síl·laba
         div_index = round((self.n_syllables / 2))
@@ -228,7 +228,7 @@ class Word:
 
 if __name__ == "__main__":
 
-    sentence = " doler-me"
+    sentence = "tot senyal"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)
