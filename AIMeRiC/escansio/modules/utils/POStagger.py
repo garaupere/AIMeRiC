@@ -5,7 +5,7 @@ import string
 
 from spacy.tokens import Doc, Token
 
-from AIMeRiC.escansio.modules.utils.preprocess import clean_text
+from AIMeRiC.escansio.modules.utils.preproc import preproc_text
 
 
 def correct_spacy(doc):
@@ -248,7 +248,7 @@ def posTagger(nlp, text: str):
     Returns:
         list: Una llista de SpaCy Token objects amb les etiquetes morfosintàctiques corregides.
     """
-    text = clean_text(text)
+    text = preproc_text(text)
     text = ortho_repair(text)
     doc = nlp(text)
     doc = ocr_errors(doc)

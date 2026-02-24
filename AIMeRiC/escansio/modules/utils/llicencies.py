@@ -4,8 +4,8 @@ import re
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.word import Word
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
-    best_sineresi, neutralitza_accents_secundaris
-from .stress import get_stress_index, secondary_stress, forced_rhythmic_alternation
+    millor_sineresi, neutralitza_accents_secundaris
+from .accentuacio import get_index_accent, secondary_stress, accent_secundari
 
 
 def llicencies(self, permit, doc) -> list[str] | None:
@@ -109,7 +109,7 @@ def sineresi(self, times):
     Example: his.tò.ri.a -> his.tò.ria
     """
     counter = 0  # Comptador de vegades que s'ha aplicat la sineresi
-    best = best_sineresi(self)
+    best = millor_sineresi(self)
     if best:
         diff = self.recompte_sillabes_metriques - self.objectiu
         while diff > 0 and best and counter < times:
@@ -120,7 +120,7 @@ def sineresi(self, times):
                     result.text = re.sub(r"_", "", result.text)
                     if result:
                         word.stress.remove(change[1])
-                        word.stress_index = get_stress_index(word)
+                        word.stress_index = get_index_accent(word)
                         neutralitza_accents_secundaris(self)
                         counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu

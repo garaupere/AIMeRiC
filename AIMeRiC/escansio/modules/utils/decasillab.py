@@ -22,7 +22,7 @@ from .fonetica_sintactica import split_syllable
 from .tools import seguent
 
 
-def find_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
+def troba_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
     """Aquesta funció cerca un tall en un vers donat i en substitueix el pes accentual per un cim màxim (5)."""
 
     result = False  # Resultat de la cerca
@@ -70,7 +70,7 @@ def tall(self) -> int | None:
     i = 0
     while i < len(talls):
         tall_actual = talls[i]
-        cerca = find_tall(self, tall_actual, True)
+        cerca = troba_tall(self, tall_actual, True)
         if cerca is True:
             # Tall vàlid trobat
             pos = tall_actual + 1
@@ -78,7 +78,7 @@ def tall(self) -> int | None:
 
         elif cerca == 'not-best' and i < len(talls):
             # No és el millor tall, prova el següent
-            cerca_nonBest = find_tall(self, tall_actual, False)
+            cerca_nonBest = troba_tall(self, tall_actual, False)
 
             if cerca_nonBest is True:
 
@@ -96,7 +96,7 @@ def tall(self) -> int | None:
     i = 0
     while i < len(talls):
         tall_actual = talls[i]
-        cerca = find_tall(self, tall_actual, False)
+        cerca = troba_tall(self, tall_actual, False)
         if cerca is True:
             word_at_tall = _get_word_at_position(self, tall_actual)
             next_word = _get_next_word_at_position(self, tall_actual)

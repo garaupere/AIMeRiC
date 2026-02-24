@@ -19,7 +19,7 @@ from typing import List, Tuple, Optional, Dict, Any
 
 from AIMeRiC.escansio.modules.syllable import Syllable
 from AIMeRiC.escansio.modules.utils.meter import recompte_metric
-from AIMeRiC.escansio.modules.utils.stress import get_stress_index, forced_rhythmic_alternation
+from AIMeRiC.escansio.modules.utils.accentuacio import get_index_accent, accent_secundari
 
 # Caràcters vocals (majúscules/minúscules es tracten on calgui)
 _VOWELS = "aeiouyàáèéìíòóùúâêîôûüýÿï"
@@ -42,7 +42,7 @@ def max_pes(syllable1: Syllable, syllable2: Syllable) -> float:
     return syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
 
 
-def score(syllable: Syllable, vers: List[Syllable]) -> int:
+def puntua(syllable: Syllable, vers: List[Syllable]) -> int:
     """Calcula una puntuació heurística per a un candidat de fusió."""
     pts = 0
     f = syllable.fono_info
@@ -80,7 +80,7 @@ def score(syllable: Syllable, vers: List[Syllable]) -> int:
     return pts
 
 
-def score_diftong(syll1: Syllable, syll2: Syllable) -> int:
+def puntua_diftong(syll1: Syllable, syll2: Syllable) -> int:
     """Puntuació addicional basada en tipus vocàlic per diftong/sineresi."""
     if syll1.fusionada or syll2.fusionada:
         return 0
@@ -95,7 +95,7 @@ def score_diftong(syll1: Syllable, syll2: Syllable) -> int:
     return 0
 
 
-def best_contacte_vocalic(self) -> List[Tuple[Syllable, Syllable, int]]:
+def millor_contacte_vocalic(self) -> List[Tuple[Syllable, Syllable, int]]:
     """Retorna candidats de contacte vocàlic amb puntuació ordenada (descendent)."""
     vers = [s for w in self.words for s in getattr(w, "stress", [])]
     candidats: List[Tuple[Syllable, Syllable, int]] = []
@@ -106,8 +106,8 @@ def best_contacte_vocalic(self) -> List[Tuple[Syllable, Syllable, int]]:
         s1 = vers[i]
         s2 = vers[i + 1]
         if s1.last and s2.first and s1.ends_with_vowel and s2.starts_with_vowel:
-            pts = score(s1, vers) + score(s2, vers)
-            pts = pts * vallverdu_score(s1, s2) + score_diftong(s1, s2)
+            pts = puntua(s1, vers) + puntua(s2, vers)
+            pts = pts * puntua_vallverdu(s1, s2) + puntua_diftong(s1, s2)
             if s1.fusionada or s2.fusionada:
                 pts -= 4
             if pts > 0:
@@ -118,7 +118,7 @@ def best_contacte_vocalic(self) -> List[Tuple[Syllable, Syllable, int]]:
     return candidats
 
 
-def vallverdu_score(syllable1: Syllable, syllable2: Syllable) -> int:
+def puntua_vallverdu(syllable1: Syllable, syllable2: Syllable) -> int:
     """Regles basades en Vallverdú per decidir el tipus de contacte (0/1/2)."""
     if not (syllable1.ends_with_vowel and syllable2.starts_with_vowel):
         return 0
@@ -187,7 +187,7 @@ def neutralitza_accents_secundaris(self):
         for s in stresses:
             if s.pes == 2 and any(s2.pes >= 3 and s2.s_index != s.s_index for s2 in stresses):
                 s.pes = 0  # convertir a àtona
-        forced_rhythmic_alternation(word) # aplicar alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
+        accent_secundari(word) # aplicar alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
 
 
 
@@ -227,9 +227,9 @@ def resol_contactes_vocalics(self, best_mode: str):
 
     def get_best(mode: str):
         if mode == "natural":
-            return best_contacte_vocalic(self)
+            return millor_contacte_vocalic(self)
         if mode == "sinalefa":
-            return best_sinalefa(self)
+            return millor_sinalefa(self)
         return []
 
     best = get_best(best_mode)
@@ -255,17 +255,17 @@ def resol_contactes_vocalics(self, best_mode: str):
                 # Quatre mètodes per actualitzar llistes de síl·labes/paraules
                 if word.n_syllables == 1 and next_word.n_syllables == 1:  # Dos mots monosíl·labs: unir i assignar a un dels dos, eliminar l'altre
                     next_word.stress[0] = res
-                    next_word.stress_index = get_stress_index(next_word)
+                    next_word.stress_index = get_index_accent(next_word)
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
                 elif word.n_syllables == 1 and next_word.n_syllables > 1:  # El primer és monosíl·lab i el segon polisíl·lab: assignar nova síl·laba al segon, eliminar la del primer
                     next_word.stress[0] = res
-                    next_word.stress_index = get_stress_index(next_word)
+                    next_word.stress_index = get_index_accent(next_word)
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
                 elif word.n_syllables > 1 and next_word.n_syllables == 1:  # El primer és polisíl·lab i el segon monosíl·lab: assignar nova síl·laba al primer, eliminar la del segon
                     word.stress[-1] = res
-                    word.stress_index = get_stress_index(word)
+                    word.stress_index = get_index_accent(word)
                     word.n_syllables = len(word.stress)
                     del self.words[wi + 1]
                 else:
@@ -274,8 +274,8 @@ def resol_contactes_vocalics(self, best_mode: str):
                     word.stress[-1].ends_with_vowel = word.stress[-1].vowel_end()
                     word.n_syllables = len(word.stress)
                     del next_word.stress[0]
-                    word.stress_index = get_stress_index(word)
-                    next_word.stress_index = get_stress_index(next_word)
+                    word.stress_index = get_index_accent(word)
+                    next_word.stress_index = get_index_accent(next_word)
                     if next_word.stress:
                         next_word.stress[0].starts_with_vowel = next_word.stress[0].vowel_start()
                         next_word.n_syllables = len(next_word.stress)
@@ -385,7 +385,7 @@ def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
     return result
 
 
-def best_sinalefa(self) -> List[Tuple[Syllable, Syllable, int]]:
+def millor_sinalefa(self) -> List[Tuple[Syllable, Syllable, int]]:
     """Candidats basats en sinalefa (molt similar a best_contacte_vocalic)."""
     candidats = []
     vers = [s for w in self.words for s in getattr(w, "stress", [])]
@@ -394,13 +394,13 @@ def best_sinalefa(self) -> List[Tuple[Syllable, Syllable, int]]:
         s1 = vers[i]
         s2 = vers[i + 1]
         if s1.last and s2.first and s1.ends_with_vowel and s2.starts_with_vowel:
-            pts = score(s1, vers) + score(s2, vers)
+            pts = puntua(s1, vers) + puntua(s2, vers)
             candidats.append((s1, s2, pts))
     candidats.sort(key=lambda x: x[2], reverse=True)
     return candidats
 
 
-def best_sineresi(self) -> List[Tuple[Syllable, Syllable, int]]:
+def millor_sineresi(self) -> List[Tuple[Syllable, Syllable, int]]:
     """Candidats per sineresi."""
     candidats = []
     for w in self.words:
@@ -408,7 +408,7 @@ def best_sineresi(self) -> List[Tuple[Syllable, Syllable, int]]:
             s1 = s
             s2 = w.stress[s.s_index + 1] if s.s_index + 1 < len(w.stress) else None
             if s2 and s1.ends_with_vowel and s2.starts_with_vowel:
-                pts = score(s1, w.stress) + score(s2, w.stress) + score_diftong(s1, s2)
+                pts = puntua(s1, w.stress) + puntua(s2, w.stress) + puntua_diftong(s1, s2)
                 s1.fusionable = pts
                 candidats.append((s1, s2, pts))
     candidats.sort(key=lambda x: x[2], reverse=True)

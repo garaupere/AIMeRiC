@@ -7,9 +7,9 @@ import spacy
 
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.utils.fonologia import starts_with_vowel, ends_with_vowel
-from AIMeRiC.escansio.modules.utils.stress import get_stress, get_stress_index, secondary_stress, \
-    forced_rhythmic_alternation
-from AIMeRiC.escansio.modules.utils.syllabify import hyphenate_word as syllabify
+from AIMeRiC.escansio.modules.utils.accentuacio import accentua, get_index_accent, secondary_stress, \
+    accent_secundari
+from AIMeRiC.escansio.modules.utils.sillabifica import hyphenate_word as syllabify
 
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
@@ -59,14 +59,14 @@ class Word:
         self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?)
         self.word_ment = self.word_ment()
         self.n_syllables = len(self.syllables)  # Número de síl·labes
-        self.stress = get_stress(self)
-        self.stress_index = get_stress_index(self)
+        self.stress = accentua(self)
+        self.stress_index = get_index_accent(self)
         self.is_compost = False
         #if self.stress_index is not None and self.stress_index > 2:
         #    self.compost()
 
         #secondary_stress(self)
-        forced_rhythmic_alternation(self)
+        accent_secundari(self)
         self.starts_with_vowel = starts_with_vowel(self)
         self.ends_with_vowel = ends_with_vowel(self)
         self.plain_syllables = self.plain()  # Afegir a un mòdul independent: escansio/utils/representation.py
@@ -189,8 +189,8 @@ class Word:
                               doc2[0].pos_)  # Cream el primer component del mot compost.
                 word_1.syllables = self.syllables[
                     0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
-                get_stress(word_1)
-                get_stress_index(word_1)
+                accentua(word_1)
+                get_index_accent(word_1)
                 # print([(syl.text, syl.pes) for syl in word_1.stress])
                 for syl in word_1.stress:  # Assignam el valor d'accent secundari a l'accent primari del primer component del mot compost.
                     if int(syl.pes) > 2:
@@ -203,8 +203,8 @@ class Word:
                                   doc3[0].pos_)  # Cream el segon component del mot compost.
                     word_2.syllables = self.syllables[
                         div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
-                    get_stress(word_2)
-                    get_stress_index(word_2)
+                    accentua(word_2)
+                    get_index_accent(word_2)
                     # print([(syl.text, syl.pes) for syl in word_2.stress])
                     self.stress = word_1.stress + word_2.stress  # Unim els dos components del mot compost en un sol mot (el mot que s'està creant).
                     self.is_compost = True
@@ -215,7 +215,7 @@ class Word:
                     self.is_compost = False
                     self.stress = original
                     #secondary_stress(self)
-                    forced_rhythmic_alternation(self)
+                    accent_secundari(self)
                     break
                 else:
                     self.is_compost = True

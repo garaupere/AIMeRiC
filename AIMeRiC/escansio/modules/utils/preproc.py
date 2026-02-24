@@ -2,7 +2,7 @@
 import re
 
 
-def clean_text(line: str) -> str:
+def preproc_text(line: str) -> str:
     """Una funció per netejar el text d'entrada abans de l'anàlisi automàtica de l'escansió.
     Args:
         line (str): La línia de text a netejar.
