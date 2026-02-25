@@ -5,7 +5,7 @@ from AIMeRiC.escansio.modules.sillaba import Sillaba
 from AIMeRiC.escansio.modules.mot import Mot
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
     millor_sineresi, neutralitza_accents_secundaris
-from .accentuacio import get_index_accent, secondary_stress, accent_secundari
+from .accentuacio import get_index_accent
 
 
 def llicencies(self, permit, doc) -> list[str] | None:

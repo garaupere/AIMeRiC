@@ -197,10 +197,14 @@ def main(nlp):
             if len(options) < 3:
                 if options[0] == '-comp':
                     corpus = options[1]
-                    try:
-                        compile(raw_files_path, corpus)
-                    except FileNotFoundError:
-                        print('El corpus seleccionat no existeix.')
+                    if corpus == 'DecaCo':
+                        print(Fore.RED + "Està prohibit compliar aquest corpus!" + Fore.RESET)
+                        exit()
+                    else:
+                        try:
+                            compile(raw_files_path, corpus)
+                        except FileNotFoundError:
+                            print('El corpus seleccionat no existeix.')
 
                 elif options[0] == '-etiq':
                     corpus = options[1]

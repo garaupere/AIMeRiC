@@ -64,7 +64,6 @@ class Mot:
         #if self.stress_index is not None and self.stress_index > 2:
         #    self.compost()
 
-        #secondary_stress(self)
         accent_secundari(self)
         self.starts_with_vowel = starts_with_vowel(self)
         self.ends_with_vowel = ends_with_vowel(self)
@@ -213,7 +212,6 @@ class Mot:
                 if 2.0 not in [syl.pes for syl in self.stress]:
                     self.is_compost = False
                     self.stress = original
-                    #secondary_stress(self)
                     accent_secundari(self)
                     break
                 else:

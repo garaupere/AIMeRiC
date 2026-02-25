@@ -46,6 +46,11 @@ def clean_results_folders(results_path):
         for f in files:
             if f.endswith(".log"):
                 os.remove(f)
+    if os.path.exists(f"{results_path}/xml/"):
+        files = glob.glob(f"{results_path}/xml/*")
+        for f in files:
+            if f.endswith(".xml"):
+                os.remove(f)
 
 
 def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode: int = 10):
