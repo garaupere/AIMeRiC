@@ -1,5 +1,5 @@
 """Un mòdul per gestionar funcions prosòdiques del vers"""
-from .meter import recompte_metric
+from .metre import recompte_metric
 
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Callable, Any, Generator, Dict

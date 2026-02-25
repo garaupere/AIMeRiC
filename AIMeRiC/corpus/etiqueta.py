@@ -9,10 +9,10 @@ import pandas as pd
 import spacy
 from tqdm import tqdm
 
-from AIMeRiC.corpus.modules.author import Author
-from AIMeRiC.corpus.modules.book import Book
+from AIMeRiC.corpus.modules.autor import Autor
+from AIMeRiC.corpus.modules.obra import Obra
 from AIMeRiC.corpus.modules.getUSB import getUSB
-from AIMeRiC.corpus.modules.poem import Poem
+from AIMeRiC.corpus.modules.poema import Poema
 from AIMeRiC.escansio.escansor import escaneja
 
 usb = getUSB()
@@ -62,7 +62,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                      ncols=80):  # Per cada autor del corpus
         # print(f'> Etiquetant el corpus de l\'autor {file}...')
         outsiders = []
-        author = Author(os.path.join(corpus_path, file))  # Crea un objecte Autor
+        author = Autor(os.path.join(corpus_path, file))  # Crea un objecte Autor
         author.print_metadata()  # Imprimeix la metadata de l'autor
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
@@ -77,13 +77,13 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
 
         rows = []
         for book_title in author.books:  # Per a cada llibre de l'autor
-            book = Book(book_title, author.content)  # Crea un objecte Llibre
+            book = Obra(book_title, author.content)  # Crea un objecte Llibre
             book.print_metadata()  # Imprimeix la metadata del llibre
             results_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
 
             for poem_title in book.poems:  # Per cada poema del llibre
                 if book.poems[poem_title]:  # Si el poema no és buit
-                    poem = Poem(poem_title, book.book_content)  # Crea un objecte Poema
+                    poem = Poema(poem_title, book.book_content)  # Crea un objecte Poema
                     poem.print_metadata()  # Imprimeix la metadata del poema
                     results_dict['books'][book_title]['poems'].update(
                         poem.save_metadata())  # Guarda la metadata del poema

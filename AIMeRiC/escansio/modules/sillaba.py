@@ -1,12 +1,12 @@
 """
-Mòdul: syllable.py
+Mòdul: sillaba.py
 
 Classe principal:
-- Syllable: representa una síl·laba amb metadades fonològiques i propietats
+- Sillaba: representa una síl·laba amb metadades fonològiques i propietats
   útils per a l'escansió mètrica (pes, tonicitat, diftong, triftong, límits vocàlics).
 """
 __autor__ = "Pere Garau"
-__all__ = ["Syllable"]
+__all__ = ["Sillaba"]
 
 import re
 from copy import deepcopy
@@ -14,7 +14,7 @@ from copy import deepcopy
 from AIMeRiC.escansio.modules.utils.fonologia import get_vowel
 
 
-class Syllable:
+class Sillaba:
     def __init__(self, index: int, syllable: tuple, len_word: int, fusion_direction=None):
         self.text = syllable[0]
         self.s_index = index
@@ -28,8 +28,8 @@ class Syllable:
         self.fusionable = 0
         self.triftong = True if re.search("._._", self.text) else False
         self.fusionada = True if fusion_direction is not None else False or True if self.triftong else False
-        self.starts_with_vowel = self.vowel_start()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
-        self.ends_with_vowel = self.vowel_end()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Word
+        self.starts_with_vowel = self.vowel_start()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Mot
+        self.ends_with_vowel = self.vowel_end()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Mot
         self.first = True if self.s_index == 0 else False
         self.last = True if self.s_index == self.len_word - 1 else False
         self.has_PRONe = True if self.text.endswith('-') else False
@@ -112,6 +112,6 @@ class Syllable:
 
 
 if __name__ == '__main__':
-    syl = Syllable(0, ('-hi', 4.0), 1)
+    syl = Sillaba(0, ('-hi', 4.0), 1)
     syl.print_metadata()
 

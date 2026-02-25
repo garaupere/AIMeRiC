@@ -1,12 +1,12 @@
 """
-Mòdul: verse.py
+Mòdul: vers.py
 
 Classe principal:
 - Vers: gestiona l'escansió mètrica i l'anàlisi prosòdic d'un vers.
 
 Descripció breu:
 Aquest mòdul processa un vers proporcionat a través d'un pipeline spaCy,
-construeix objectes Word per cada token, resol contactes vocàlics, calcula
+construeix objectes Mot per cada token, resol contactes vocàlics, calcula
 patrons mètrics i rítmics, aplica regles de prosòdia i exporta resultats
 per visualització i serialització.
 
@@ -30,12 +30,12 @@ from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, e
     scansion_array
 from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.utils.llicencies import llicencies
-from AIMeRiC.escansio.modules.utils.meter import recompte_metric, metre_ajustat, abstract_pattern, \
+from AIMeRiC.escansio.modules.utils.metre import recompte_metric, metre_ajustat, abstract_pattern, \
     maximal_comparison_pattern
 from AIMeRiC.escansio.modules.utils.prosodia import accents_prosodics, cim_maxim
 from AIMeRiC.escansio.modules.utils.syntax import encavalcament
-from AIMeRiC.escansio.modules.utils.word_info import quants_mots, safe_words
-from AIMeRiC.escansio.modules.word import Word
+from AIMeRiC.escansio.modules.utils.mot_info import quants_mots, safe_words
+from AIMeRiC.escansio.modules.mot import Mot
 
 
 class Vers:
@@ -58,7 +58,7 @@ class Vers:
         self.encavalcament = encavalcament(self.text)
         self._minimal = minimal
 
-        # Preparació bàsica (etiquetatge i construcció d'objectes Word)
+        # Preparació bàsica (etiquetatge i construcció d'objectes Mot)
         self.__prepara__(nlp)
 
         # Resol contactes i calcular si està ajustat (un cop després de preparar)
@@ -91,10 +91,10 @@ class Vers:
             self.__anota__()
 
     def __prepara__(self, nlp) -> None:
-        """Prepara el vers: etiquetatge POS, crear objects Word i neteja inicial."""
+        """Prepara el vers: etiquetatge POS, crear objects Mot i neteja inicial."""
         self.pos = posTagger(nlp, self.text)
 
-        self.words: List[Word] = [Word(token, len(self.pos)) for token in self.pos]
+        self.words: List[Mot] = [Mot(token, len(self.pos)) for token in self.pos]
         safe_words(self)
         self.original = self.words.copy()
         self.__uneix_mots__()  # crea self.nomes_sillabes

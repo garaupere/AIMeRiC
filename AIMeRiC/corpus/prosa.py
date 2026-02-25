@@ -6,10 +6,10 @@ import time
 import pandas as pd
 import spacy
 
-from AIMeRiC.corpus.modules.author import Author
-from AIMeRiC.corpus.modules.book import Book
+from AIMeRiC.corpus.modules.autor import Autor
+from AIMeRiC.corpus.modules.obra import Obra
 from AIMeRiC.corpus.modules.getUSB import getUSB
-from AIMeRiC.corpus.modules.poem import Poem
+from AIMeRiC.corpus.modules.poema import Poema
 from AIMeRiC.escansio.escansor import escaneja, escaneja_minim
 from AIMeRiC.escansio.modules.utils import prose
 
@@ -97,15 +97,15 @@ def paragrafs_prosa(nlp, text, goal):
 
 def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
     global corpus_dict, rows
-    author = Author(file_path)  # Crea un objecte Autor
+    author = Autor(file_path)  # Crea un objecte Autor
     corpus_dict = author.save_metadata()  # Guarda la metadata de l'autor
     rows = []
     for book_title in author.books:  # Per a cada llibre de l'autor
-        book = Book(book_title, author.content)  # Crea un objecte Llibre
+        book = Obra(book_title, author.content)  # Crea un objecte Llibre
         corpus_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
         for poem_title in book.poems:  # Per cada poema del llibre
             if book.poems[poem_title]:  # Si el poema no és buit
-                pagina = Poem(poem_title, book.book_content)  # Crea un objecte Poema
+                pagina = Poema(poem_title, book.book_content)  # Crea un objecte Poema
                 corpus_dict['books'][book_title]['poems'].update(pagina.save_metadata())
                 for paragraf in pagina.verses:  # Per cada vers del poema
                     if isinstance(paragraf, str) and len(paragraf) > 20:

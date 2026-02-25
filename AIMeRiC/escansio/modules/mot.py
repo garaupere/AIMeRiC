@@ -1,4 +1,4 @@
-"""A module for the Word class."""
+"""El mòdul de la classe 'Mot'."""
 import re
 import time
 from copy import deepcopy
@@ -7,14 +7,13 @@ import spacy
 
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.utils.fonologia import starts_with_vowel, ends_with_vowel
-from AIMeRiC.escansio.modules.utils.accentuacio import accentua, get_index_accent, secondary_stress, \
-    accent_secundari
+from AIMeRiC.escansio.modules.utils.accentuacio import accentua, get_index_accent, accent_secundari
 from AIMeRiC.escansio.modules.utils.sillabifica import hyphenate_word as syllabify
 
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
 
-class Word:
+class Mot:
     """Aquesta classe representa una paraula amb les seves característiques."""
 
     def __init__(self, token, length):
@@ -185,8 +184,8 @@ class Word:
             if not doc2[0].is_oov and doc2[0].pos_ in ["NOUN", "VERB", "ADV",
                                                        "ADJ",
                                                        "ADP"]:  # Si el mot no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
-                word_1 = Word(''.join(self.syllables[0:div_index]),
-                              doc2[0].pos_)  # Cream el primer component del mot compost.
+                word_1 = Mot(''.join(self.syllables[0:div_index]),
+                             doc2[0].pos_)  # Cream el primer component del mot compost.
                 word_1.syllables = self.syllables[
                     0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                 accentua(word_1)
@@ -199,8 +198,8 @@ class Word:
                 if not doc3[0].is_oov and doc3[0].pos_ in ["NOUN", "VERB", "ADV",
                                                            "ADJ",
                                                            "ADP"]:  # Si el segon component del mot compost no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
-                    word_2 = Word(''.join(self.syllables[div_index:]),
-                                  doc3[0].pos_)  # Cream el segon component del mot compost.
+                    word_2 = Mot(''.join(self.syllables[div_index:]),
+                                 doc3[0].pos_)  # Cream el segon component del mot compost.
                     word_2.syllables = self.syllables[
                         div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
                     accentua(word_2)
@@ -234,7 +233,7 @@ if __name__ == "__main__":
     doc = posTagger(nlp, sentence)
     print(doc)
     for token in doc:
-        word = (Word(token, len(doc)))
+        word = (Mot(token, len(doc)))
         word.print_metadata()
         print(word.save_metadata())
     print(time.time() - start)

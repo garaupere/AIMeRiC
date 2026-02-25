@@ -4,7 +4,7 @@ __version__ = "0.7.9"
 
 import spacy
 
-from AIMeRiC.escansio.modules.verse import Vers
+from AIMeRiC.escansio.modules.vers import Vers
 
 
 def escaneja(nlp, verse: str, goal: int, permet_llicencies: bool = True) -> Vers | None:

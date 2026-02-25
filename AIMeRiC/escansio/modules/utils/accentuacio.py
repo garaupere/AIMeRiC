@@ -2,7 +2,7 @@
 import re
 from copy import deepcopy
 
-from AIMeRiC.escansio.modules.syllable import Syllable
+from AIMeRiC.escansio.modules.sillaba import Sillaba
 
 
 def bivalents(result, cat):
@@ -93,9 +93,9 @@ def accentua(self):
             if self.word_ment is not None:
                 w_ment = result + [("ment", 4.0)]
                 w_ment = resol_xoc_ment(w_ment)
-                return [Syllable(0, w_ment[0], 2), Syllable(1, w_ment[1], 2)]
+                return [Sillaba(0, w_ment[0], 2), Sillaba(1, w_ment[1], 2)]
 
-            return [Syllable(0, result[0], 1)]
+            return [Sillaba(0, result[0], 1)]
 
         elif n >= 2:
             """Si el mot té dues o més de dues síl·labes"""
@@ -111,7 +111,7 @@ def accentua(self):
         result = result + [("ment", 4.0)]
         result = resol_xoc_ment(result)
         self.stress = result
-    result = [Syllable(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
+    result = [Sillaba(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
 
     if clean:
         result[-1].text = result[-1].text + pronoun
@@ -154,7 +154,7 @@ def accent_secundari(self) -> list:
             else:
                 new_weight = 1.5
 
-        result[i] = Syllable(i, (syllable.text, new_weight), len(self.stress))
+        result[i] = Sillaba(i, (syllable.text, new_weight), len(self.stress))
 
     self.stress = result
     return result
