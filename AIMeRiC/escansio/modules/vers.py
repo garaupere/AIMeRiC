@@ -157,6 +157,7 @@ class Vers:
     def __mot_info__(self) -> None:
         """Nombre de mots i distribució respecte al còlon (informació de quants_mots)."""
         self.n_mots = len(self.original)
+        self.l_mots = [len(word.stress) for word in self.original] # Longitud sil·làbica original de cada mot
         qm = quants_mots(self)
         # quants_mots pot retornar una tupla; usem indices amb seguretat
         self.mots_colon1 = qm[0] if len(qm) > 0 else 0
@@ -248,6 +249,7 @@ class Vers:
             "ajustat": getattr(self, 'ajustat', None),
             "subdivisio": getattr(self, 'subdivisio', None),
             "n_mots": getattr(self, 'n_mots', None),
+            "l_mots": getattr(self, 'l_mots', None),
             "mots_colon1": getattr(self, 'mots_colon1', None),
             "mots_colon2": getattr(self, 'mots_colon2', None),
             "llicencies": getattr(self, 'llicencies', None),
@@ -275,6 +277,7 @@ class Vers:
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Subdivisió:",
               attrs["subdivisio"] if attrs["subdivisio"] is not None else 'Cap')
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Número de mots:", attrs["n_mots"])
+        print(Fore.CYAN, f"\t➥", Fore.RESET, f"Longitud sil·làbica dels mots:", attrs["l_mots"])
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Mots al primer colon:", attrs["mots_colon1"])
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Mots al segon colon:", attrs["mots_colon2"])
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Llicències:",
@@ -295,6 +298,7 @@ class Vers:
                 "subdivisió": getattr(self, 'subdivisio', None),
                 "llicències": getattr(self, 'llicencies', None),
                 "mots": getattr(self, 'n_mots', None),
+                "l_mots": getattr(self, 'l_mots', None),
                 "mots al còlon 1": getattr(self, 'mots_colon1', None),
                 "mots al còlon 2": getattr(self, 'mots_colon2', None),
                 "cv_info": getattr(self, 'contactes_vocalics', None),
@@ -321,6 +325,7 @@ class Vers:
             getattr(self, 'subdivisio', None),
             getattr(self, 'llicencies', None),
             getattr(self, 'n_mots', None),
+            getattr(self, 'l_mots', None),
             getattr(self, 'mots_colon1', None),
             getattr(self, 'mots_colon2', None),
             str(getattr(self, 'patro_metric', '')),
@@ -339,6 +344,7 @@ class Vers:
                 "sillabes_metriques": getattr(self, 'sillables_metriques', None),
                 "sillabes_extrametriques": getattr(self, 'recompte_sillabes_extrametriques', None),
                 "n_words": getattr(self, 'n_mots', None),
+                "l_words": getattr(self, 'l_mots', None),
                 "comparative_pattern": getattr(self, 'patro_ritmic', None),
                 "array": [[syllable.save_metadata() for syllable in mot.stress] for mot in getattr(self, 'words', [])]
             }
