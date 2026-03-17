@@ -156,7 +156,7 @@ class Vers:
 
     def __mot_info__(self) -> None:
         """Nombre de mots i distribució respecte al còlon (informació de quants_mots)."""
-        self.n_mots = len(self.words)
+        self.n_mots = len(self.original)
         qm = quants_mots(self)
         # quants_mots pot retornar una tupla; usem indices amb seguretat
         self.mots_colon1 = qm[0] if len(qm) > 0 else 0
@@ -320,6 +320,7 @@ class Vers:
             getattr(self, 'recompte_sillabes_extrametriques', None),
             getattr(self, 'subdivisio', None),
             getattr(self, 'llicencies', None),
+            getattr(self, 'n_mots', None),
             getattr(self, 'mots_colon1', None),
             getattr(self, 'mots_colon2', None),
             str(getattr(self, 'patro_metric', '')),
