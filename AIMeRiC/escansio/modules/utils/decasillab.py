@@ -36,7 +36,7 @@ def troba_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
 
             if detect_nonBest:
 
-                if self.nomes_sillabes[tall].pes < 4:  # Si l'accent no és principal
+                if 4 > self.nomes_sillabes[tall].pes >= 3:  # Si l'accent no és principal
 
                     return 'not-best'  # Retorna 'not-best' per indicar que no és el millor cas
 

@@ -20,7 +20,8 @@ class Mot:
         self.w_index = token.i
         self.lower = token.lower_
         self.verse_wlength = length
-        self.text = token.text
+        self.text = token.text.replace("-", "")
+        self.original_text = deepcopy(token.text)
 
         # helper to read extension safely
         def ext(name):
@@ -31,6 +32,11 @@ class Mot:
 
         # prefer corrected values stored in token._.* extensions, fallback to token attributes
         self.pos_ = getattr(token, "pos_", None) or ext("upos_corr")
+        if '-' in self.original_text:
+            if '-' in self.original_text[0]:
+                self.pos_ = 'PRONe'
+            elif '-' in self.original_text[-1]:
+                self.has_PRONe = True
         self.dep_ = getattr(token, "dep_", None) or ext("dep_corr")
         self.lemma_ = getattr(token, "lemma_", None) or ext("lemma_corr")
         self.head = getattr(token, "head", None) or ext("head_corr")
@@ -225,7 +231,7 @@ class Mot:
 
 if __name__ == "__main__":
 
-    sentence = "tot senyal"
+    sentence = "saber-te"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)

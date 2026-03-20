@@ -196,9 +196,9 @@ def spacy_asyllabic(doc):
     asyllabic_L = ["d'", "l'", "s'", "m'", "n'", "t'", "qu'", "qu", "qu·", "d", "p", "L", "m·", "t·", "l·", "s·", "n·",
                    "l'", "ll'", "ll·", "c'", "c·", "[^aàáeéèíìióòóúùuüïâêîôûyý]['·]"]
     asyllabic_R = ["'ns", "'ns", "'l", "'m", "'n", "'s", "'ls", "'t", "'ts", "l", "ll", "lls", "'ll", "'lls", "ls", "s",
-                   "·ns", "·l", "·ll", "·lls", "·m", "·n", "·s", "·ls", "·t", "·ts", "·ns", "·y", '-te', '-me', '-se',
-                   '-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li', '-hi'
-                   '-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
+                   "·ns", "·l", "·ll", "·lls", "·m", "·n", "·s", "·ls", "·t", "·ts", "·ns", "·y"]#,'-te', '-me', '-se',
+                   #'-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li', '-hi'
+                   #'-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
 
     new_doc = [(text, pos_, dep_, lemma_, morph, head) for text, pos_, dep_, lemma_, morph, head in doc]
     i = 0
@@ -239,6 +239,25 @@ def inicials(text: str):
     return ' '.join([replacements[word] if word in replacements else word for word in text.split()])
 
 
+def prones(doc):
+
+    def previous_token(token, doc):
+        """Comprova si el token anterior existeix i retorna'l, sinó retorna None."""
+        index = doc.index(token)
+        if index > 0:
+            return doc[index - 1]
+        return None
+    for token in doc:
+        if '-' in token[0]:
+            if token[0].startswith('-'):
+                token[1] = 'PRONe'
+                if previous_token(token, doc):
+                    prev = previous_token(token, doc)
+                    prev[0] = f"{prev[0]}-"
+
+    return doc
+
+
 def posTagger(nlp, text: str):
     """
     Realitza l'etiquetatge morfosintàctic d'un text en català utilitzant SpaCy i diverses correccions específiques.
@@ -254,6 +273,7 @@ def posTagger(nlp, text: str):
     doc = ocr_errors(doc)
     doc = spacy_asyllabic(doc)
     doc = correct_spacy(doc)
+    doc = prones(doc)
 
     # Assegura que les extensions de Token existeixen
     ext_names = {
@@ -311,10 +331,11 @@ def posTagger(nlp, text: str):
 
 
 if __name__ == "__main__":
-    text = "marquem-hi solcs pregons."
+    text = "saber-nos"
     import spacy
 
     nlp = spacy.load("ca_core_news_md")
     words = posTagger(nlp, text)
     for w in words:
         print(w.i, w.text, w.lower_, w.pos_, w.dep_, w.head.i, w.has_head())
+        print(f"  Corrections: UPOS={w._.upos_corr}, LEMMA={w._.lemma_corr}, MORPH={w._.morph_corr}, DEP={w._.dep_corr}, HEAD={w._.head_corr}")

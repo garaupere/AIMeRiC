@@ -63,7 +63,7 @@ def escansio_accentual(self) -> str:
     for word in words:
         stress = getattr(word, "stress", [])
         parts.append(".".join((s.text.upper() if int(s.pes) > 1 else s.text.lower()) for s in stress))
-    return "#".join(parts).replace("_", "‿")
+    return "#".join(parts).replace("_", "‿").replace("--", "-").replace("-#", "#-")
 
 
 def metronome(self) -> str:

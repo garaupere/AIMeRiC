@@ -3,7 +3,7 @@ Mòdul: fonologia.py
 - Funcions  per obtenir propietats fonològiques de mots i síl·labes:
   `starts_with_vowel(self)`, `ends_with_vowel(self)`, `get_vowel(string)`.
 """
-
+from copy import deepcopy
 from typing import Any
 import re
 
@@ -36,7 +36,7 @@ def starts_with_vowel(self: Any) -> bool:
     tenint en compte `h` inicial i la regla que exclou semivocals inicials
     com `ia/iu/ya` (p. ex. `i+vocal` no compta com a vocal inicial).
     """
-    txt = getattr(self, "text", "") or ""
+    txt = deepcopy(getattr(self, "text", "") or "").replace("-", "")
     if _RE_START.search(txt):
         # Si comença per semivocal seguida de vocal, excloure
         if _RE_START_SEMI.search(txt):
@@ -52,7 +52,7 @@ def ends_with_vowel(self: Any) -> bool:
     quan calen per casos especials (paraules acabades en `-r`, formes com
     `per`, `llur`, etc.).
     """
-    txt = getattr(self, "text", "") or ""
+    txt = deepcopy(getattr(self, "text", "") or "").replace("-", "")
     # llista de paraules exceptions que no compten com a final en -r
     exceptions = {"per", "llur"}
     if txt in exceptions:
