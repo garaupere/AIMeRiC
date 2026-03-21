@@ -163,7 +163,7 @@ def main(nlp):
             print("--" * 40)
             start = time.time()
             backup_path = r"C:\Users\pereg\OneDrive - Universitat de les Illes Balears\Documents\UIB\Estudis oficials\Doctorat en Filologia i Filosofia\Tesi\TESI ESPAI DE TREBALL NET\DADES\.backup"
-            corpus_path = getUSB()
+            corpus_path = getUSB() + '/'
             backup_files(corpus_path, backup_path)
             elapsed_time = time.time() - start
             minutes = int(elapsed_time // 60)

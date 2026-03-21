@@ -51,7 +51,7 @@ def ctilc(file_path):
 def compile_corpus(path: str, corpus: str) -> None:
     """Finds the files in the new_files folders and compiles a corpus in JSON format."""
     drive = path
-    corpus_path = drive + corpus
+    corpus_path = drive + r'/' + corpus
     print(f'Compilant el corpus \'{corpus}\'...')
 
     if corpus == 'ctilc':
