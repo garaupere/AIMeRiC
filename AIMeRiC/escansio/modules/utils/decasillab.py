@@ -29,10 +29,12 @@ def troba_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
     if self.nomes_sillabes[tall].pes == 5.0:  # Si ja hi ha un tall, retorna'l
         result = True
         return result  # Retorna False
+
+    word_at_tall = _get_word_at_position(self, tall)
+
     if self.nomes_sillabes[tall].pes > 2:  # Si el valor correspon a un accent
 
-        if not self.nomes_sillabes[
-            tall].has_PRONe:  # Assegura't que el mot de tall no té un pronom enclític ni és una síl·laba fusionada
+        if not word_at_tall.has_PRONe:  # Assegura't que el mot de tall no té un pronom enclític ni és una síl·laba fusionada
 
             if detect_nonBest:
 
@@ -85,8 +87,8 @@ def tall(self) -> int | None:
                 # Evita talls amb mot tònic després
                 #if next_word and next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
                 #    return None
-
-                if not self.nomes_sillabes[tall_actual].has_PRONe:
+                word_at_tall = _get_word_at_position(self, tall_actual)
+                if not word_at_tall.has_PRONe: # Assegura't que el mot de tall no té un pronom enclític
                     pos = tall_actual + 1
                     return pos if pos != 10 else None
 

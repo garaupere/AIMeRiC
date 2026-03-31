@@ -331,7 +331,7 @@ def posTagger(nlp, text: str):
 
 
 if __name__ == "__main__":
-    text = "saber-nos"
+    text = "plau-me"
     import spacy
 
     nlp = spacy.load("ca_core_news_md")

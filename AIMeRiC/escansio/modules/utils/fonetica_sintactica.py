@@ -173,7 +173,7 @@ def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba) -> Optional[Sil
     syllable1.pes = syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
     syllable1.fusion_direction = "dreta" if float(syllable1.pes) >= float(syllable2.pes) else "esquerra"
     syllable1.fusionada = True
-    syllable1.has_PRONe = True if syllable1.has_PRONe or syllable2.has_PRONe else False
+    #syllable1.has_PRONe = True if syllable1.has_PRONe or syllable2.has_PRONe else False
     # actualitzar flag d'acabament amb vocal
     syllable1.ends_with_vowel = bool(_RE_VOWEL_CHAR.search(syllable1.text[-1]))
     reindexa_sillabes_words(self)

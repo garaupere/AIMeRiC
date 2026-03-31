@@ -22,6 +22,7 @@ class Mot:
         self.verse_wlength = length
         self.text = token.text.replace("-", "")
         self.original_text = deepcopy(token.text)
+        self.has_PRONe = False
 
         # helper to read extension safely
         def ext(name):
@@ -151,7 +152,7 @@ class Mot:
             return syllabify(self.text.replace("ment", ""))
 
     def print_metadata(self):
-        for attr in ["text", "lower", "w_index", "pos_", "dep_", "lemma_", "morph", "head", "word_ment",
+        for attr in ["text", "lower", "w_index", "has_PRONe", "pos_", "dep_", "lemma_", "morph", "head", "word_ment",
                      "syllables", "n_syllables", "print_stress",
                      "starts_with_vowel",
                      "ends_with_vowel", "plain_syllables", "is_compost"]:
@@ -167,6 +168,7 @@ class Mot:
             "index": self.w_index,
             "text": self.text,
             "upos": self.pos_,
+            "has_PRONe": self.has_PRONe,
             "dep_": self.dep_,
             "lemma_": self.lemma_,
             "morph": self.morph.to_dict(),
@@ -231,7 +233,7 @@ class Mot:
 
 if __name__ == "__main__":
 
-    sentence = "saber-te"
+    sentence = "plau-me"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)
