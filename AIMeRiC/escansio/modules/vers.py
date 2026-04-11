@@ -11,10 +11,7 @@ patrons mètrics i rítmics, aplica regles de prosòdia i exporta resultats
 per visualització i serialització.
 
 """
-from copy import deepcopy
-
-from AIMeRiC.escansio.modules.utils.tools import seguent
-
+# ...imports netejats: `deepcopy` i `seguent` eren no utilitzats i s'han eliminat
 _author_ = "Pere Garau"
 __all__ = ["Vers"]
 
@@ -70,7 +67,7 @@ class Vers:
                 self.__disposicio__()
 
                 self.__prosodia__()
-                self.__subdivisio__()
+                #self.__subdivisio__()
                 self.__patrons__()
                 self.__anota__()
 
@@ -116,9 +113,23 @@ class Vers:
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
 
     def __subdivisio__(self) -> None:
-        """Calcula la subdivisió i actualitza el patró mètric."""
+        """Calcula la subdivisió i actualitza el patró mètric.
+
+        Assigna `self.posicio_tall` cridant `tall(self)` i, si escau, calcula
+        `self.subdivisio` amb `subdivideix(self)`. Eliminem prints que poden
+        confondre en entorns interactius (el REPL mostra el valor de retorn
+        de la funció, que és `None` perquè aquest mètode no retorna res).
+        """
+        # Determina la posició del tall (enter o None)
         self.posicio_tall = tall(self)
-        self.subdivisio = subdivideix(self)
+
+        # Calcula la subdivisió en format 'X+Y' si existeix posicio_tall
+        try:
+            self.subdivisio = subdivideix(self)
+        except Exception:
+            # En cas d'errors inesperats, assegurem que l'atribut existeixi
+            self.subdivisio = None
+
         # Actualitzar representacions derivades
         self.patro_ritmic = ''.join(str(int(x)) for x in self.patro).rstrip('0')
         self.patro_metric = maximal_comparison_pattern(self)
@@ -401,7 +412,7 @@ class Vers:
         """Actualitza el valor de pes de les síl·labes de mots.stress depsrés de canvis a self.nomes_sillabes."""
         for word in getattr(self, 'words', []):
             for syllable in getattr(word, 'stress', []):
-                # Cerca la síl·laba corresponent a self.nomes_sillabes i actualitza el pes
+                # Cerca la síl·labes corresponent a self.nomes_sillabes i actualitza el pes
                 for s in getattr(self, 'nomes_sillabes', []):
                     if syllable.text == s.text:
                         syllable.pes = s.pes

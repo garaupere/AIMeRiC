@@ -22,106 +22,110 @@ from .fonetica_sintactica import split_syllable
 from .tools import seguent
 
 
-def troba_tall(self, tall, detect_nonBest: bool = False) -> bool | str:
-    """Aquesta funció cerca un tall en un vers donat i en substitueix el pes accentual per un cim màxim (5)."""
-
-    result = False  # Resultat de la cerca
-    if self.nomes_sillabes[tall].pes == 5.0:  # Si ja hi ha un tall, retorna'l
-        result = True
-        return result  # Retorna False
+def troba_tall_posible(self, tall, detect_nonBest: bool = False) -> str:
+    """
+    Avalua si una posició podria ser un tall. NO modifica res!
+    Retorna 'best' si és òptim, 'not-best' si és alternatiu, 'invalid' si no serveix.
+    """
+    # Si ja ha estat assignat pes de tall, no és vàlid
+    if self.nomes_sillabes[tall].pes == 5.0:
+        return 'invalid'
 
     word_at_tall = _get_word_at_position(self, tall)
 
-    if self.nomes_sillabes[tall].pes > 2:  # Si el valor correspon a un accent
+    # -- NOVETAT: La síl·laba no pot ser tall si NO és l'última de la paraula --
+    es_ultima_de_mot = False
+    for paraula in self.words:
+        if paraula.stress and paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[
+            tall].fusionada is False and paraula.has_PRONe is False and tall != 10:
+            es_ultima_de_mot = True
+            break
+    if not es_ultima_de_mot:
+        return 'invalid'
+    # -- FI NOVETAT --
 
-        if not word_at_tall.has_PRONe:  # Assegura't que el mot de tall no té un pronom enclític ni és una síl·laba fusionada
-
+    if self.nomes_sillabes[tall].pes > 2:
+        if not word_at_tall.has_PRONe:
             if detect_nonBest:
+                if 4 > self.nomes_sillabes[tall].pes > 2:
+                    return 'not-best'
+            return 'best'
+    return 'invalid'
 
-                if 4 > self.nomes_sillabes[tall].pes >= 3:  # Si l'accent no és principal
 
-                    return 'not-best'  # Retorna 'not-best' per indicar que no és el millor cas
+def aplica_tall(self, tall):
+    """
+    Aplica efectivament el tall (pes=5.0, marques) a la posició indicada.
+    Retorna True si s'ha aplicat, False si no s'han complert les condicions.
+    """
+    word_at_tall = _get_word_at_position(self, tall)
 
-            for paraula in self.words:  # Recorre les paraules del vers
-                if paraula.stress:
-                    if paraula.stress[-1] == self.nomes_sillabes[tall] and self.nomes_sillabes[
-                        tall].fusionada is False:  # La síl·laba del tall coincideix amb l'última de la paraula (frontera de mot)
-                        paraula.stress[-1].pes = 5.0
-                        self.anotat[
-                            self.words.index(paraula)] = paraula.stress  # Actualitza l'estructura de l'accentuació
-                        self.nomes_sillabes[tall].pes = 5.0  # Actualitza la llista de mots
-                        self.patro[tall] = 5  # Actualitza el patró abstracte
-                        self.words[self.words.index(
-                            paraula)].paraula_tall = True  # Indica que la paraula és frontera de tall
-                        self.words[self.words.index(paraula)] = paraula  # Actualitza la paraula
-                        result = True  # Indica que s'ha trobat un tall
+    # Comprovacions de seguretat: la síl·laba ha de ser l'última de la paraula,
+    # no estar fusionada i la paraula no haver de pronom enclític.
+    if not word_at_tall:
+        return False
 
-                        return result  # Retorna True si s'ha trobat un tall
-    return result  # Retorna False si no s'ha trobat cap tall
+    syl = self.nomes_sillabes[tall]
+    if not getattr(syl, 'fusionada', False) and word_at_tall.stress and word_at_tall.stress[-1] == syl and not getattr(word_at_tall, 'has_PRONe', False):
+        word_at_tall.stress[-1].pes = 5.0
+        # actualitzem anotacions i patró
+        try:
+            self.anotat[self.words.index(word_at_tall)] = word_at_tall.stress
+        except Exception:
+            pass
+        syl.pes = 5.0
+        try:
+            self.patro[tall] = 5
+        except Exception:
+            # patro podria ser més curt; ignorem si no existeix
+            pass
+        word_at_tall.paraula_tall = True
+        # assegurem la coherència en la llista
+        try:
+            self.words[self.words.index(word_at_tall)] = word_at_tall
+        except Exception:
+            pass
+        return True
+
+    return False
 
 
 def tall(self) -> int | None:
-    """Aquesta funció aplica el tall al vers decasil·làbic."""
-
+    """Aplica el tall mètric segons criteris prioritaris, evitant assignació prematura."""
     if self.recompte_sillabes_metriques != 10:
-        return None  # No és un decasíl·lab
+        return None
 
-    talls = [3, 5, 4]  # Talls més freqüents en el decasíl·lab català
+    talls = [3, 5, 4]  # Preferències de talls
 
-    # PRIMERA PASSADA: Cerca talls amb best=True
-    i = 0
-    while i < len(talls):
-        tall_actual = talls[i]
-        cerca = troba_tall(self, tall_actual, True)
-        if cerca is True:
-            # Tall vàlid trobat
+    # === PRIMERA PASSADA: 'best' ===
+    for tall_actual in talls:
+        result = troba_tall_posible(self, tall_actual, True)
+        if result == 'best':
             pos = tall_actual + 1
-            return pos if pos != 10 else None
+            aplica_tall(self, tall_actual)
+            return pos
 
-        elif cerca == 'not-best' and i < len(talls):
-            # No és el millor tall, prova el següent
-            cerca_nonBest = troba_tall(self, tall_actual, False)
-
-            if cerca_nonBest is True:
-
-                # Evita talls amb mot tònic després
-                #if next_word and next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
-                #    return None
-                word_at_tall = _get_word_at_position(self, tall_actual)
-                if not word_at_tall.has_PRONe: # Assegura't que el mot de tall no té un pronom enclític
-                    pos = tall_actual + 1
-                    return pos if pos != 10 else None
-
-        i += 1  # Passa al següent tall candidat
-
-    # SEGONA PASSADA: Cerca talls amb mots bivalents (best=False)
-    i = 0
-    while i < len(talls):
-        tall_actual = talls[i]
-        cerca = troba_tall(self, tall_actual, False)
-        if cerca is True:
+    # === SEGONA PASSADA: 'not-best'/alternatius ===
+    for tall_actual in talls:
+        result = troba_tall_posible(self, tall_actual, False)
+        if result == 'not-best':
+            pos = tall_actual + 1
             word_at_tall = _get_word_at_position(self, tall_actual)
             next_word = _get_next_word_at_position(self, tall_actual)
-
             if word_at_tall and next_word:
-                # Cas especial: NOUN/VERB/PRON/ADJ/PROPN + VERB
-                if (word_at_tall.pos_ in ["NOUN", "VERB", "PRON", "ADJ", "PROPN"]
-                        and next_word.pos_ in ["VERB"]):
-                    pos = tall_actual + 1
-                    return pos if pos != 10 else None
-
-                # Evita talls amb mot tònic després
+                if (word_at_tall.pos_ in ["NOUN", "VERB", "PRON", "ADJ", "PROPN"] and
+                        next_word.pos_ in ["VERB"]):
+                    aplica_tall(self, tall_actual)
+                    return pos
                 elif next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
-                    i += 1  # Continua cercant
                     continue
-
                 else:
-                    pos = tall_actual + 1
-                    return pos if pos != 10 else None
-
-        i += 1  # Passa al següent tall candidat
-
-    return None  # No s'ha trobat cap tall vàlid
+                    aplica_tall(self, tall_actual)
+                    return pos
+            else:
+                aplica_tall(self, tall_actual)
+                return pos
+    return None  # No s'ha trobat tall vàlid
 
 
 def _get_word_at_position(self, pos: int):
@@ -136,7 +140,7 @@ def _get_word_at_position(self, pos: int):
 
 
 def _get_next_word_at_position(self, pos: int):
-    """Retorna la paraula següent a la que conté la síl·laba a la posició donada."""
+    """Retorna la paraula següent a la que conté la síl·aba a la posició donada."""
     word_at_pos = _get_word_at_position(self, pos)
 
     if word_at_pos and word_at_pos.w_index + 1 < len(self.words):
@@ -145,8 +149,56 @@ def _get_next_word_at_position(self, pos: int):
 
 
 def subdivideix(self):
-    """Aquesta funció subdivideix el vers en còlons si conté un tall."""
-    return f'{self.posicio_tall}+{self.recompte_sillabes_metriques - self.posicio_tall}' if self.posicio_tall is not None else None
+    """Aquesta funció subdivideix el vers en còlons si conté un tall.
+
+    Observacions i millores aplicades:
+    - Si `self.posicio_tall` no existeix (o és None), intentem obtenir-la cridant
+      `tall(self)` i l'assignem explícitament. Això evita que `subdivideix` retornï
+      sempre `None` quan abans no s'hagi calculat el tall.
+    - Fem comprovacions robustes dels tipus (int) i del recompte de síl·labes
+      mètriques abans de fer l'operació aritmètica.
+    - Si no es pot determinar el recompte mètric, retornem una cadena indicativa
+      en lloc de llançar una excepció.
+    """
+    # Intentem usar l'atribut existent
+    pos = getattr(self, 'posicio_tall', None)
+
+    # Si no existeix, provem de calcular-lo cridant tall(self)
+    if pos is None:
+        try:
+            pos = tall(self)
+        except Exception:
+            pos = None
+        # Assignem si l'hem obtingut
+        if pos is not None:
+            self.posicio_tall = pos
+        else:
+            return None
+
+    # Assegurem-nos que és un enter vàlid
+    try:
+        pos_int = int(pos)
+    except Exception:
+        return None
+
+    # Obtenim el recompte de síl·labes mètriques (int) de forma segura
+    recompte = getattr(self, 'recompte_sillabes_metriques', None)
+    if recompte is None:
+        # Intentem recalcular-lo sense importar la dependència exterior si ja existeix
+        try:
+            from AIMeRiC.escansio.modules.utils.metre import recompte_metric
+            recompte = recompte_metric(self)
+            self.recompte_sillabes_metriques = recompte
+        except Exception:
+            # No podem obtenir el recompte, retornem una forma parcial
+            return f'{pos_int}+?'
+
+    try:
+        right = int(recompte) - pos_int
+    except Exception:
+        return f'{pos_int}+?'
+
+    return f'{pos_int}+{right}'
 
 
 def cesura_femenina(self):

@@ -25,7 +25,7 @@ def escaneja_minim(nlp, verse: str, goal: int, permet_llicencies: bool = False) 
 
 if __name__ == "__main__":
     nlp = spacy.load('ca_core_news_lg')
-    exemple = "Sol, i de dol, i amb vetusta gonella"
+    exemple = "em commou aquest altre que és més gran,"
     doc = nlp(exemple)
 
     escaner = escaneja(nlp, exemple, 10)
