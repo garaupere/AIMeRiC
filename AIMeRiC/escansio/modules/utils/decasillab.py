@@ -25,7 +25,7 @@ from .tools import seguent
 def troba_tall_posible(self, tall, detect_nonBest: bool = False) -> str:
     """
     Avalua si una posició podria ser un tall. NO modifica res!
-    Retorna 'best' si és òptim, 'not-best' si és alternatiu, 'invalid' si no serveix.
+    Retorna 'best' si és òptim, 'discontinu' si és alternatiu, 'invalid' si no serveix.
     """
     # Si ja ha estat assignat pes de tall, no és vàlid
     if self.nomes_sillabes[tall].pes == 5.0:
@@ -41,14 +41,15 @@ def troba_tall_posible(self, tall, detect_nonBest: bool = False) -> str:
             es_ultima_de_mot = True
             break
     if not es_ultima_de_mot:
-        return 'invalid'
-    # -- FI NOVETAT --
-
-    if self.nomes_sillabes[tall].pes > 2:
+        if self.nomes_sillabes[tall].pes > 2.0:
+            return 'continu'
+        return 'kkk'
+    # -------------------------------------------------
+    if self.nomes_sillabes[tall].pes > 2.0:
         if not word_at_tall.has_PRONe:
             if detect_nonBest:
-                if 4 > self.nomes_sillabes[tall].pes > 2:
-                    return 'not-best'
+                if 4 > self.nomes_sillabes[tall].pes > 2.0:
+                    return 'discontinu'
             return 'best'
     return 'invalid'
 
@@ -66,7 +67,8 @@ def aplica_tall(self, tall):
         return False
 
     syl = self.nomes_sillabes[tall]
-    if not getattr(syl, 'fusionada', False) and word_at_tall.stress and word_at_tall.stress[-1] == syl and not getattr(word_at_tall, 'has_PRONe', False):
+    if not getattr(syl, 'fusionada', False) and word_at_tall.stress and word_at_tall.stress[-1] == syl and not getattr(
+            word_at_tall, 'has_PRONe', False):
         word_at_tall.stress[-1].pes = 5.0
         # actualitzem anotacions i patró
         try:
@@ -85,13 +87,21 @@ def aplica_tall(self, tall):
             self.words[self.words.index(word_at_tall)] = word_at_tall
         except Exception:
             pass
+
+        # Important: recordem la posició del tall (1-based)
+        try:
+            self.posicio_tall = int(tall) + 1
+        except Exception:
+            self.posicio_tall = tall
+
         return True
 
     return False
 
 
-def tall(self) -> int | None:
+def tall(self) -> None | int | tuple[int, str]:
     """Aplica el tall mètric segons criteris prioritaris, evitant assignació prematura."""
+    pos, result = None, None
     if self.recompte_sillabes_metriques != 10:
         return None
 
@@ -101,14 +111,18 @@ def tall(self) -> int | None:
     for tall_actual in talls:
         result = troba_tall_posible(self, tall_actual, True)
         if result == 'best':
-            pos = tall_actual + 1
             aplica_tall(self, tall_actual)
-            return pos
+            # assegurem la coherència i retornem posició 1-based
+            try:
+                self.posicio_tall = int(tall_actual) + 1
+            except Exception:
+                pass
+            return tall_actual + 1
 
-    # === SEGONA PASSADA: 'not-best'/alternatius ===
+    # === SEGONA PASSADA: 'discontinu'/alternatius ===
     for tall_actual in talls:
         result = troba_tall_posible(self, tall_actual, False)
-        if result == 'not-best':
+        if result in {'discontinu', 'continu'}:
             pos = tall_actual + 1
             word_at_tall = _get_word_at_position(self, tall_actual)
             next_word = _get_next_word_at_position(self, tall_actual)
@@ -116,16 +130,56 @@ def tall(self) -> int | None:
                 if (word_at_tall.pos_ in ["NOUN", "VERB", "PRON", "ADJ", "PROPN"] and
                         next_word.pos_ in ["VERB"]):
                     aplica_tall(self, tall_actual)
-                    return pos
+                    self.posicio_tall = pos
+                    return pos, result
                 elif next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
                     continue
                 else:
                     aplica_tall(self, tall_actual)
-                    return pos
+                    self.posicio_tall = pos
+                    return pos, result
             else:
                 aplica_tall(self, tall_actual)
-                return pos
-    return None  # No s'ha trobat tall vàlid
+                self.posicio_tall = pos
+                return pos, result
+    return pos, result  # No s'ha trobat tall vàlid
+
+
+def subdivisiona(self):
+    """Nova versió de la subdivisio: millorada i molt simplificada."""
+    subdpos = [3, 5, 4]  # Preferències de subdivisions
+
+    # Per a les síl·labes del vers, obtenim els pesos de les subdpos
+    candidats = []
+    for pos in subdpos:
+        candidats.append((pos, self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None))
+    # ordena els candidats per pes (descendent) i després per posició (segons la preferència). Elimina els candidats amb pes None o <= 2.0
+    candidats_valids = [(pos, pes) for pos, pes in candidats if pes is not None and pes >= 2]
+    candidats_valids.sort(
+        key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
+
+    # Defineix el tipus de subdivisió.
+    for pos, pes in candidats_valids:
+        # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
+        word_at_pos = _get_word_at_position(self, pos)
+        if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
+                word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
+            if self.nomes_sillabes[pos].pes >= 4:  # Si el pes és un accent lèxic, considera que és un tall
+                self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és 5.0
+                pos = pos + 1  # Convertim a 1-based
+                word_at_pos.paraula_tall = True  # Marca la paraula com a tall
+                return f'{pos}+{10 - pos}', 'tall'
+            elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[
+                pos].pes < 4:  # Si el pes és d'accent bivalent o secundari, considera que és discontinu
+                pos = pos + 1  # Convertim a 1-based
+                word_at_pos.paraula_tall = True  # Marca la paraula com a tall
+                return f'{pos}+{10 - pos}', 'discontinu'
+        elif self.nomes_sillabes[
+            pos].pes > 1.0:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
+            pos = pos + 1  # Convertim a 1-based
+            word_at_pos.paraula_tall = True  # Marca la paraula com a tall
+            return f'{pos}+{10 - pos}', 'continu'
+    return None, None  # No s'ha trobat una subdivisió vàlida
 
 
 def _get_word_at_position(self, pos: int):
@@ -166,7 +220,7 @@ def subdivideix(self):
     # Si no existeix, provem de calcular-lo cridant tall(self)
     if pos is None:
         try:
-            pos = tall(self)
+            pos = tall(self)[0]
         except Exception:
             pos = None
         # Assignem si l'hem obtingut

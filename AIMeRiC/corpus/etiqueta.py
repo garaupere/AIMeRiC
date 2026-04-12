@@ -76,8 +76,8 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                  'obra', 'any', 'traducció', 'font', 'poema',
                  'núm. de vers', 'text del vers',
                  'escansió'] + scansion_cols +
-                ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències', 'mots', 'l_mots',
-                 'mots al còlon 1', 'mots al còlon 2',
+                ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'tipus subdivisió', 'còlon 1', 'còlon 2', 'llicències', 'mots', 'l_mots',
+                 'mots al còlon 1', 'mots al còlon 2', 'signatura',
                  'patró', 'patró_rítmic', 'encavalcament', 'metronome'])
 
         rows = []

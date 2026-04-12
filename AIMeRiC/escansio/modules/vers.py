@@ -22,7 +22,7 @@ import spacy
 from colorama import Fore
 
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
-from AIMeRiC.escansio.modules.utils.decasillab import tall, subdivideix
+from AIMeRiC.escansio.modules.utils.decasillab import tall, subdivideix, subdivisiona
 from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, escansio_accentual, metronome, \
     scansion_array
 from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
@@ -54,6 +54,7 @@ class Vers:
         self.text = text
         self.encavalcament = encavalcament(self.text)
         self._minimal = minimal
+        self.colon_1, self.colon_2 = None, None
 
         # Preparació bàsica (etiquetatge i construcció d'objectes Mot)
         self.__prepara__(nlp)
@@ -63,12 +64,15 @@ class Vers:
         self.ajustat = metre_ajustat(self)
         if not minimal:
             if self.ajustat:
-                self.__subdivisio__()
+                #self.__subdivisio__()
+
                 self.__disposicio__()
 
-                self.__prosodia__()
-                #self.__subdivisio__()
+                #self.__prosodia__(subdi=False)
+                self.__subdivisio2__()#self.__subdivisio__()
+                self.__prosodia__(subdi=True)
                 self.__patrons__()
+                self.__colons__()
                 self.__anota__()
 
                 self.__mot_info__()
@@ -109,19 +113,16 @@ class Vers:
         self.patro_ritmic = ''.join(str(int(x)) for x in self.patro).rstrip('0')
         self.recompte_sillabes_metriques = recompte_metric(self)
         self.patro_metric = maximal_comparison_pattern(self)
+        self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
         self.recompte_sillabes_extrametriques = max(0, len(self.patro) - self.recompte_sillabes_metriques)
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
 
     def __subdivisio__(self) -> None:
         """Calcula la subdivisió i actualitza el patró mètric.
-
-        Assigna `self.posicio_tall` cridant `tall(self)` i, si escau, calcula
-        `self.subdivisio` amb `subdivideix(self)`. Eliminem prints que poden
-        confondre en entorns interactius (el REPL mostra el valor de retorn
-        de la funció, que és `None` perquè aquest mètode no retorna res).
         """
         # Determina la posició del tall (enter o None)
-        self.posicio_tall = tall(self)
+        self.posicio_tall = tall(self)[0] if isinstance(tall(self), tuple) and len(tall(self)) > 0 else None
+        self.tipus_subdivisio = tall(self)[1] if isinstance(tall(self), tuple) and len(tall(self)) > 1 else None
 
         # Calcula la subdivisió en format 'X+Y' si existeix posicio_tall
         try:
@@ -152,12 +153,12 @@ class Vers:
         else:
             self.rima = None
 
-    def __prosodia__(self) -> None:
+    def __prosodia__(self, subdi=False) -> None:
         """Càlculs prosòdics addicionals (accents prosòdics, cim màxim)."""
         cim_maxim(self)
         #self.prosodia_original = deepcopy(self)
 
-        accents_prosodics(self, debug=False)
+        accents_prosodics(self, subdividit=subdi, debug=False)
         #self.actualitza_pesos()
         #cim_maxim(self)
         # Actualitza anotacions i representacions
@@ -205,6 +206,37 @@ class Vers:
                 self.patro_metric = self.patro_metric[:pos] + ' ' + self.patro_metric[pos:]
                 self.patro_ritmic = self.patro_ritmic[:pos] + ' ' + self.patro_ritmic[pos:].rstrip('0')
 
+    def __colons__(self):
+        """Localitza i aïlla els còlons del vers"""
+        cpos = [3,5,4]
+        if '5' in self.patro_ritmic[3]:
+            self.colon_1 = self.patro_ritmic[0:4]
+            self.colon_2 = self.patro_ritmic[4:]
+        elif '5' in self.patro_ritmic[5]:
+            self.colon_1 = self.patro_ritmic[0:6]
+            self.colon_2 = self.patro_ritmic[6:]
+        elif '5' in self.patro_ritmic[4]:
+            self.colon_1 = self.patro_ritmic[0:5]
+            self.colon_2 = self.patro_ritmic[5:]
+        elif '4' in self.patro_ritmic[3]:
+            self.colon_1 = self.patro_ritmic[0:4]
+            self.colon_2 = self.patro_ritmic[4:]
+        elif '4' in self.patro_ritmic[5]:
+            self.colon_1 = self.patro_ritmic[0:6]
+            self.colon_2 = self.patro_ritmic[6:]
+        elif '4' in self.patro_ritmic[4]:
+            self.colon_1 = self.patro_ritmic[0:5]
+            self.colon_2 = self.patro_ritmic[5:]
+        elif '3' in self.patro_ritmic[3]:
+            self.colon_1 = self.patro_ritmic[0:4]
+            self.colon_2 = self.patro_ritmic[4:]
+        elif '3' in self.patro_ritmic[5]:
+            self.colon_1 = self.patro_ritmic[0:6]
+            self.colon_2 = self.patro_ritmic[6:]
+        elif '3' in self.patro_ritmic[4]:
+            self.colon_1 = self.patro_ritmic[0:5]
+            self.colon_2 = self.patro_ritmic[5:]
+
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
         safe_words(self)
@@ -212,13 +244,15 @@ class Vers:
         self.__patrons__()
         # Reset del cim màxim
         self.__kill_cim_maxim__()
-        self.__subdivisio__()
+        self.__subdivisio2__()
         self.__disposicio__()
         self.ajustat = metre_ajustat(self)
         if self.ajustat or self.words[-1].stress[-1].pes < 3:
-            self.__prosodia__()
-            self.__subdivisio__()
+            self.__prosodia__(subdi=True)
+            if not self.subdivisio:
+                self.__subdivisio2__()
         self.__patrons__()
+        self.__colons__()
         self.__anota__()
         self.__mot_info__()
         self.__contactes_vocalics__()
@@ -255,10 +289,14 @@ class Vers:
             "escansio_text": getattr(self, 'escansio_text', None),
             "patro": getattr(self, 'patro', None),
             "patro_metric": getattr(self, 'patro_metric', None),
+            "signatura": getattr(self, 'signatura', None),
             "recompte_sillabes_metriques": getattr(self, 'recompte_sillabes_metriques', None),
             "recompte_sillabes_extrametriques": getattr(self, 'recompte_sillabes_extrametriques', None),
             "ajustat": getattr(self, 'ajustat', None),
             "subdivisio": getattr(self, 'subdivisio', None),
+            "tipus_subdivisio": getattr(self, 'tipus_subdivisio', None),
+            "colon_1": getattr(self, 'colon_1', None),
+            "colon_2": getattr(self, 'colon_2', None),
             "n_mots": getattr(self, 'n_mots', None),
             "l_mots": getattr(self, 'l_mots', None),
             "mots_colon1": getattr(self, 'mots_colon1', None),
@@ -276,6 +314,9 @@ class Vers:
         if attrs["patro_metric"] is not None:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:", color_metric(str(attrs['patro_metric'])))
 
+        if attrs["signatura"] is not None:
+            print(Fore.CYAN, f"\t➥", Fore.RESET, f"Signatura:", Fore.CYAN, attrs["signatura"], Fore.RESET)
+
         if attrs["recompte_sillabes_metriques"] is not None:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Síl·labes mètriques:", Fore.CYAN,
                   attrs["recompte_sillabes_metriques"], Fore.RESET)
@@ -286,7 +327,11 @@ class Vers:
 
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Ajustat:", attrs["ajustat"])
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Subdivisió:",
-              attrs["subdivisio"] if attrs["subdivisio"] is not None else 'Cap')
+              attrs["subdivisio"] if attrs["subdivisio"] is not None else 'Cap'),
+        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Tipus de subdivisió:",
+              attrs["tipus_subdivisio"] if attrs["tipus_subdivisio"] is not None else 'N/A'),
+        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 1:", attrs["colon_1"] if attrs["colon_1"] is not None else 'N/A'),
+        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 2:", attrs["colon_2"] if attrs["colon_2"] is not None else 'N/A'),
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Número de mots:", attrs["n_mots"])
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Longitud sil·làbica dels mots:", attrs["l_mots"])
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Mots al primer colon:", attrs["mots_colon1"])
@@ -303,10 +348,14 @@ class Vers:
                 "escansió": getattr(self, 'escansio_text', None),
                 "patró rítmic": getattr(self, 'patro_ritmic', None),
                 "patró mètric": getattr(self, 'patro_metric', None),
+                "signatura": getattr(self, 'signatura', None),
                 "síl·labes mètriques": getattr(self, 'recompte_sillabes_metriques', None),
                 "síl·labes extramètriques": getattr(self, 'recompte_sillabes_extrametriques', None),
                 "posició tall": getattr(self, 'posicio_tall', None),
                 "subdivisió": getattr(self, 'subdivisio', None),
+                "tipus subdivisió": getattr(self, 'tipus_subdivisio', None),
+                "còlon 1": getattr(self, 'colon_1', None),
+                "còlon 2": getattr(self, 'colon_2', None),
                 "llicències": getattr(self, 'llicencies', None),
                 "mots": getattr(self, 'n_mots', None),
                 "l_mots": getattr(self, 'l_mots', None),
@@ -334,11 +383,15 @@ class Vers:
             getattr(self, 'recompte_sillabes_metriques', None),
             getattr(self, 'recompte_sillabes_extrametriques', None),
             getattr(self, 'subdivisio', None),
+            getattr(self, 'tipus_subdivisio', None),
+            getattr(self, 'colon_1', None),
+            getattr(self, 'colon_2', None),
             getattr(self, 'llicencies', None),
             getattr(self, 'n_mots', None),
             getattr(self, 'l_mots', None),
             getattr(self, 'mots_colon1', None),
             getattr(self, 'mots_colon2', None),
+            str(getattr(self, 'signatura', '')),
             str(getattr(self, 'patro_metric', '')),
             str(getattr(self, 'patro_ritmic', '')),
             getattr(self, 'encavalcament', None),
@@ -352,6 +405,7 @@ class Vers:
                 "string": getattr(self, 'string', None),
                 "string_stress": getattr(self, 'escansio_text', None),
                 "pattern": getattr(self, 'patro', None),
+                "signatura": getattr(self, 'signatura', None),
                 "sillabes_metriques": getattr(self, 'sillables_metriques', None),
                 "sillabes_extrametriques": getattr(self, 'recompte_sillabes_extrametriques', None),
                 "n_words": getattr(self, 'n_mots', None),
@@ -418,6 +472,15 @@ class Vers:
                         syllable.pes = s.pes
                         break
 
+    def __subdivisio2__(self):
+        subdivisio_info = subdivisiona(self)
+        if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 1:
+            self.subdivisio = subdivisio_info[0]
+            self.tipus_subdivisio = subdivisio_info[1]
+        else:
+            self.subdivisio = None
+            self.tipus_subdivisio = None
+        self.patro_metric = maximal_comparison_pattern(self)
 
 # Exemple d'ús
 if __name__ == "__main__":

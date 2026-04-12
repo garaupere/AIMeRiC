@@ -662,7 +662,8 @@ class ReglaPrimeraSillabaFinal(ReglaAccent):
 class GestorAccentsProsodics:
     """Gestiona l'aplicació de regles d'accents prosòdics."""
 
-    def __init__(self, debug: bool = False):
+    def __init__(self, subdividit, debug: bool = False):
+        self.subdividit = subdividit
         self.debug = debug
         self.regles_xocs: List[ReglaAccent] = []
         self.regles_secundaris: List[ReglaAccent] = []
@@ -817,7 +818,7 @@ class GestorAccentsProsodics:
             print(f"{'#' * 60}")
 
         # Ordre dels xocs a resoldre amb tots els valors intermitjos (3.5, 2.5, 1.5)
-        ordre_xocs = [
+        grup1 = [
             # Grup 1: Xocs amb 5 (inclou 4, 3.5, 3, 2.5, 2, 1.5)
             (4.0, 5.0, "4-5"),
             (3.5, 5.0, "3-5"),
@@ -830,8 +831,10 @@ class GestorAccentsProsodics:
             (5.0, 3.0, "5-3"),
             (5.0, 2.5, "5-2"),
             (5.0, 2.0, "5-2"),
-            (5.0, 1.5, "5-2"),
+            (5.0, 1.5, "5-2")
+            ]
 
+        grup2 = [
             # Grup 2: Xocs amb 4 (inclou 3.5, 3, 2.5, 2, 1.5)
             (4.0, 4.0, "4-4"),
             (3.5, 4.0, "3-4"),
@@ -843,8 +846,9 @@ class GestorAccentsProsodics:
             (4.0, 3.0, "4-3"),
             (4.0, 2.5, "4-2"),
             (4.0, 2.0, "4-2"),
-            (4.0, 1.5, "4-2"),
-
+            (4.0, 1.5, "4-2")
+        ]
+        grup3 = [
             # Grup 3: Xocs amb 3.5 i 3 (inclou 2.5, 2, 1.5)
             (3.5, 3.5, "3-3"),
             (3.5, 3.0, "3-3"),
@@ -855,8 +859,9 @@ class GestorAccentsProsodics:
             (3.5, 1.5, "3-2"),
             (3.0, 2.5, "3-2"),
             (3.0, 2.0, "3-2"),
-            (3.0, 1.5, "3-2"),
-
+            (3.0, 1.5, "3-2")
+            ]
+        grup4 = [
             # Grup 4: Xocs amb 2.5, 2 i 1.5
             (2.5, 5.0, "2-5"),
             (2.5, 4.0, "2-4"),
@@ -878,8 +883,13 @@ class GestorAccentsProsodics:
             (1.5, 3.0, "2-3"),
             (1.5, 2.5, "2-2"),
             (1.5, 2.0, "2-2"),
-            (1.5, 1.5, "2-2"),
+            (1.5, 1.5, "2-2")
         ]
+
+        #if self.subdividit:
+        ordre_xocs = grup1 + grup2 + grup3 + grup4
+        #else:
+        #    ordre_xocs = grup3 + grup4
 
         for pes1, pes2, nom_xoc in ordre_xocs:
             if self.debug:
@@ -1041,7 +1051,7 @@ class GestorAccentsProsodics:
             print(f"{'#' * 60}\n")
 
 
-def accents_prosodics(self, debug: bool = False):
+def accents_prosodics(self, subdividit=False, debug: bool = False):
     """
     Ajusta els accents prosòdics de les síl·labes del vers segons regles específiques.
 
@@ -1049,7 +1059,7 @@ def accents_prosodics(self, debug: bool = False):
         self: Objecte que conté les síl·labes i paraules del vers.
         debug: Si True, mostra informació de debug.
     """
-    gestor = GestorAccentsProsodics(debug=debug)
+    gestor = GestorAccentsProsodics(subdividit, debug=debug)
     gestor.aplica_regles(self)
 
 
