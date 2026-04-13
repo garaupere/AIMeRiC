@@ -130,7 +130,25 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
              'mots al còlon 1', 'mots al còlon 2',
              'patró', 'patró_rítmic', 'encavalcament', 'metronome', 'posició'])
 
-    return corpus_dict, pd.DataFrame(rows, columns=head)
+    # Crea el DataFrame i assegura que les columnes d'escansió i de patró siguin strings
+    df = pd.DataFrame(rows, columns=head)
+
+    # Força les columnes d'escansió (1..goal) a cadenes per evitar que pandas les converteixi a int
+    try:
+        df[scansion_cols] = df[scansion_cols].astype(str)
+    except Exception:
+        # Si falla per alguna raó, ignora i continua; no hauria de passar en condicions normals
+        pass
+
+    # Assegura també que els camps de patró es guardin com a cadena
+    for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició']:
+        if col in df.columns:
+            try:
+                df[col] = df[col].astype(str)
+            except Exception:
+                continue
+
+    return corpus_dict, df
 
 
 if __name__ == "__main__":
@@ -172,8 +190,9 @@ if __name__ == "__main__":
                 print("Desant els resultats en format CSV...")
                 print(corpus_result[1])
                 os.makedirs(f"{results_path}csv/", exist_ok=True)
+                import csv
                 corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
-                                        lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+                                        lineterminator='\n', header=True, decimal=',', quoting=csv.QUOTE_ALL)
 
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)

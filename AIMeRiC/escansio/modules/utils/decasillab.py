@@ -175,7 +175,7 @@ def subdivisiona(self):
                 word_at_pos.paraula_tall = True  # Marca la paraula com a tall
                 return f'{pos}+{10 - pos}', 'discontinu'
         elif self.nomes_sillabes[
-            pos].pes > 1.0:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
+            pos].pes >= 2:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
             pos = pos + 1  # Convertim a 1-based
             word_at_pos.paraula_tall = True  # Marca la paraula com a tall
             return f'{pos}+{10 - pos}', 'continu'

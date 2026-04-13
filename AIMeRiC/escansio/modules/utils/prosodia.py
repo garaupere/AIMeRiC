@@ -301,7 +301,39 @@ class ReglaXocAccents(ReglaAccent):
                         self.canvia_pes(ctx, sil2, PesAccent.DESACCENTUADA, words)
                         return True
 
-            # Cas per defecte: desaccentuar la síl·laba de pes més baix
+            # Comprovació addicional: si el vers té una subdivisió (ex: '4+6','6+4','5+5')
+            # i una de les síl·labes implicades coincideix amb la posició de la subdivisió,
+            # no hem de desaccentuar aquesta síl·laba (ha de funcionar com si tingués més pes).
+            # Això evita que la frontera de la subdivisió perdi l'accent per efecte d'un xoc.
+            vers_obj = getattr(self, '_vers', None)
+            subdiv_positions = set()
+            if vers_obj is not None:
+                subdiv = getattr(vers_obj, 'subdivisio', None)
+                if isinstance(subdiv, str) and '+' in subdiv:
+                    try:
+                        parts = [p.strip() for p in subdiv.split('+')]
+                        for p in parts:
+                            if p.isdigit():
+                                subdiv_positions.add(int(p))
+                    except Exception:
+                        subdiv_positions = set()
+
+            # Si només una de les síl·labes està en la posició de subdivisió, preferim
+            # desaccentuar l'altra sílaba (no toquem la sílaba de la frontera).
+            if pos_sil1 and pos_sil2 and subdiv_positions:
+                if pos_sil1 in subdiv_positions and pos_sil2 not in subdiv_positions:
+                    # preservem sil1, desaccentuem sil2
+                    self.canvia_pes(ctx, sil2, PesAccent.DESACCENTUADA, words)
+                    return True
+                if pos_sil2 in subdiv_positions and pos_sil1 not in subdiv_positions:
+                    # preservem sil2, desaccentuem sil1
+                    self.canvia_pes(ctx, sil1, PesAccent.DESACCENTUADA, words)
+                    return True
+                if pos_sil1 in subdiv_positions and pos_sil2 in subdiv_positions:
+                    # Ambdues són fronteres de subdivisió; no fem res en aquest cas
+                    return False
+
+            # Si no hi ha subdivisió que afecti, comportament per defecte: desaccentuar la de pes més baix
             target = sil1 if sil2.pes >= sil1.pes else sil2
             self.canvia_pes(ctx, target, PesAccent.DESACCENTUADA, words)
             return True
@@ -1106,3 +1138,4 @@ def cim_maxim(self):
             self.recompte_sillabes_extrametriques = len(self.patro) - self.recompte_sillabes_metriques
     except IndexError:
         pass
+

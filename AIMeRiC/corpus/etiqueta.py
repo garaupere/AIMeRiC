@@ -8,6 +8,7 @@ from datetime import datetime
 import pandas as pd
 import spacy
 from tqdm import tqdm
+import csv
 
 from AIMeRiC.corpus.modules.autor import Autor
 from AIMeRiC.corpus.modules.obra import Obra
@@ -26,7 +27,7 @@ def merge_tables(results_path, file_name):
 
     data = pd.concat(data, ignore_index=True)
     data.to_csv(f"{results_path}/{file_name}.csv", sep=';', decimal=',', encoding='utf-8',
-                header=True, index=True)
+                header=True, index=True, quoting=csv.QUOTE_ALL)
     print(f"Corpus '{file_name}' etiquetat i compilat!")
 
 
@@ -169,15 +170,39 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                 # Si ja existeix concatena el nou dataframe amb el dataframe existent (sense encapçalat)
                 existing_df = pd.read_csv(f"{results_path}csv/{author.id}.csv", encoding="utf-8", sep=';')
                 new_df = pd.DataFrame(rows, columns=head)
+                # Forcem les columnes d'escansió i patró a cadenes
+                try:
+                    sc_cols = [str(col) for col in range(1, mode + 1)]
+                    new_df[sc_cols] = new_df[sc_cols].astype(str)
+                except Exception:
+                    pass
+                for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició', 'signatura', 'còlon 1', 'còlon 2']:
+                    if col in new_df.columns:
+                        try:
+                            new_df[col] = new_df[col].astype(str)
+                        except Exception:
+                            continue
                 df = pd.concat([existing_df, new_df], ignore_index=True)
                 df.to_csv(f"{results_path}csv/{author.id}.csv", index=False, sep=';', encoding='utf-8',
-                          lineterminator='\n')
+                          lineterminator='\n', quoting=csv.QUOTE_ALL)
             else:
                 os.makedirs(f"{results_path}csv/", exist_ok=True)
                 with open(f"{results_path}csv/{author.id}.csv", 'w',
                           encoding='utf-8') as f:
                     df = pd.DataFrame(rows, columns=head)
-                    df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True)
+                    # Forcem les columnes d'escansió i patró a cadenes
+                    try:
+                        sc_cols = [str(col) for col in range(1, mode + 1)]
+                        df[sc_cols] = df[sc_cols].astype(str)
+                    except Exception:
+                        pass
+                    for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició', 'signatura', 'còlon 1', 'còlon 2']:
+                        if col in df.columns:
+                            try:
+                                df[col] = df[col].astype(str)
+                            except Exception:
+                                continue
+                    df.to_csv(f, index=False, sep=';', encoding='utf-8', lineterminator='\n', header=True, quoting=csv.QUOTE_ALL)
 
             os.makedirs(f"{results_path}log/", exist_ok=True)
             with open(f"{results_path}log/{author.id}_outsiders.log", 'a', encoding='utf-8') as f:

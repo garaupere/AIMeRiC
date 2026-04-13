@@ -110,9 +110,9 @@ class Vers:
     def __patrons__(self) -> None:
         """Calcula patrons rítmics i mètrics i recompte de síl·labes mètriques/extramètriques."""
         self.patro = abstract_pattern(self.words)
-        self.patro_ritmic = ''.join(str(int(x)) for x in self.patro).rstrip('0')
+        self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
         self.recompte_sillabes_metriques = recompte_metric(self)
-        self.patro_metric = maximal_comparison_pattern(self)
+        self.patro_metric = str(maximal_comparison_pattern(self))
         self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
         self.recompte_sillabes_extrametriques = max(0, len(self.patro) - self.recompte_sillabes_metriques)
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
@@ -132,8 +132,8 @@ class Vers:
             self.subdivisio = None
 
         # Actualitzar representacions derivades
-        self.patro_ritmic = ''.join(str(int(x)) for x in self.patro).rstrip('0')
-        self.patro_metric = maximal_comparison_pattern(self)
+        self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
+        self.patro_metric = str(maximal_comparison_pattern(self))
 
     def __anota__(self) -> None:
         """Genera l'etiquetatge del vers."""
@@ -199,43 +199,18 @@ class Vers:
     def __disposa_tall__(self) -> None:
         """Disposa la representació del patró afegint l'espai després de la posició de tall."""
         if getattr(self, 'subdivisio', None) is None:
-            self.subdivisio = 'Cap'
-        elif self.subdivisio != 'Cap':
-            pos = getattr(self, 'posicio_tall', None)
-            if pos is not None and isinstance(self.patro_metric, str):
-                self.patro_metric = self.patro_metric[:pos] + ' ' + self.patro_metric[pos:]
-                self.patro_ritmic = self.patro_ritmic[:pos] + ' ' + self.patro_ritmic[pos:].rstrip('0')
+            self.subdivisio = 'N/I'
 
     def __colons__(self):
         """Localitza i aïlla els còlons del vers"""
-        cpos = [3,5,4]
-        if '5' in self.patro_ritmic[3]:
-            self.colon_1 = self.patro_ritmic[0:4]
-            self.colon_2 = self.patro_ritmic[4:]
-        elif '5' in self.patro_ritmic[5]:
-            self.colon_1 = self.patro_ritmic[0:6]
-            self.colon_2 = self.patro_ritmic[6:]
-        elif '5' in self.patro_ritmic[4]:
-            self.colon_1 = self.patro_ritmic[0:5]
-            self.colon_2 = self.patro_ritmic[5:]
-        elif '4' in self.patro_ritmic[3]:
-            self.colon_1 = self.patro_ritmic[0:4]
-            self.colon_2 = self.patro_ritmic[4:]
-        elif '4' in self.patro_ritmic[5]:
-            self.colon_1 = self.patro_ritmic[0:6]
-            self.colon_2 = self.patro_ritmic[6:]
-        elif '4' in self.patro_ritmic[4]:
-            self.colon_1 = self.patro_ritmic[0:5]
-            self.colon_2 = self.patro_ritmic[5:]
-        elif '3' in self.patro_ritmic[3]:
-            self.colon_1 = self.patro_ritmic[0:4]
-            self.colon_2 = self.patro_ritmic[4:]
-        elif '3' in self.patro_ritmic[5]:
-            self.colon_1 = self.patro_ritmic[0:6]
-            self.colon_2 = self.patro_ritmic[6:]
-        elif '3' in self.patro_ritmic[4]:
-            self.colon_1 = self.patro_ritmic[0:5]
-            self.colon_2 = self.patro_ritmic[5:]
+        self.colon_1_pos = self.subdivisio.split('+')[0] if self.subdivisio and '+' in self.subdivisio else None
+        self.colon_2_pos = self.subdivisio.split('+')[1] if self.subdivisio and '+' in self.subdivisio else None
+
+        self.colon_1 = self.patro_metric[:int(self.colon_1_pos)] if self.colon_1_pos else None
+        self.colon_2 = self.patro_metric[int(self.colon_1_pos):] if self.colon_1_pos else None
+
+        if self.colon_1[-1] == '0' or self.colon_2[-1] == '2':
+            self.colon_1 = self.colon_2 = self.subdivisio = self.tipus_subdivisio = None
 
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
@@ -327,7 +302,7 @@ class Vers:
 
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Ajustat:", attrs["ajustat"])
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Subdivisió:",
-              attrs["subdivisio"] if attrs["subdivisio"] is not None else 'Cap'),
+              attrs["subdivisio"] if attrs["subdivisio"] is not None else 'N/I'),
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Tipus de subdivisió:",
               attrs["tipus_subdivisio"] if attrs["tipus_subdivisio"] is not None else 'N/A'),
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 1:", attrs["colon_1"] if attrs["colon_1"] is not None else 'N/A'),
@@ -376,7 +351,13 @@ class Vers:
         else:
             sc_col = patro_local[:self.objectiu]
 
-        return [
+        # Convertim explícitament cada element a cadena perquè al CSV surtin com a text,
+        # no com a nombres. Això evita problemes amb eines que interpreten columnes numèriques.
+        sc_col = [str(x) for x in sc_col]
+        # Prefixem amb un apòstrof per forçar que programes com Excel interpretin el valor com a text
+        sc_col = ["'" + x for x in sc_col]
+
+        result = [
             self.text,
             getattr(self, 'escansio_text', None),
             *sc_col,
@@ -384,19 +365,23 @@ class Vers:
             getattr(self, 'recompte_sillabes_extrametriques', None),
             getattr(self, 'subdivisio', None),
             getattr(self, 'tipus_subdivisio', None),
-            getattr(self, 'colon_1', None),
-            getattr(self, 'colon_2', None),
+            str(getattr(self, 'colon_1', None)),
+            str(getattr(self, 'colon_2', None)),
             getattr(self, 'llicencies', None),
             getattr(self, 'n_mots', None),
             getattr(self, 'l_mots', None),
             getattr(self, 'mots_colon1', None),
             getattr(self, 'mots_colon2', None),
             str(getattr(self, 'signatura', '')),
-            str(getattr(self, 'patro_metric', '')),
-            str(getattr(self, 'patro_ritmic', '')),
+            # Assegurem que els patrons rítmic i mètric s'exportin com a cadenes i prefixem l'apòstrof
+            "'" + str(getattr(self, 'patro_metric', '')),
+            "'" + str(getattr(self, 'patro_ritmic', '')),
             getattr(self, 'encavalcament', None),
             getattr(self, 'metronome', None)
         ]
+
+        # Convertim tots els elements a cadena per evitar que pandas infereixi tipus numèrics
+        return [str(x) if x is not None else '' for x in result]
 
     def save_minimal(self) -> Dict[str, Any]:
         """Retorna un diccionari amb informació essencial del vers."""
@@ -404,13 +389,14 @@ class Vers:
             self.text: {
                 "string": getattr(self, 'string', None),
                 "string_stress": getattr(self, 'escansio_text', None),
-                "pattern": getattr(self, 'patro', None),
-                "signatura": getattr(self, 'signatura', None),
+                # Convertim explicitament el patró a cadena per coherència en exportacions
+                "pattern": str(getattr(self, 'patro', None)),
+                "signatura": str(getattr(self, 'signatura', None)),
                 "sillabes_metriques": getattr(self, 'sillables_metriques', None),
                 "sillabes_extrametriques": getattr(self, 'recompte_sillabes_extrametriques', None),
                 "n_words": getattr(self, 'n_mots', None),
                 "l_words": getattr(self, 'l_mots', None),
-                "comparative_pattern": getattr(self, 'patro_ritmic', None),
+                "comparative_pattern": str(getattr(self, 'patro_ritmic', None)),
                 "array": [[syllable.save_metadata() for syllable in mot.stress] for mot in getattr(self, 'words', [])]
             }
         }
