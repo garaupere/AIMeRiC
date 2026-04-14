@@ -192,7 +192,7 @@ if __name__ == "__main__":
                 os.makedirs(f"{results_path}csv/", exist_ok=True)
                 import csv
                 corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
-                                        lineterminator='\n', header=True, decimal=',', quoting=csv.QUOTE_ALL)
+                                        lineterminator='\n', header=True, decimal=',')
 
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)

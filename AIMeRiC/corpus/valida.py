@@ -116,7 +116,7 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> (pd.DataFrame, lis
 
     # Genera un df amb els versos no coincidents marcats amb un booleà
     df_comp['match'] = accuracy
-    df_comp.to_csv('AiMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
+    df_comp.to_csv('AiMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True, quoting=csv.QUOTE_ALL)
 
     return df_comp
 
