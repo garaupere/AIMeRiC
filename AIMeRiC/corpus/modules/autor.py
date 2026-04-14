@@ -2,7 +2,7 @@ import json
 from typing import List, Dict, Any, Optional
 
 
-class Author:
+class Autor:
     """
     Representa un autor i permet carregar informació des d'un fitxer JSON.
 

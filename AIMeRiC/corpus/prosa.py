@@ -6,10 +6,10 @@ import time
 import pandas as pd
 import spacy
 
-from AIMeRiC.corpus.modules.author import Author
-from AIMeRiC.corpus.modules.book import Book
+from AIMeRiC.corpus.modules.autor import Autor
+from AIMeRiC.corpus.modules.obra import Obra
 from AIMeRiC.corpus.modules.getUSB import getUSB
-from AIMeRiC.corpus.modules.poem import Poem
+from AIMeRiC.corpus.modules.poema import Poema
 from AIMeRiC.escansio.escansor import escaneja, escaneja_minim
 from AIMeRiC.escansio.modules.utils import prose
 
@@ -97,15 +97,15 @@ def paragrafs_prosa(nlp, text, goal):
 
 def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
     global corpus_dict, rows
-    author = Author(file_path)  # Crea un objecte Autor
+    author = Autor(file_path)  # Crea un objecte Autor
     corpus_dict = author.save_metadata()  # Guarda la metadata de l'autor
     rows = []
     for book_title in author.books:  # Per a cada llibre de l'autor
-        book = Book(book_title, author.content)  # Crea un objecte Llibre
+        book = Obra(book_title, author.content)  # Crea un objecte Llibre
         corpus_dict['books'].update(book.save_metadata())  # Guarda la metadata del llibre
         for poem_title in book.poems:  # Per cada poema del llibre
             if book.poems[poem_title]:  # Si el poema no és buit
-                pagina = Poem(poem_title, book.book_content)  # Crea un objecte Poema
+                pagina = Poema(poem_title, book.book_content)  # Crea un objecte Poema
                 corpus_dict['books'][book_title]['poems'].update(pagina.save_metadata())
                 for paragraf in pagina.verses:  # Per cada vers del poema
                     if isinstance(paragraf, str) and len(paragraf) > 20:
@@ -126,11 +126,29 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
              'obra', 'any', 'traducció', 'font', 'poema',
              'núm. de vers', 'text del vers',
              'escansió'] + scansion_cols +
-            ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències',
+            ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències', 'mots', 'l_mots',
              'mots al còlon 1', 'mots al còlon 2',
              'patró', 'patró_rítmic', 'encavalcament', 'metronome', 'posició'])
 
-    return corpus_dict, pd.DataFrame(rows, columns=head)
+    # Crea el DataFrame i assegura que les columnes d'escansió i de patró siguin strings
+    df = pd.DataFrame(rows, columns=head)
+
+    # Força les columnes d'escansió (1..goal) a cadenes per evitar que pandas les converteixi a int
+    try:
+        df[scansion_cols] = df[scansion_cols].astype(str)
+    except Exception:
+        # Si falla per alguna raó, ignora i continua; no hauria de passar en condicions normals
+        pass
+
+    # Assegura també que els camps de patró es guardin com a cadena
+    for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició']:
+        if col in df.columns:
+            try:
+                df[col] = df[col].astype(str)
+            except Exception:
+                continue
+
+    return corpus_dict, df
 
 
 if __name__ == "__main__":
@@ -172,8 +190,9 @@ if __name__ == "__main__":
                 print("Desant els resultats en format CSV...")
                 print(corpus_result[1])
                 os.makedirs(f"{results_path}csv/", exist_ok=True)
+                import csv
                 corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
-                                        lineterminator='\n', header=True, decimal=',', float_format='%.2f')
+                                        lineterminator='\n', header=True, decimal=',')
 
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)

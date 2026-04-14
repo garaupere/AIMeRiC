@@ -2,17 +2,29 @@
 import re
 from copy import deepcopy
 
-from AIMeRiC.escansio.modules.syllable import Syllable
+from AIMeRiC.escansio.modules.sillaba import Sillaba
 
 
 def bivalents(result, cat):
+    """Identifica els mots bivalents i assigna el nivell accentual corresponent segons la categoria gramatical"""
+    secondary = ["ADPa", "DET", 'CCONJ', 'SCONJ']
+    semitonics = ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]
     for syllable in result:
         if syllable[1] == 4.0:
-            if cat in ["AUX", "NUM", "PRON", "PRONe", "INTJ", "ADP"]:
-                o_syllable = syllable
-                syllable = (syllable[0], 3.0)
-                result[result.index(o_syllable)] = syllable
-            if cat in ['ADPa', 'DET', 'CCONJ', 'SCONJ']:
+            if cat in semitonics:
+                if cat == 'PRONe':
+                    o_syllable = syllable
+                    syllable = (syllable[0], 2.5)
+                    result[result.index(o_syllable)] = syllable
+                elif cat == 'AUX':
+                    o_syllable = syllable
+                    syllable = (syllable[0], 3.5)
+                    result[result.index(o_syllable)] = syllable
+                else:
+                    o_syllable = syllable
+                    syllable = (syllable[0], 3.0)
+                    result[result.index(o_syllable)] = syllable
+            elif cat in secondary:
                 o_syllable = syllable
                 syllable = (syllable[0], 2.0)
                 result[result.index(o_syllable)] = syllable
@@ -23,7 +35,7 @@ def bivalents(result, cat):
     return result
 
 
-def identify_pronom_assillabic(syllables):
+def identifica_pronom_assillabic(syllables):
     if syllables and "'" in syllables[-1]:
         for pronoun in ["'t", "'s", "'m", "'n", "'l", "'ls", "'ns"]:
             if pronoun in syllables[-1]:
@@ -40,10 +52,10 @@ def resol_xoc_ment(paraula) -> list:
     return paraula
 
 
-def get_stress(self):
+def accentua(self):
     """Aquesta funció retorna la paraula amb l'accentuació"""
     stressed = self.syllables.copy()
-    clean = identify_pronom_assillabic(stressed)
+    clean = identifica_pronom_assillabic(stressed)
     if clean:
         stressed, pronoun = clean
     else:
@@ -81,9 +93,9 @@ def get_stress(self):
             if self.word_ment is not None:
                 w_ment = result + [("ment", 4.0)]
                 w_ment = resol_xoc_ment(w_ment)
-                return [Syllable(0, w_ment[0], 2), Syllable(1, w_ment[1], 2)]
+                return [Sillaba(0, w_ment[0], 2), Sillaba(1, w_ment[1], 2)]
 
-            return [Syllable(0, result[0], 1)]
+            return [Sillaba(0, result[0], 1)]
 
         elif n >= 2:
             """Si el mot té dues o més de dues síl·labes"""
@@ -99,58 +111,14 @@ def get_stress(self):
         result = result + [("ment", 4.0)]
         result = resol_xoc_ment(result)
         self.stress = result
-        #result = forced_rhythmic_alternation(self)
-    result = [Syllable(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
+    result = [Sillaba(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
 
     if clean:
         result[-1].text = result[-1].text + pronoun
     return result
 
 
-def secondary_stress(self):
-    """
-        Assigna un accent secundari (2) a la síl·laba que està 2 posicions abans de la síl·laba amb l'accent primari (>1).
-        A partir de les regles d'Oliva (1992).
-    """
-    """
-    if not self.is_compost:
-        if len(self.syllables) > 2 and 'des' in self.stress[0].text.lower():
-            self.stress[0] = Syllable(0, (self.stress[0].text, 2.0), len_word=len(self.stress))
-
-        if self.word_ment is not None:
-            result = deepcopy(self.stress)[:-1]
-            result_end = deepcopy(self.stress)[-1]
-        else:
-            result = deepcopy(self.stress)
-            result_end = None
-
-        index_accent_primari = None
-        for i, syl in enumerate(result):
-            if syl.pes > 0:
-                index_accent_primari = i
-                break
-        if index_accent_primari is None:
-            return result + [result_end] if self.word_ment is not None else result
-
-        posicio_actual = index_accent_primari - 2
-        while posicio_actual >= 0:
-            syll = result[posicio_actual]
-            result[posicio_actual] = Syllable(posicio_actual, (syll.text, 2.0), len_word=len(self.stress))
-            posicio_actual -= 2
-
-        if len(self.stress) > 2 and index_accent_primari < 3:
-            posicio_actual = index_accent_primari + 2
-            while posicio_actual < len(result):
-                syll = result[posicio_actual]
-                if syll.pes < 2.0:
-                    result[posicio_actual] = Syllable(posicio_actual, (syll.text, 1.5), len_word=len(self.stress))
-                posicio_actual += 2
-
-        self.stress = result + [result_end] if self.word_ment is not None else result"""
-    pass
-
-
-def forced_rhythmic_alternation(self) -> list:
+def accent_secundari(self) -> list:
     """
     Alternança rítmica al llarg de tot el mot a partir de l'accent primari, amb asimetria:
       - esquerra del primari: secundari = 2.0
@@ -186,32 +154,13 @@ def forced_rhythmic_alternation(self) -> list:
             else:
                 new_weight = 1.5
 
-        result[i] = Syllable(i, (syllable.text, new_weight), len(self.stress))
+        result[i] = Sillaba(i, (syllable.text, new_weight), len(self.stress))
 
     self.stress = result
     return result
 
-def aforced_rhythmic_alternation(self):
-    resta = self.stress
-    stressed = self.stress
-    result = []
-    if len(stressed) >= 2:
-        if stressed[-2].pes > 1.0 and stressed[-1].pes > 1.0:
-            #result = [(stressed[-2][0], 0.25), (stressed[-1][0], 4.0)]
-            result = [Syllable(stressed[-2].s_index, (stressed[-2].text, 0.25), len(stressed)),
-                      Syllable(stressed[-1].s_index, (stressed[-1].text, 4.0), len(stressed))]
-            #resta = [(syllable[0], 0.0) for syllable in stressed[:-2]]
-            resta = [Syllable(syllable.s_index, (syllable.text, 0.0), len(stressed)) for syllable in stressed[:-2]]
-        elif stressed[-2].pes <= 1.0 and stressed[-1].pes <= 1.0:
-            #result = [(stressed[-2][0], 4.0), (stressed[-1][0], 1.0)]
-            result = [Syllable(stressed[-2].s_index, (stressed[-2].text, 4.0), len(stressed)),
-                      Syllable(stressed[-1].s_index, (stressed[-1].text, 1.0), len(stressed))]
-            #resta = [(syllable[0], 0.0) for syllable in stressed[:-2]]
-            resta = [Syllable(syllable.s_index, (syllable.text, 0.0), len(stressed)) for syllable in stressed[:-2]]
-    return resta + result
 
-
-def get_stress_index(self):
+def get_index_accent(self):
     for i, syllable in enumerate(self.stress):
         if syllable.pes > 2.0:
             stress_index = i

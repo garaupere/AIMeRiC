@@ -1,4 +1,4 @@
-"""A module for the Word class."""
+"""El mòdul de la classe 'Mot'."""
 import re
 import time
 from copy import deepcopy
@@ -7,21 +7,22 @@ import spacy
 
 from AIMeRiC.escansio.modules.utils.POStagger import posTagger
 from AIMeRiC.escansio.modules.utils.fonologia import starts_with_vowel, ends_with_vowel
-from AIMeRiC.escansio.modules.utils.stress import get_stress, get_stress_index, secondary_stress, \
-    forced_rhythmic_alternation
-from AIMeRiC.escansio.modules.utils.syllabify import hyphenate_word as syllabify
+from AIMeRiC.escansio.modules.utils.accentuacio import accentua, get_index_accent, accent_secundari
+from AIMeRiC.escansio.modules.utils.sillabifica import hyphenate_word as syllabify
 
 nlp = spacy.load("ca_core_news_md", disable=["ner"])
 
 
-class Word:
+class Mot:
     """Aquesta classe representa una paraula amb les seves característiques."""
 
     def __init__(self, token, length):
         self.w_index = token.i
         self.lower = token.lower_
         self.verse_wlength = length
-        self.text = token.text
+        self.text = token.text.replace("-", "")
+        self.original_text = deepcopy(token.text)
+        self.has_PRONe = False
 
         # helper to read extension safely
         def ext(name):
@@ -32,6 +33,11 @@ class Word:
 
         # prefer corrected values stored in token._.* extensions, fallback to token attributes
         self.pos_ = getattr(token, "pos_", None) or ext("upos_corr")
+        if '-' in self.original_text:
+            if '-' in self.original_text[0]:
+                self.pos_ = 'PRONe'
+            elif '-' in self.original_text[-1]:
+                self.has_PRONe = True
         self.dep_ = getattr(token, "dep_", None) or ext("dep_corr")
         self.lemma_ = getattr(token, "lemma_", None) or ext("lemma_corr")
         self.head = getattr(token, "head", None) or ext("head_corr")
@@ -59,14 +65,13 @@ class Word:
         self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?)
         self.word_ment = self.word_ment()
         self.n_syllables = len(self.syllables)  # Número de síl·labes
-        self.stress = get_stress(self)
-        self.stress_index = get_stress_index(self)
+        self.stress = accentua(self)
+        self.stress_index = get_index_accent(self)
         self.is_compost = False
         #if self.stress_index is not None and self.stress_index > 2:
         #    self.compost()
 
-        #secondary_stress(self)
-        forced_rhythmic_alternation(self)
+        accent_secundari(self)
         self.starts_with_vowel = starts_with_vowel(self)
         self.ends_with_vowel = ends_with_vowel(self)
         self.plain_syllables = self.plain()  # Afegir a un mòdul independent: escansio/utils/representation.py
@@ -147,7 +152,7 @@ class Word:
             return syllabify(self.text.replace("ment", ""))
 
     def print_metadata(self):
-        for attr in ["text", "lower", "w_index", "pos_", "dep_", "lemma_", "morph", "head", "word_ment",
+        for attr in ["text", "lower", "w_index", "has_PRONe", "pos_", "dep_", "lemma_", "morph", "head", "word_ment",
                      "syllables", "n_syllables", "print_stress",
                      "starts_with_vowel",
                      "ends_with_vowel", "plain_syllables", "is_compost"]:
@@ -163,6 +168,7 @@ class Word:
             "index": self.w_index,
             "text": self.text,
             "upos": self.pos_,
+            "has_PRONe": self.has_PRONe,
             "dep_": self.dep_,
             "lemma_": self.lemma_,
             "morph": self.morph.to_dict(),
@@ -175,7 +181,7 @@ class Word:
         }
 
     def compost(self):
-        """Un mètode per assignar l'accent secundari als mots composts."""
+        """Un mètode per assignar l'accent secundari als mots composts. ACTUALMENT NO S'APLICA, MASSA COSTÓS I POC EXHAUSTIU."""
         original = deepcopy(self.stress)
         # Cream un índex de divisió del mot a la meitat + una síl·laba
         div_index = round((self.n_syllables / 2))
@@ -185,12 +191,12 @@ class Word:
             if not doc2[0].is_oov and doc2[0].pos_ in ["NOUN", "VERB", "ADV",
                                                        "ADJ",
                                                        "ADP"]:  # Si el mot no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
-                word_1 = Word(''.join(self.syllables[0:div_index]),
-                              doc2[0].pos_)  # Cream el primer component del mot compost.
+                word_1 = Mot(''.join(self.syllables[0:div_index]),
+                             doc2[0].pos_)  # Cream el primer component del mot compost.
                 word_1.syllables = self.syllables[
                     0:div_index]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
-                get_stress(word_1)
-                get_stress_index(word_1)
+                accentua(word_1)
+                get_index_accent(word_1)
                 # print([(syl.text, syl.pes) for syl in word_1.stress])
                 for syl in word_1.stress:  # Assignam el valor d'accent secundari a l'accent primari del primer component del mot compost.
                     if int(syl.pes) > 2:
@@ -199,12 +205,12 @@ class Word:
                 if not doc3[0].is_oov and doc3[0].pos_ in ["NOUN", "VERB", "ADV",
                                                            "ADJ",
                                                            "ADP"]:  # Si el segon component del mot compost no és 'estrany' i és un nom, verb o adverbi (cat. que poden formar mots composts segons la GIEC)
-                    word_2 = Word(''.join(self.syllables[div_index:]),
-                                  doc3[0].pos_)  # Cream el segon component del mot compost.
+                    word_2 = Mot(''.join(self.syllables[div_index:]),
+                                 doc3[0].pos_)  # Cream el segon component del mot compost.
                     word_2.syllables = self.syllables[
                         div_index::]  # Ens asseguram que el mot obeeixi la divisió sil·làbica original
-                    get_stress(word_2)
-                    get_stress_index(word_2)
+                    accentua(word_2)
+                    get_index_accent(word_2)
                     # print([(syl.text, syl.pes) for syl in word_2.stress])
                     self.stress = word_1.stress + word_2.stress  # Unim els dos components del mot compost en un sol mot (el mot que s'està creant).
                     self.is_compost = True
@@ -214,8 +220,7 @@ class Word:
                 if 2.0 not in [syl.pes for syl in self.stress]:
                     self.is_compost = False
                     self.stress = original
-                    #secondary_stress(self)
-                    forced_rhythmic_alternation(self)
+                    accent_secundari(self)
                     break
                 else:
                     self.is_compost = True
@@ -228,13 +233,13 @@ class Word:
 
 if __name__ == "__main__":
 
-    sentence = " doler-me"
+    sentence = "aquest"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)
     print(doc)
     for token in doc:
-        word = (Word(token, len(doc)))
+        word = (Mot(token, len(doc)))
         word.print_metadata()
         print(word.save_metadata())
     print(time.time() - start)

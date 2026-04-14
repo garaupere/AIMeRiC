@@ -2,7 +2,7 @@ import re
 from typing import List, Dict, Optional
 
 
-class Poem:
+class Poema:
     """
     Representa un poema dins d'un llibre.
 

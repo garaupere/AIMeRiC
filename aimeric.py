@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from colorama import Fore
 from tqdm import tqdm
+import csv
 
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
@@ -73,7 +74,7 @@ def check_jsons(corpus):
 def scan_dictionary(nlp):
     """Escaneja prosòdicament els mots d'un diccionari. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
     resultats = escaneja_diccionari(nlp)
-    resultats.to_csv(f'{getUSB()}/corpora/diccionari/diccionari_prosodic.csv', index=False, encoding='utf-8', sep=';')
+    resultats.to_csv(f'{getUSB()}/corpora/diccionari/diccionari_prosodic.csv', index=False, encoding='utf-8', sep=';', quoting=csv.QUOTE_ALL)
     print(f"Escansió del diccionari completada i desada a '{getUSB()}/corpora/diccionari/diccionari_prosodic.csv'.")
 
 
@@ -134,7 +135,7 @@ def compara_corpus(corpus1, corpus2):
 def scan_dictionary_frequencies(nlp):
     """Escaneja prosòdicament els mots d'un diccionari amb freqüències. Parteix del catalan-dict-tools (Softcatalà, J. Ortolà)"""
     escaneja_diccionari_frequencies(nlp).to_csv(f'{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv',
-                                                index=False, encoding='utf-8', sep=';')
+                                                index=False, encoding='utf-8', sep=';', quoting=csv.QUOTE_ALL)
     print(
         f"Escansió del diccionari de freqüències completada i desada a '{getUSB()}/corpora/diccionari/FREQDCC_prosodic.csv'.")
 
@@ -162,8 +163,8 @@ def main(nlp):
         elif option == "-bkp":
             print("--" * 40)
             start = time.time()
-            backup_path = "C:\\Users\\pere\\OneDrive - Universitat de les Illes Balears\\Documents\\UIB\\Estudis oficials\\Doctorat en Filologia i Filosofia\\Tesi\\TESI ESPAI DE TREBALL NET\\DADES\\.backup\\"
-            corpus_path = getUSB()
+            backup_path = r"C:\Users\pereg\OneDrive - Universitat de les Illes Balears\Documents\UIB\Estudis oficials\Doctorat en Filologia i Filosofia\Tesi\TESI ESPAI DE TREBALL NET\DADES\.backup"
+            corpus_path = getUSB() + '/'
             backup_files(corpus_path, backup_path)
             elapsed_time = time.time() - start
             minutes = int(elapsed_time // 60)
@@ -197,10 +198,14 @@ def main(nlp):
             if len(options) < 3:
                 if options[0] == '-comp':
                     corpus = options[1]
-                    try:
-                        compile(raw_files_path, corpus)
-                    except FileNotFoundError:
-                        print('El corpus seleccionat no existeix.')
+                    if corpus == 'DecaCo':
+                        print(Fore.RED + "Està prohibit compliar aquest corpus!" + Fore.RESET)
+                        exit()
+                    else:
+                        try:
+                            compile(raw_files_path, corpus)
+                        except FileNotFoundError:
+                            print('El corpus seleccionat no existeix.')
 
                 elif options[0] == '-etiq':
                     corpus = options[1]
@@ -236,10 +241,8 @@ def main(nlp):
                                 print("Desant els resultats en format CSV...")
                                 print(corpus_result[1])
                                 os.makedirs(f"{results_path}csv/", exist_ok=True)
-                                corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';',
-                                                        encoding='utf-8',
-                                                        lineterminator='\n', header=True, decimal=',',
-                                                        float_format='%.2f')
+                                corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
+                                        lineterminator='\n', header=True, decimal=',', quoting=csv.QUOTE_ALL)
                             except FileNotFoundError:
                                 print('El corpus seleccionat no existeix.')
                     elapsed_time = time.time() - start

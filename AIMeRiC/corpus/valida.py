@@ -5,11 +5,50 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score
+import matplotlib as mpl
+from matplotlib import font_manager
+from pathlib import Path
 
 from AIMeRiC.corpus.modules.getUSB import getUSB
+fpath = Path(mpl.get_data_path(), r"C:\Users\pereg\AppData\Local\Microsoft\Windows\Fonts\cmunrm.ttf")
+font_manager.fontManager.addfont(fpath)
+#prop = font_manager.FontProperties(fname=fpath)
+#plt.rcParams['font.family'] = 'sans-serif'
+#plt.rcParams['font.sans-serif'] = prop.get_name()
+#plt.rcParams.update({'font.size': 12})
+tex_fonts = {
+    # Use LaTeX to write all text
+    "text.usetex": True,
+    "font.family": "serif",
+    # Use 10pt font in plots, to match 10pt font in document
+    "axes.labelsize": 12,
+    "font.size": 12,
+    # Make the legend/label fonts a little smaller
+    "legend.fontsize": 12,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12
+}
 
-plt.rcParams['svg.fonttype'] = 'none'
-plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams.update(tex_fonts)
+#plt.rcParams["svg.fonttype"] = "none"
+
+
+mpl.rcParams["xtick.color"] = "black"      # color de ticks (opcional però recomanat)
+mpl.rcParams["ytick.color"] = "black"
+mpl.rcParams["xtick.labelcolor"] = "black" # color de les etiquetes dels ticks (opcional)
+mpl.rcParams["ytick.labelcolor"] = "black"
+
+mpl.rcParams["axes.spines.left"] = True
+#mpl.rcParams["axes.spines.right"] = True
+mpl.rcParams["axes.spines.bottom"] = True
+#mpl.rcParams["axes.spines.top"] = True
+mpl.rcParams["axes.edgecolor"] = "black"
+mpl.rcParams["axes.linewidth"] = 0.45
+mpl.rcParams['patch.linewidth'] = 0.4
+# opcional:
+# mpl.rcParams['axes.linewidth'] = 0.6
+onepath = r"C:\Users\pereg\OneDrive - Universitat de les Illes Balears\Documents\UIB\Estudis oficials\Doctorat en Filologia i Filosofia\Tesi\TESI ESPAI DE TREBALL NET\REDACCIÓ\LaTeX\03_Resultats\figures"
+
 
 
 
@@ -77,13 +116,14 @@ def compare(automatic: pd.DataFrame, manual: pd.DataFrame) -> (pd.DataFrame, lis
 
     # Genera un df amb els versos no coincidents marcats amb un booleà
     df_comp['match'] = accuracy
-    df_comp.to_csv('AiMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True)
+    df_comp.to_csv('AiMeRiC/corpus/validacio/errors.csv', sep=';', encoding='utf-8', index=False, header=True, quoting=csv.QUOTE_ALL)
 
     return df_comp
 
 
 def plot_comparison(comparison_df):
     """Una funció per comparar els valors de tonicitat de les síl·labes automàtiques i manuals."""
+
     auto = comparison_df[
         ['1_auto', '2_auto', '3_auto', '4_auto', '5_auto', '6_auto', '7_auto', '8_auto', '9_auto', '10_auto']]
     manual = comparison_df[
@@ -107,6 +147,7 @@ def plot_comparison(comparison_df):
     plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
     plt.savefig('AiMeRiC/corpus/validacio/comparison.png', dpi=600)
+    plt.savefig(f'{onepath}/corpus/comparison.png', dpi=600)
     plt.close()
 
     # Calcula la distància total entre els valors automàtics i manuals

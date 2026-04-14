@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
 
-class Book:
+class Obra:
     """
     Representa un llibre de l'autor.
 

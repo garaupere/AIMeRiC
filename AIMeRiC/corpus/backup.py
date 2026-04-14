@@ -24,7 +24,7 @@ def backup_files(corpus_path, backup_path):
 
 if __name__ == '__main__':
     start = time.time()
-    backup_path = "C:\\Users\\pere\\OneDrive - Universitat de les Illes Balears\\Documents\\UIB\\Estudis oficials\\Doctorat en Filologia i Filosofia\\Tesi\\TESI ESPAI DE TREBALL NET\\DADES\\.backup\\"
+    backup_path = r"C:\PhD Thesis"
     corpus_path = "E:/"
     backup_files(corpus_path, backup_path)
     elapsed_time = time.time() - start

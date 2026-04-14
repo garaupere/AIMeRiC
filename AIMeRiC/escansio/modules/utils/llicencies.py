@@ -1,11 +1,11 @@
 """Un mòdul per a aplicar les solucions prosòdiques forçades"""
 import re
 
-from AIMeRiC.escansio.modules.syllable import Syllable
-from AIMeRiC.escansio.modules.word import Word
+from AIMeRiC.escansio.modules.sillaba import Sillaba
+from AIMeRiC.escansio.modules.mot import Mot
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
-    best_sineresi, neutralitza_accents_secundaris
-from .stress import get_stress_index, secondary_stress, forced_rhythmic_alternation
+    millor_sineresi, neutralitza_accents_secundaris
+from .accentuacio import get_index_accent
 
 
 def llicencies(self, permit, doc) -> list[str] | None:
@@ -109,7 +109,7 @@ def sineresi(self, times):
     Example: his.tò.ri.a -> his.tò.ria
     """
     counter = 0  # Comptador de vegades que s'ha aplicat la sineresi
-    best = best_sineresi(self)
+    best = millor_sineresi(self)
     if best:
         diff = self.recompte_sillabes_metriques - self.objectiu
         while diff > 0 and best and counter < times:
@@ -120,7 +120,7 @@ def sineresi(self, times):
                     result.text = re.sub(r"_", "", result.text)
                     if result:
                         word.stress.remove(change[1])
-                        word.stress_index = get_stress_index(word)
+                        word.stress_index = get_index_accent(word)
                         neutralitza_accents_secundaris(self)
                         counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu
@@ -132,7 +132,7 @@ def dialefa(self, diferencia, doc, times):
     # print("Dialefa")
     counter = 0
     if len(self.words) > 1:
-        self.words.append(Word(doc[0], len(self.words)))
+        self.words.append(Mot(doc[0], len(self.words)))
         # print([word.plain() for word in self.words])
         len_words = len(self.words)
         i = 0
@@ -161,7 +161,7 @@ def dialefa(self, diferencia, doc, times):
                 """Mètode 1: dos mots monosil·làbics"""
                 word1_syll = self.words[i].stress[-1]
                 result = split_syllable(self, word1_syll)
-                self.words.insert(j, Word(doc[0], len(self.words)))
+                self.words.insert(j, Mot(doc[0], len(self.words)))
                 self.words[i].stress[-1] = result[0]
                 self.words[j].stress[0] = result[1]
 
@@ -177,7 +177,7 @@ def dialefa(self, diferencia, doc, times):
                 """Mètode 2: monosil·lab i polisil·lab"""
                 word1_syll = self.words[i].stress[0]
                 result = split_syllable(self, word1_syll)
-                self.words.insert(i, Word(doc[0], len(self.words)))
+                self.words.insert(i, Mot(doc[0], len(self.words)))
                 self.words[i].stress[-1] = result[0]
                 self.words[j].stress[0] = result[1]
 
@@ -193,7 +193,7 @@ def dialefa(self, diferencia, doc, times):
                 """Mètode 3: polisil·lab i monosil·lab"""
                 word1_syll = self.words[i].stress[-1]
                 result = split_syllable(self, word1_syll)
-                self.words.insert(j, Word(doc[0], len(self.words)))
+                self.words.insert(j, Mot(doc[0], len(self.words)))
                 self.words[i].stress[-1] = result[0]
                 self.words[j].stress[0] = result[1]
                 len_words += 1
@@ -209,7 +209,7 @@ def dialefa(self, diferencia, doc, times):
                 word1_syll = self.words[i].stress[0]
                 result = split_syllable(self, word1_syll)
                 if word1_syll.triftong:
-                    self.words.insert(i, Word(doc[0], len(self.words)))
+                    self.words.insert(i, Mot(doc[0], len(self.words)))
                     self.words[i].stress.append(result[0])
                 else:
                     self.words[i - 1].stress.append(result[0])
@@ -246,9 +246,9 @@ def dieresi(self, times):
                     # Crea dues síl·labes a partir del diftong
                     sillaba_split = re.sub(r"(.*[aeiouàéèíòóú])([iy].*)", r"\1@\2",
                                            syllable.text)
-                    sil1 = Syllable(syllable.s_index, (sillaba_split.split("@")[0], 0), syllable.len_word + 1)
-                    sil2 = Syllable(syllable.s_index + 1, (sillaba_split.split("@")[1], syllable.pes),
-                                    syllable.len_word)
+                    sil1 = Sillaba(syllable.s_index, (sillaba_split.split("@")[0], 0), syllable.len_word + 1)
+                    sil2 = Sillaba(syllable.s_index + 1, (sillaba_split.split("@")[1], syllable.pes),
+                                   syllable.len_word)
 
                     sil1.diftong = False
                     sil2.diftong = False

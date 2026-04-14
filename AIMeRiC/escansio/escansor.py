@@ -1,10 +1,10 @@
 __author__ = "Pere Garau Borràs"
 __copyright__ = "Copyright © 2025, Pere Garau Borràs"
-__version__ = "0.7.9"
+__version__ = "0.7.3"
 
 import spacy
 
-from AIMeRiC.escansio.modules.verse import Vers
+from AIMeRiC.escansio.modules.vers import Vers
 
 
 def escaneja(nlp, verse: str, goal: int, permet_llicencies: bool = True) -> Vers | None:
@@ -25,7 +25,7 @@ def escaneja_minim(nlp, verse: str, goal: int, permet_llicencies: bool = False) 
 
 if __name__ == "__main__":
     nlp = spacy.load('ca_core_news_lg')
-    exemple = "Sol, i de dol, i amb vetusta gonella"
+    exemple = "em commou aquest altre que és més gran,"
     doc = nlp(exemple)
 
     escaner = escaneja(nlp, exemple, 10)

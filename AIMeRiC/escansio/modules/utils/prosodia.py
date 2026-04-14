@@ -1,5 +1,5 @@
 """Un mòdul per gestionar funcions prosòdiques del vers"""
-from .meter import recompte_metric
+from .metre import recompte_metric
 
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Callable, Any, Generator, Dict
@@ -81,10 +81,46 @@ class ReglaAccent:
         if sillaba is None:
             return
 
-        sillaba.pes = nou_pes
-        for word in words:
-            if sillaba in word.stress:
-                word.stress[word.stress.index(sillaba)].pes = nou_pes
+        # Protecció centralitzada per evitar assignacions indegudes de CIM_MAXIM (5.0)
+        if nou_pes == PesAccent.CIM_MAXIM:
+            # Si tenim referència al vers, validem el candidat de tall amb les mateixes regles
+            vers_obj = getattr(self, '_vers', None)
+            if vers_obj is not None:
+                try:
+                    from AIMeRiC.escansio.modules.utils.decasillab import troba_tall_posible
+                    idx = vers_obj.nomes_sillabes.index(sillaba)
+                    # Només assignem 5 si troba_tall_posible diu 'best'
+                    if troba_tall_posible(vers_obj, idx, True) != 'best':
+                        return
+                except Exception:
+                    # Si no podem validar, no assignem el cim
+                    return
+            # La síl·laba ha de ser l'última del mot, no fusionada i la paraula no ha de tenir pronom enclític
+            word_found = None
+            for w in words:
+                if sillaba in getattr(w, 'stress', []):
+                    word_found = w
+                    break
+            if word_found is None:
+                # No podem determinar la paraula, no assignem el cim
+                return
+            # comprovar condicions
+            if not getattr(sillaba, 'fusionada', False) and word_found.stress and word_found.stress[-1] == sillaba and not getattr(word_found, 'has_PRONe', False):
+                sillaba.pes = nou_pes
+                # reflectim el canvi també a la representació dins de la paraula
+                try:
+                    word_found.stress[word_found.stress.index(sillaba)].pes = nou_pes
+                except Exception:
+                    pass
+            else:
+                # Si no es compleixen les condicions, no assignem 5.0
+                return
+        else:
+            # Assignacions normals (altres pesos)
+            sillaba.pes = nou_pes
+            for word in words:
+                if sillaba in getattr(word, 'stress', []):
+                    word.stress[word.stress.index(sillaba)].pes = nou_pes
 
 
 # === REGLES ESPECÍFIQUES ===
@@ -248,12 +284,56 @@ class ReglaXocAccents(ReglaAccent):
                     self.canvia_pes(ctx, sil1, PesAccent.DESACCENTUADA, words)
                     return True
                 elif sil1_en_tall and not sil2_en_tall:
-                    if sil2.pes < PesAccent.LEXIC:
+                    # Abans d'assignar el cim, comprovem condicions de paraula i síl·labes
+                    try:
+                        word1 = ctx.get_paraula(sil1, words)
+                    except Exception:
+                        word1 = None
+
+                    cond_word_ok = False
+                    if word1 and getattr(word1, 'stress', None):
+                        # Ha de ser l'última síl·laba del mot, no fusionada i no tenir pronom enclític
+                        if word1.stress and word1.stress[-1] == sil1 and getattr(sil1, 'fusionada', False) is False and getattr(word1, 'has_PRONe', False) is False:
+                            cond_word_ok = True
+
+                    if cond_word_ok and sil2.pes < PesAccent.LEXIC:
                         self.canvia_pes(ctx, sil1, PesAccent.CIM_MAXIM, words)
                         self.canvia_pes(ctx, sil2, PesAccent.DESACCENTUADA, words)
                         return True
 
-            # Cas per defecte: desaccentuar la síl·laba de pes més baix
+            # Comprovació addicional: si el vers té una subdivisió (ex: '4+6','6+4','5+5')
+            # i una de les síl·labes implicades coincideix amb la posició de la subdivisió,
+            # no hem de desaccentuar aquesta síl·laba (ha de funcionar com si tingués més pes).
+            # Això evita que la frontera de la subdivisió perdi l'accent per efecte d'un xoc.
+            vers_obj = getattr(self, '_vers', None)
+            subdiv_positions = set()
+            if vers_obj is not None:
+                subdiv = getattr(vers_obj, 'subdivisio', None)
+                if isinstance(subdiv, str) and '+' in subdiv:
+                    try:
+                        parts = [p.strip() for p in subdiv.split('+')]
+                        for p in parts:
+                            if p.isdigit():
+                                subdiv_positions.add(int(p))
+                    except Exception:
+                        subdiv_positions = set()
+
+            # Si només una de les síl·labes està en la posició de subdivisió, preferim
+            # desaccentuar l'altra sílaba (no toquem la sílaba de la frontera).
+            if pos_sil1 and pos_sil2 and subdiv_positions:
+                if pos_sil1 in subdiv_positions and pos_sil2 not in subdiv_positions:
+                    # preservem sil1, desaccentuem sil2
+                    self.canvia_pes(ctx, sil2, PesAccent.DESACCENTUADA, words)
+                    return True
+                if pos_sil2 in subdiv_positions and pos_sil1 not in subdiv_positions:
+                    # preservem sil2, desaccentuem sil1
+                    self.canvia_pes(ctx, sil1, PesAccent.DESACCENTUADA, words)
+                    return True
+                if pos_sil1 in subdiv_positions and pos_sil2 in subdiv_positions:
+                    # Ambdues són fronteres de subdivisió; no fem res en aquest cas
+                    return False
+
+            # Si no hi ha subdivisió que afecti, comportament per defecte: desaccentuar la de pes més baix
             target = sil1 if sil2.pes >= sil1.pes else sil2
             self.canvia_pes(ctx, target, PesAccent.DESACCENTUADA, words)
             return True
@@ -285,6 +365,7 @@ class ReglaXocAccentsSecundaris(ReglaAccent):
 
                 self.canvia_pes(ctx, target, PesAccent.ATONA, words)
                 return True
+
 
         # XOCS ENTRE PREV I CURR
         if ctx.prev is not None:
@@ -481,9 +562,9 @@ class ReglaAccentsSecundaris(ReglaAccent):
         if (PesAccent.ATONA < curr.pes <= PesAccent.DESACCENTUADA
                 and next.pes < PesAccent.LLINDAR_SECUNDARI):
             if curr.pes > next.pes:
-                self.canvia_pes(ctx, next, PesAccent.ATONA, words)
+                self.canvia_pes(ctx, next, PesAccent.SECUNDARI_DESACCENTUADA, words)
             else:
-                self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+                self.canvia_pes(ctx, curr, PesAccent.SECUNDARI_DESACCENTUADA, words)
             canvis = True
 
         # Desaccentuada entre àtones
@@ -495,7 +576,7 @@ class ReglaAccentsSecundaris(ReglaAccent):
 
         # Desaccentuada després d'àtona
         if curr.pes < PesAccent.DESACCENTUADA < next.pes:
-            self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+            self.canvia_pes(ctx, curr, PesAccent.SECUNDARI_DESACCENTUADA, words)
             canvis = True
 
         # xXx
@@ -553,6 +634,11 @@ class ReglaPostProcessament(ReglaAccent):
                 self.canvia_pes(ctx, curr, PesAccent.SECUNDARI, words)
                 canvis = True
 
+            if curr.pes >= PesAccent.BIVALENT and (next.pes < PesAccent.BIVALENT and next.pes > PesAccent.ATONA):
+                self.canvia_pes(ctx, next, PesAccent.SECUNDARI_DESACCENTUADA, words)
+                ReglaAccentsSecundaris()
+                canvis = True
+
         return canvis
 
 
@@ -587,16 +673,18 @@ class ReglaPrimeraSillabaFinal(ReglaAccent):
         # Comprova si les dues següents són àtones
         if curr.pes < PesAccent.BIVALENT and next.pes == PesAccent.ATONA and nextnext.pes >= PesAccent.SECUNDARI:
             self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
+        elif curr.pes < PesAccent.BIVALENT and next.pes < PesAccent.SECUNDARI <= nextnext.pes:
+            self.canvia_pes(ctx, curr, PesAccent.SECUNDARI_DESACCENTUADA, words)
         elif next.pes != PesAccent.ATONA or nextnext.pes != PesAccent.ATONA:
             return False
 
         # Si la primera síl·laba ha estat desaccentuada o és àtona
         # i les dues següents són àtones, restaura a accent secundari
-        elif curr.pes < PesAccent.BIVALENT:  # < 3.0
-            if curr.pes == PesAccent.ATONA:
+        elif curr.pes == PesAccent.DESACCENTUADA:  # < 3.0
+            #if curr.pes == PesAccent.ATONA:
                 # Restaura de 0 a 2 (accent secundari)
-                self.canvia_pes(ctx, curr, PesAccent.SECUNDARI, words)
-                return True
+            self.canvia_pes(ctx, curr, PesAccent.SECUNDARI, words)
+            return True
             # Si ja té un accent entre 0.75 i 2.5, el manté (no fa res)
             # Això es gestiona implícitament no canviant-lo
 
@@ -606,7 +694,8 @@ class ReglaPrimeraSillabaFinal(ReglaAccent):
 class GestorAccentsProsodics:
     """Gestiona l'aplicació de regles d'accents prosòdics."""
 
-    def __init__(self, debug: bool = False):
+    def __init__(self, subdividit, debug: bool = False):
+        self.subdividit = subdividit
         self.debug = debug
         self.regles_xocs: List[ReglaAccent] = []
         self.regles_secundaris: List[ReglaAccent] = []
@@ -740,6 +829,14 @@ class GestorAccentsProsodics:
         """Aplica totes les regles als accents prosòdics del vers en tres passades."""
         sillabes = vers.nomes_sillabes
 
+        # Assignem referència al vers a cada regla perquè `canvia_pes` pugui validar
+        totes_regles = self.regles_xocs + self.regles_secundaris + self.regles_xocs_secundaris + self.regles_finals
+        for regla in totes_regles:
+            try:
+                regla._vers = vers
+            except Exception:
+                pass
+
         if self.debug:
             print(f"\n{'#' * 60}")
             print(f"# INICI PROCESSAMENT: {len(sillabes)} síl·labes")
@@ -753,7 +850,7 @@ class GestorAccentsProsodics:
             print(f"{'#' * 60}")
 
         # Ordre dels xocs a resoldre amb tots els valors intermitjos (3.5, 2.5, 1.5)
-        ordre_xocs = [
+        grup1 = [
             # Grup 1: Xocs amb 5 (inclou 4, 3.5, 3, 2.5, 2, 1.5)
             (4.0, 5.0, "4-5"),
             (3.5, 5.0, "3-5"),
@@ -766,8 +863,10 @@ class GestorAccentsProsodics:
             (5.0, 3.0, "5-3"),
             (5.0, 2.5, "5-2"),
             (5.0, 2.0, "5-2"),
-            (5.0, 1.5, "5-2"),
+            (5.0, 1.5, "5-2")
+            ]
 
+        grup2 = [
             # Grup 2: Xocs amb 4 (inclou 3.5, 3, 2.5, 2, 1.5)
             (4.0, 4.0, "4-4"),
             (3.5, 4.0, "3-4"),
@@ -779,8 +878,9 @@ class GestorAccentsProsodics:
             (4.0, 3.0, "4-3"),
             (4.0, 2.5, "4-2"),
             (4.0, 2.0, "4-2"),
-            (4.0, 1.5, "4-2"),
-
+            (4.0, 1.5, "4-2")
+        ]
+        grup3 = [
             # Grup 3: Xocs amb 3.5 i 3 (inclou 2.5, 2, 1.5)
             (3.5, 3.5, "3-3"),
             (3.5, 3.0, "3-3"),
@@ -791,8 +891,9 @@ class GestorAccentsProsodics:
             (3.5, 1.5, "3-2"),
             (3.0, 2.5, "3-2"),
             (3.0, 2.0, "3-2"),
-            (3.0, 1.5, "3-2"),
-
+            (3.0, 1.5, "3-2")
+            ]
+        grup4 = [
             # Grup 4: Xocs amb 2.5, 2 i 1.5
             (2.5, 5.0, "2-5"),
             (2.5, 4.0, "2-4"),
@@ -814,8 +915,13 @@ class GestorAccentsProsodics:
             (1.5, 3.0, "2-3"),
             (1.5, 2.5, "2-2"),
             (1.5, 2.0, "2-2"),
-            (1.5, 1.5, "2-2"),
+            (1.5, 1.5, "2-2")
         ]
+
+        #if self.subdividit:
+        ordre_xocs = grup1 + grup2 + grup3 + grup4
+        #else:
+        #    ordre_xocs = grup3 + grup4
 
         for pes1, pes2, nom_xoc in ordre_xocs:
             if self.debug:
@@ -977,7 +1083,7 @@ class GestorAccentsProsodics:
             print(f"{'#' * 60}\n")
 
 
-def accents_prosodics(self, debug: bool = False):
+def accents_prosodics(self, subdividit=False, debug: bool = False):
     """
     Ajusta els accents prosòdics de les síl·labes del vers segons regles específiques.
 
@@ -985,7 +1091,7 @@ def accents_prosodics(self, debug: bool = False):
         self: Objecte que conté les síl·labes i paraules del vers.
         debug: Si True, mostra informació de debug.
     """
-    gestor = GestorAccentsProsodics(debug=debug)
+    gestor = GestorAccentsProsodics(subdividit, debug=debug)
     gestor.aplica_regles(self)
 
 
@@ -1002,7 +1108,6 @@ def cim_maxim(self):
                 self.patro[last_sil] = 5.0
             # Si hi ha més síl·labes després de last_sil (possiblement entre 0 i 3)
             if len(sense_mots) > last_sil + 1:
-                # Ajusta el pes de la següent síl·laba a 0.0
                 word_index = None
                 for word in self.words:
                     if sense_mots[last_sil] in word.stress:
@@ -1033,3 +1138,4 @@ def cim_maxim(self):
             self.recompte_sillabes_extrametriques = len(self.patro) - self.recompte_sillabes_metriques
     except IndexError:
         pass
+
