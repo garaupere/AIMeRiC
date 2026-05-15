@@ -28,7 +28,7 @@ from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, e
 from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.utils.llicencies import llicencies
 from AIMeRiC.escansio.modules.utils.metre import recompte_metric, metre_ajustat, abstract_pattern, \
-    maximal_comparison_pattern
+    maximal_comparison_pattern, patro_metric_PC
 from AIMeRiC.escansio.modules.utils.prosodia import accents_prosodics, cim_maxim
 from AIMeRiC.escansio.modules.utils.syntax import encavalcament
 from AIMeRiC.escansio.modules.utils.mot_info import quants_mots, safe_words
@@ -55,7 +55,6 @@ class Vers:
         self.encavalcament = encavalcament(self.text)
         self._minimal = minimal
         self.colon_1, self.colon_2 = None, None
-
         # Preparació bàsica (etiquetatge i construcció d'objectes Mot)
         self.__prepara__(nlp)
 
@@ -80,9 +79,21 @@ class Vers:
                 self.__metronome__()
                 self.__rima__()
                 self.llicencies = None
+                if not self.subdivisio:
+                    subdivisio_info = subdivisiona(self)
+                    self.subdivisio = subdivisio_info[0] if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 0 else None
+                    self.tipus_subdivisio = subdivisio_info[1] if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 1 else None
+                    if self.subdivisio:
+                        self.colon_1 = self.patro_metric[:int(self.subdivisio.split('+')[0])] if self.subdivisio and '+' in self.subdivisio else None
+                        self.colon_2 = self.patro_metric[int(self.subdivisio.split('+')[0]):] if self.subdivisio and '+' in self.subdivisio else None
+                    self.patro_metric = maximal_comparison_pattern(self)
+                    # Actualitzem també la versió PC del patró mètric
+                    self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio) if self.subdivisio else None
+                    self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
+
                 self.__disposa_tall__()
             else:
-                # Si no està ajustat, calcula possibles llicències
+                # Si no està ajustat, aplica llicències
                 self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
 
         else:
@@ -113,6 +124,16 @@ class Vers:
         self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
         self.recompte_sillabes_metriques = recompte_metric(self)
         self.patro_metric = str(maximal_comparison_pattern(self))
+        # Generem/actualitzem la versió 'PC' del patró mètric només si ja tenim subdivisió
+        if getattr(self, 'subdivisio', None):
+            try:
+                self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio)
+            except Exception:
+                # Si el càlcul falla, preservem el valor anterior si existia
+                self.patro_metric_PC = getattr(self, 'patro_metric_PC', None)
+        else:
+            # No tenir subdivisió no hauria de sobreescriure un valor prèviament calculat
+            self.patro_metric_PC = getattr(self, 'patro_metric_PC', None)
         self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
         self.recompte_sillabes_extrametriques = max(0, len(self.patro) - self.recompte_sillabes_metriques)
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
@@ -134,6 +155,9 @@ class Vers:
         # Actualitzar representacions derivades
         self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
         self.patro_metric = str(maximal_comparison_pattern(self))
+        self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio) if getattr(self, 'subdivisio', None) else None
+        self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
+
 
     def __anota__(self) -> None:
         """Genera l'etiquetatge del vers."""
@@ -165,6 +189,13 @@ class Vers:
         self.anotat = anota_vers(self)
         self.escansio_array = scansion_array(self)
         self.escansio_text = escansio_accentual(self)
+        # Després d'ajustar la prosòdia, la subdivisió pot haver de recalcular-se
+        try:
+            # Recalcula subdivisió i patro_metric_PC per coherència
+            self.__subdivisio2__()
+        except Exception:
+            # No hem de trencar el flux si la reassignació falla
+            pass
 
     def __mot_info__(self) -> None:
         """Nombre de mots i distribució respecte al còlon (informació de quants_mots)."""
@@ -199,18 +230,31 @@ class Vers:
     def __disposa_tall__(self) -> None:
         """Disposa la representació del patró afegint l'espai després de la posició de tall."""
         if getattr(self, 'subdivisio', None) is None:
-            self.subdivisio = 'N/I'
+
+            if '3-7' in self.signatura:
+                self.subdivisio = '4+6'
+                self.tipus_subdivisio = 'continu'
+                if self.signatura == '3-7-10':
+                    self.patro_metric_PC = '[(001)0][(001)(001)]'
+                    self.colon_1 = self.patro_metric[:4]
+                    self.colon_2 = self.patro_metric[4:]
+                elif self.signatura == '1-3-7-10':
+                    self.patro_metric_PC = '[(1)(01)0][(001)(001)]'
+            else:
+                self.subdivisio = 'N/I'
+                self.patro_metric_PC = self.patro_metric
 
     def __colons__(self):
         """Localitza i aïlla els còlons del vers"""
-        self.colon_1_pos = self.subdivisio.split('+')[0] if self.subdivisio and '+' in self.subdivisio else None
-        self.colon_2_pos = self.subdivisio.split('+')[1] if self.subdivisio and '+' in self.subdivisio else None
+        if self.subdivisio is not None:
+            self.colon_1_pos = self.subdivisio.split('+')[0] if self.subdivisio and '+' in self.subdivisio else None
+            self.colon_2_pos = self.subdivisio.split('+')[1] if self.subdivisio and '+' in self.subdivisio else None
 
-        self.colon_1 = self.patro_metric[:int(self.colon_1_pos)] if self.colon_1_pos else None
-        self.colon_2 = self.patro_metric[int(self.colon_1_pos):] if self.colon_1_pos else None
+            self.colon_1 = self.patro_metric[:int(self.colon_1_pos)] if self.colon_1_pos else None
+            self.colon_2 = self.patro_metric[int(self.colon_1_pos):] if self.colon_1_pos else None
 
-        if self.colon_1[-1] == '0' or self.colon_2[-1] == '2':
-            self.colon_1 = self.colon_2 = self.subdivisio = self.tipus_subdivisio = None
+            if self.colon_1[-1] == '0' or self.colon_2[-1] == '2':
+                self.colon_1 = self.colon_2 = self.subdivisio = self.tipus_subdivisio = None
 
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
@@ -222,10 +266,11 @@ class Vers:
         self.__subdivisio2__()
         self.__disposicio__()
         self.ajustat = metre_ajustat(self)
-        if self.ajustat or self.words[-1].stress[-1].pes < 3:
+        if self.ajustat:
             self.__prosodia__(subdi=True)
             if not self.subdivisio:
                 self.__subdivisio2__()
+
         self.__patrons__()
         self.__colons__()
         self.__anota__()
@@ -264,6 +309,7 @@ class Vers:
             "escansio_text": getattr(self, 'escansio_text', None),
             "patro": getattr(self, 'patro', None),
             "patro_metric": getattr(self, 'patro_metric', None),
+            "patro_metric_PC": getattr(self, 'patro_metric_PC', None),
             "signatura": getattr(self, 'signatura', None),
             "recompte_sillabes_metriques": getattr(self, 'recompte_sillabes_metriques', None),
             "recompte_sillabes_extrametriques": getattr(self, 'recompte_sillabes_extrametriques', None),
@@ -288,6 +334,9 @@ class Vers:
 
         if attrs["patro_metric"] is not None:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:", color_metric(str(attrs['patro_metric'])))
+
+        if attrs["patro_metric_PC"] is not None:
+            print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric PC:", (str(attrs['patro_metric_PC'])))
 
         if attrs["signatura"] is not None:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Signatura:", Fore.CYAN, attrs["signatura"], Fore.RESET)
@@ -354,7 +403,7 @@ class Vers:
         # Convertim explícitament cada element a cadena perquè al CSV surtin com a text,
         # no com a nombres. Això evita problemes amb eines que interpreten columnes numèriques.
         sc_col = [str(x) for x in sc_col]
-        # Prefixem amb un apòstrof per forçar que programes com Excel interpretin el valor com a text
+        # Prefixem amb un apòstrof per forçar que programes com Excel interprein el valor com a text
         sc_col = ["'" + x for x in sc_col]
 
         result = [
@@ -376,6 +425,7 @@ class Vers:
             # Assegurem que els patrons rítmic i mètric s'exportin com a cadenes i prefixem l'apòstrof
             "'" + str(getattr(self, 'patro_metric', '')),
             "'" + str(getattr(self, 'patro_ritmic', '')),
+            "'" + str(getattr(self, 'patro_metric_PC', '')),
             getattr(self, 'encavalcament', None),
             getattr(self, 'metronome', None)
         ]
@@ -467,6 +517,15 @@ class Vers:
             self.subdivisio = None
             self.tipus_subdivisio = None
         self.patro_metric = maximal_comparison_pattern(self)
+        # Calcular també patro_metric_PC
+        self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio) if getattr(self, 'subdivisio', None) else None
+        self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
+        if self.subdivisio:
+            self.colon_1 = self.patro_metric[:int(self.subdivisio.split('+')[0])] if '+' in self.subdivisio else None
+            self.colon_2 = self.patro_metric[int(self.subdivisio.split('+')[0]):] if '+' in self.subdivisio else None
+        else:
+            self.colon_1 = None
+            self.colon_2 = None
 
 # Exemple d'ús
 if __name__ == "__main__":

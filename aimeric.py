@@ -51,7 +51,13 @@ def etiq(nlp, corpus, goal: int):
 
 def scan(nlp, verse, goal):
     analisi = escaneja(nlp, verse, goal)
-    return analisi.mostra()
+    # Comprovem si l'escàner ha retornat un objecte vàlid
+    if analisi is None:
+        print(Fore.RED + f"[ERROR] No s'ha pogut analitzar el vers: {verse!r}." + Fore.RESET)
+        return None
+    # Mostrem la informació i retornem l'objecte per a ús posterior
+    analisi.mostra()
+    return analisi
 
 
 def check_jsons(corpus):

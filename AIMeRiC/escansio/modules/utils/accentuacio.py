@@ -67,7 +67,7 @@ def accentua(self):
         r"[aeioïüy][ui]$|"  # Diftongs ascendents. # excepte grup ui final
         r"[^qg]u[ui]$|"  # Diftongs ascendents amb <qu>, <gu>. # evita detectar mots tipus tengui, detecta mots tipus avui
         r"[aouïü][^'aeiuos]+|"  # Vocals (a, o, u) + consonants excepte <s>.
-        r"[^qg]?[aouïü][^aeouïü][^aouïüs]|"  # Vocals (a, o, u) + consonants  + consonant (tipus: rebost).
+        r"[^qg]?[aouïü][^aeiouïü][^aouïüs]|"  # Vocals (a, o, u) + consonants  + consonant (tipus: rebost).
         r"[eiy]([^'aeiuons]|[^'aeiuo]+[^'aeiuo])|"  # Vocals (e, i) + consonants, excepte <s> i  <en>, <in>.
         r"[^qg][aeiou][iu]s)"  # vocal + i/u + s (maqueis, belais, antiherois, etc.)
         r"s?(?:$|-')"  # s opcional + final o guionet.

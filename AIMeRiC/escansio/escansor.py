@@ -3,24 +3,36 @@ __copyright__ = "Copyright © 2025, Pere Garau Borràs"
 __version__ = "0.7.3"
 
 import spacy
+import traceback
 
 from AIMeRiC.escansio.modules.vers import Vers
 
 
 def escaneja(nlp, verse: str, goal: int, permet_llicencies: bool = True) -> Vers | None:
-    """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse."""
+    """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse.
+    Si hi ha una excepció, retorna None però registra el motiu per ajudar a depurar.
+    """
     try:
         return Vers(nlp, verse, goal, permet_llicencies)
-    except ValueError:
-        pass
+    except Exception as e:
+        # Mostrar informació de depuració en català per ajudar l'usuari
+        print("\n" + "[ERROR] Excepció en escanejar el vers:")
+        print(f"	Vers: {verse!r}")
+        print(f"	Tipus d'excepció: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        return None
 
 
 def escaneja_minim(nlp, verse: str, goal: int, permet_llicencies: bool = False) -> Vers | None:
     """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse amb informació mínima."""
     try:
         return Vers(nlp, verse, goal, permet_llicencies, minimal=True)
-    except ValueError:
-        pass
+    except Exception as e:
+        print("\n" + "[ERROR] Excepció en escanejar (mínim) el vers:")
+        print(f"	Vers: {verse!r}")
+        print(f"	Tipus d'excepció: {type(e).__name__}: {e}")
+        traceback.print_exc()
+        return None
 
 
 if __name__ == "__main__":
