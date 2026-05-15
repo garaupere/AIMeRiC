@@ -138,6 +138,19 @@ class ReglaPrimeraSillaba(ReglaAccent):
         curr, next = ctx.curr, ctx.next
         canvis = False
 
+        # Regla especial: si estem a l'inici del vers (index == 0) i les dues primeres síl·labes
+        # són accents secundaris (1.5, 2.0, 2.5), rebaixem la primera a 0.75 perquè la segona tingui més pes.
+        try:
+            pes_curr = round(float(curr.pes), 1)
+            pes_next = round(float(next.pes), 1)
+        except Exception:
+            pes_curr = pes_next = None
+
+        if ctx.index == 0 and pes_curr in {1.5, 2.0, 2.5} and pes_next in {1.5, 2.0, 2.5}:
+            # Assignem la primera com a secundari desaccentuat (0.75) i preservem la segona
+            self.canvia_pes(ctx, curr, pes_curr/2 - 0.25, words)
+            return True
+
         # xX amb igual pes
         if curr.pes == next.pes:
             self.canvia_pes(ctx, curr, PesAccent.ATONA, words)
@@ -318,8 +331,6 @@ class ReglaXocAccents(ReglaAccent):
                     except Exception:
                         subdiv_positions = set()
 
-            # Si només una de les síl·labes està en la posició de subdivisió, preferim
-            # desaccentuar l'altra sílaba (no toquem la sílaba de la frontera).
             if pos_sil1 and pos_sil2 and subdiv_positions:
                 if pos_sil1 in subdiv_positions and pos_sil2 not in subdiv_positions:
                     # preservem sil1, desaccentuem sil2
@@ -705,9 +716,14 @@ class GestorAccentsProsodics:
 
     def _inicialitza_regles(self):
         """Inicialitza i separa les regles per passades."""
+        # Regles que cal executar abans de resoldre xocs (pre-processament)
+        self.pre_regles = [
+            ReglaPrimeraSillaba(),
+        ]
+
         # Regles per resoldre xocs accentuals (primera passada)
         self.regles_xocs = [
-            ReglaPrimeraSillaba(),
+            # ReglaPrimeraSillaba(),  # traslladada a pre_regles per executar-la abans
             ReglaUltimaSillaba(),
             ReglaXocAccents(),
             ReglaAccentsIntermedis(),
@@ -801,7 +817,7 @@ class GestorAccentsProsodics:
         Comprova si hi ha un xoc accentual específic entre síl·labes adjacents.
 
         Args:
-            ctx: Context de la síl·laba actual
+            ctx: Context de la síl·labes actual
             pes1: Pes de la primera síl·laba del xoc
             pes2: Pes de la segona síl·laba del xoc
 
@@ -848,6 +864,21 @@ class GestorAccentsProsodics:
             print(f"\n{'#' * 60}")
             print(f"# PRIMERA PASSADA: Resolució de xocs accentuals")
             print(f"{'#' * 60}")
+
+        # --- Executar pre-regles (p.ex. ReglaPrimeraSillaba) abans dels xocs ---
+        for ctx in self._itera_sillabes(sillabes):
+            for regla in getattr(self, 'pre_regles', []):
+                try:
+                    if self.debug:
+                        estat_abans = self._captura_estat(ctx)
+                    aplicat = regla.aplica(ctx, vers.words)
+                    if self.debug and aplicat:
+                        estat_despres = self._captura_estat(ctx)
+                        canvis = self._detecta_canvis(estat_abans, estat_despres)
+                        if canvis:
+                            self._print_canvis(regla.nom, canvis)
+                except Exception as e:
+                    print(f"  ✗ Error aplicant pre-regla '{regla.nom}': {e}")
 
         # Ordre dels xocs a resoldre amb tots els valors intermitjos (3.5, 2.5, 1.5)
         grup1 = [

@@ -4,8 +4,9 @@ import re
 from AIMeRiC.escansio.modules.sillaba import Sillaba
 from AIMeRiC.escansio.modules.mot import Mot
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
-    millor_sineresi, neutralitza_accents_secundaris
-from .accentuacio import get_index_accent
+    millor_sineresi
+from .accentuacio import get_index_accent, accent_secundari
+from .metre import recompte_metric
 
 
 def llicencies(self, permit, doc) -> list[str] | None:
@@ -45,12 +46,14 @@ def llicencies(self, permit, doc) -> list[str] | None:
                 # Si hi ha excés de síl·labes: intentem reduir amb sinalefa
                 resol_contactes_vocalics(self, best_mode='sinalefa')
                 # comprova si s'ha aplicat la sinalefa (reducció de síl·labes)
-                self.__actualitza__()
+                #self.__actualitza__()
+                self.recompte_sillabes_metriques = recompte_metric(self)  # Actualitza el recompte de síl·labes després de la sinalefa
                 new_diff = self.recompte_sillabes_metriques - self.objectiu
                 if new_diff < diff:  # Si la sinalefa ha reduït el nombre de síl·labes, actualitza el diff
                     diff = new_diff
                     sinalefa_used = True
                     result.append('sinalefa')
+                    self.__actualitza__()  # Actualitza després de la sinalefa per assegurar que el recompte és correcte
             else:
                 if initial_count < self.objectiu: # permet evitar que forci versos menors, per exemple de 8 a 10 síl·labes.
                     # Si falten síl·labes: intentem augmentar amb dialefa
@@ -77,7 +80,7 @@ def llicencies(self, permit, doc) -> list[str] | None:
                                 dieresi_used = True
                                 result.append('dièresi')
                         except Exception:
-                            # Si dieresi falla, no interrompem el procés; seguim sense marcar-lo com usat
+                            # Si dieresi falla, no interromp el procés; segueix sense marcar-lo com usat
                             pass
 
             # Si encara sobra (diff > 0) podem intentar una sineresi, però només una vegada per vers i després de la sinalefa
@@ -93,7 +96,7 @@ def llicencies(self, permit, doc) -> list[str] | None:
                         sineresi_used = True
                         result.append('sinèresi')
                 except Exception:
-                    # si sineresi no existeix o falla, continuem sense llançar excepció
+                    # si sineresi no existeix o falla, continua sense llançar excepció
                     pass
             iterations += 1
     else:
@@ -121,7 +124,12 @@ def sineresi(self, times):
                     if result:
                         word.stress.remove(change[1])
                         word.stress_index = get_index_accent(word)
-                        neutralitza_accents_secundaris(self)
+                        if 2 in [int(syllable.pes) for syllable in word.stress]:
+                            for syllable in word.stress:
+                                if syllable.pes >= 2.0:
+                                    syllable.pes = 0.0
+                                    word.stress = accent_secundari(word)
+                                    #neutralitza_accents_secundaris(self)
                         counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])

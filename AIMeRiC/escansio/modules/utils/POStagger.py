@@ -23,7 +23,7 @@ def correct_spacy(doc):
         'á': 'ADPa', 'à': 'ADPa', 'a': 'ADPa', 'dels': 'ADPa', 'del': 'ADPa', 'als': 'ADPa', 'al': 'ADPa',
         'des': 'ADPa', "me'ls": 'DET',
         'res': 'NOUN', 'hom': 'NOUN', 'om': 'NOUN', 'així': 'ADV', 'cell': 'PRON', 'quell': 'PRON', '·quell': 'PRON',
-        'ceyl': 'PRON',
+        'ceyl': 'PRON', 'cal': 'AUX',
         'mi': 'PRON', 'què': 'PRON', 'qui': 'PRON', 'quin': 'PRON', 'quins': 'PRON',
         'quina': 'PRON', 'quines': 'PRON', 'yo': 'PRON', 'vós': 'NOUN', 'nós': 'NOUN', 'ne': 'CCONJ', 'ni': 'CCONJ',
         'seu': 'PRON', 'seus': 'PRON', 'seva': 'PRON', 'seves': 'PRON', 'seua': 'PRON', 'seues': 'PRON', 'sua': 'PRON',
@@ -43,7 +43,7 @@ def correct_spacy(doc):
         'això': 'PRON',
         'açò': 'PRON', 'ço': 'PRON', 'so': 'NOUN', 'xo': 'PRON', 'xô': 'PRON', 'xò': 'PRON', "'xo": 'PRON',
         "'xô": 'PRON',
-        "'xò": 'PRON', 'més': 'PRON', 'menys': 'PRON', 'molt': 'PRON', 'poc': 'PRON', 'pocs': 'PRON', 'molts': 'PRON',
+        "'xò": 'PRON', 'més': 'PRON', 'mès': 'PRON', 'menys': 'PRON', 'molt': 'PRON', 'poc': 'PRON', 'pocs': 'PRON', 'molts': 'PRON',
         'ab': 'ADPa', 'com': 'PRON', 'quan': 'ADP', 'on': 'ADPa', 'perquè': 'ADV', 'perque': 'ADV', 'perqué': 'ADV',
         'no': 'ADP', 'sí': 'ADP', 'ja': 'ADP', 'encara': 'ADV', 'ans': 'ADV', 'ara': 'ADV', 'ací': 'ADV', 'allà': 'ADV',
         'allí': 'ADV', 'açà': 'ADV', 'dallà': 'ADV', 'dallí': 'ADV', 'pus': 'ADV', 'am': 'VERB', 'cel': 'NOUN',
@@ -61,7 +61,11 @@ def correct_spacy(doc):
         'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP',
         "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN', "d'en": 'DET', 'ben': 'DET', 'he': 'AUX',
         'vaig': 'AUX', 'ha': 'AUX', 'han': 'AUX', 'vam': 'AUX', 'vau': 'AUX', 'van': 'AUX', 'vàrem': 'AUX', 'vàreu':'AUX', 'varen':'AUX', 'havia': 'AUX', 'havíem': 'AUX', 'havieu': 'AUX',
-        'urss': 'PROPN', 'front': 'NOUN', "dú": 'VERB'
+        'urss': 'PROPN', 'front': 'NOUN', "dú": 'VERB', 'vull': 'AUX', 'vol': 'AUX', 'és':'AUX', 'ets': 'AUX', 'soc': 'AUX', 'som': 'AUX', 'sou': 'AUX',
+        'sóc': 'AUX', 'só': 'AUX',
+        'era': 'AUX', 'eres': 'AUX', 'érem': 'AUX', 'éreu': 'AUX', 'eren': 'AUX', 'seré': 'AUX', 'seràs': 'AUX', 'serà': 'AUX',
+        'sereu': 'AUX', 'serem': 'AUX', 'seran': 'AUX', 'siguí': 'AUX', 'sigués': 'AUX', 'sigui': 'AUX', 'siguem': 'AUX', 'sigueu': 'AUX', 'siguin': 'AUX',
+            'haguí': 'AUX', 'hagués': 'AUX', 'hagi': 'AUX', 'haguem': 'AUX', 'hagueu': 'AUX', 'hagin': 'AUX', 'hàgiu': 'AUX'
     }
 
     normalized = []
@@ -143,7 +147,6 @@ def correct_spacy(doc):
 
     return new_doc
 
-
 def ortho_repair(text: str):
     """
     Repara errors ortogràfics comuns en el text donat utilitzant patrons regex predefinits.
@@ -162,6 +165,12 @@ def ortho_repair(text: str):
     for pattern, replacement in regex_patterns.items():
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
     return text
+
+def abreviatures(token):
+    dict = {r"sra": "senyora", "srta": "senyoreta", "sr": "senyor", "dr": "doctor", "dra": "doctora"}
+    for pattern, replacement in dict.items():
+        if re.fullmatch(pattern, token[0], flags=re.IGNORECASE):
+            token[0] = replacement
 
 
 def ocr_errors(doc):

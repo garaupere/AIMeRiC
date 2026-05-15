@@ -126,9 +126,10 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
              'obra', 'any', 'traducció', 'font', 'poema',
              'núm. de vers', 'text del vers',
              'escansió'] + scansion_cols +
-            ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'llicències', 'mots', 'l_mots',
-             'mots al còlon 1', 'mots al còlon 2',
-             'patró', 'patró_rítmic', 'encavalcament', 'metronome', 'posició'])
+            ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'tipus subdivisió', 'còlon 1', 'còlon 2',
+             'llicències', 'mots', 'l_mots',
+             'mots al còlon 1', 'mots al còlon 2', 'signatura',
+             'patró', 'patro mètric', 'patró_rítmic', 'encavalcament', 'metronome', 'posició'])
 
     # Crea el DataFrame i assegura que les columnes d'escansió i de patró siguin strings
     df = pd.DataFrame(rows, columns=head)

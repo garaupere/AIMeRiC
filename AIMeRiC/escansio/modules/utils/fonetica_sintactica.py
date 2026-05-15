@@ -184,10 +184,11 @@ def neutralitza_accents_secundaris(self):
     """Resol casos de xocs d'accent secundari amb accent primari (24, 42) convertint secundaris a àtones. S'aplica després de la sinèresi."""
     for word in self.words:
         stresses = getattr(word, "stress", [])
-        for s in stresses:
-            if s.pes == 2 and any(s2.pes >= 3 and s2.s_index != s.s_index for s2 in stresses):
-                s.pes = 0  # convertir a àtona
-        accent_secundari(word) # aplicar alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
+        if 2 in [int(s.pes) for s in stresses]:
+            for syl in self.stress:
+                if syl.pes <= 2:
+                    syl.pes = 0
+        word.stress = accent_secundari(word) # aplica alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
 
 
 
@@ -244,7 +245,6 @@ def resol_contactes_vocalics(self, best_mode: str):
         if not cand_list:
             break
         change = cand_list.pop(0)
-        # cerca ràpida: iterar paraules i comparar objectes en stress
         for wi in range(len(self.words) - 1):
             word = self.words[wi]
             if change[0] in word.stress:
@@ -258,16 +258,19 @@ def resol_contactes_vocalics(self, best_mode: str):
                     next_word.stress_index = get_index_accent(next_word)
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
+                    actualitza_s_index(self)
                 elif word.n_syllables == 1 and next_word.n_syllables > 1:  # El primer és monosíl·lab i el segon polisíl·lab: assignar nova síl·laba al segon, eliminar la del primer
                     next_word.stress[0] = res
                     next_word.stress_index = get_index_accent(next_word)
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
+                    actualitza_s_index(self)
                 elif word.n_syllables > 1 and next_word.n_syllables == 1:  # El primer és polisíl·lab i el segon monosíl·lab: assignar nova síl·laba al primer, eliminar la del segon
                     word.stress[-1] = res
                     word.stress_index = get_index_accent(word)
                     word.n_syllables = len(word.stress)
                     del self.words[wi + 1]
+                    actualitza_s_index(self)
                 else:
                     # ambdues polisíl·labes
                     word.stress[-1] = res
@@ -281,6 +284,7 @@ def resol_contactes_vocalics(self, best_mode: str):
                         next_word.n_syllables = len(next_word.stress)
                     if not word.stress:
                         del self.words[wi]
+                    actualitza_s_index(self)
                         # ajustar iterador natural de for
                 # actualitzar estats globals
                 self.nomes_sillabes = [s for w in self.words for s in w.stress]
@@ -386,7 +390,11 @@ def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
 
 
 def millor_sinalefa(self) -> List[Tuple[Sillaba, Sillaba, int]]:
-    """Candidats basats en sinalefa (molt similar a best_contacte_vocalic)."""
+    """Candidats basats en sinalefa (molt similar a best_contacte_vocalic).
+
+    La sinalefa S'HA D'APLICAR NOMÉS entre dues paraules diferents i consecutives.
+    Aquesta funció filtra qualsevol contacte que estigui dins de la mateixa paraula.
+    """
     candidats = []
     vers = [s for w in self.words for s in getattr(w, "stress", [])]
     n = len(vers)
@@ -394,22 +402,37 @@ def millor_sinalefa(self) -> List[Tuple[Sillaba, Sillaba, int]]:
         s1 = vers[i]
         s2 = vers[i + 1]
         if s1.last and s2.first and s1.ends_with_vowel and s2.starts_with_vowel:
-            pts = puntua(s1, vers) + puntua(s2, vers)
-            candidats.append((s1, s2, pts))
+            # obtenim la paraula que conté cada síl·laba
+            w1 = next((w for w in self.words if s1 in getattr(w, "stress", [])), None)
+            w2 = next((w for w in self.words if s2 in getattr(w, "stress", [])), None)
+            if w1.stress[-1] == s1 and w2.stress[0] == s2:
+                # Comprovar que s1 és l'última síl·laba de w1 i s2 és la primera síl·laba de w2
+                pts = puntua(s1, vers) + puntua(s2, vers)
+                candidats.append((s1, s2, pts))
     candidats.sort(key=lambda x: x[2], reverse=True)
     return candidats
 
+
+def actualitza_s_index(self):
+    """Actualitza els indexes de síl·laba (s_index) després de qualsevol canvi que afecti l'ordre o nombre de síl·labes."""
+    for word in self.words:
+        for i, syllable in enumerate(word.stress):
+            syllable.s_index = i
 
 def millor_sineresi(self) -> List[Tuple[Sillaba, Sillaba, int]]:
     """Candidats per sineresi."""
     candidats = []
     for w in self.words:
         for s in w.stress:
+            #print(f'[DEBUG] Analitzant síl·laba: {s.text} (index {s.s_index}) en paraula "{w.text}"')
             s1 = s
             s2 = w.stress[s.s_index + 1] if s.s_index + 1 < len(w.stress) else None
-            if s2 and s1.ends_with_vowel and s2.starts_with_vowel:
+            if s2 and s1.ends_with_vowel and s2.starts_with_vowel and s2.s_index == s1.s_index + 1:
                 pts = puntua(s1, w.stress) + puntua(s2, w.stress) + puntua_diftong(s1, s2)
                 s1.fusionable = pts
-                candidats.append((s1, s2, pts))
+                if len(w.stress) == 2:
+                    pts -= 20 # penalització forta per sinèresi en paraules de dues síl·labes (ex: pa.ís > pais)
+                if pts > 0:
+                    candidats.append((s1, s2, pts))
     candidats.sort(key=lambda x: x[2], reverse=True)
     return candidats

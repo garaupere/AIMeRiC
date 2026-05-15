@@ -146,40 +146,49 @@ def tall(self) -> None | int | tuple[int, str]:
 
 
 def subdivisiona(self):
-    """Nova versió de la subdivisio: millorada i molt simplificada."""
-    subdpos = [3, 5, 4]  # Preferències de subdivisions
+    """Nova versió de la subdivisio: millorada i simplificada."""
+    if self.recompte_sillabes_metriques == 10:
+        subdpos = [3, 5, 4]  # Preferències de subdivisions
 
-    # Per a les síl·labes del vers, obtenim els pesos de les subdpos
-    candidats = []
-    for pos in subdpos:
-        candidats.append((pos, self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None))
-    # ordena els candidats per pes (descendent) i després per posició (segons la preferència). Elimina els candidats amb pes None o <= 2.0
-    candidats_valids = [(pos, pes) for pos, pes in candidats if pes is not None and pes >= 2]
-    candidats_valids.sort(
-        key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
+        # Per a les síl·labes del vers, obtenim els pesos de les subdpos
+        candidats = []
+        for pos in subdpos:
+            #print('Evaluant posició de subdivisió:', pos, "amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
+            if pos == 3 or pos == 5:
+                if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes == 3:
+                    self.nomes_sillabes[pos].pes = 3.75
+            elif pos == 4 and len(candidats) > 0:
+                if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes > 2:
+                    self.nomes_sillabes[pos].pes -= 0.75
+            candidats.append((pos, self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None))
+        # ordena els candidats per pes (descendent) i després per posició (segons la preferència). Elimina els candidats amb pes None o <= 2.0
+        candidats_valids = [(pos, pes) for pos, pes in candidats if pes is not None and pes >= 2]
+        candidats_valids.sort(
+            key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
 
-    # Defineix el tipus de subdivisió.
-    for pos, pes in candidats_valids:
-        # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
-        word_at_pos = _get_word_at_position(self, pos)
-        if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
-                word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
-            if self.nomes_sillabes[pos].pes >= 4:  # Si el pes és un accent lèxic, considera que és un tall
-                self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és 5.0
+        # Defineix el tipus de subdivisió.
+        for pos, pes in candidats_valids:
+            # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
+            word_at_pos = _get_word_at_position(self, pos)
+            #print('\t> Candidat a subdivisió:', pos, 'Pes:', pes, 'Paraula:', word_at_pos.text if word_at_pos else None)
+            if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
+                    word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
+                if self.nomes_sillabes[pos].pes >= 4 or self.nomes_sillabes[pos].pes >= 3 and pos==3:  # Si el pes és un accent lèxic, considera que és un tall
+                    self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és 5.0
+                    pos = pos + 1  # Convertim a 1-based
+                    word_at_pos.paraula_tall = True  # Marca la paraula com a tall
+                    return f'{pos}+{10 - pos}', 'tall'
+                elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[
+                    pos].pes < 4:  # Si el pes és d'accent bivalent o secundari, considera que és discontinu
+                    pos = pos + 1  # Convertim a 1-based
+                    word_at_pos.paraula_tall = True  # Marca la paraula com a tall
+                    return f'{pos}+{10 - pos}', 'discontinu'
+            elif self.nomes_sillabes[
+                pos].pes >= 2:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
                 pos = pos + 1  # Convertim a 1-based
                 word_at_pos.paraula_tall = True  # Marca la paraula com a tall
-                return f'{pos}+{10 - pos}', 'tall'
-            elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[
-                pos].pes < 4:  # Si el pes és d'accent bivalent o secundari, considera que és discontinu
-                pos = pos + 1  # Convertim a 1-based
-                word_at_pos.paraula_tall = True  # Marca la paraula com a tall
-                return f'{pos}+{10 - pos}', 'discontinu'
-        elif self.nomes_sillabes[
-            pos].pes >= 2:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
-            pos = pos + 1  # Convertim a 1-based
-            word_at_pos.paraula_tall = True  # Marca la paraula com a tall
-            return f'{pos}+{10 - pos}', 'continu'
-    return None, None  # No s'ha trobat una subdivisió vàlida
+                return f'{pos}+{10 - pos}', 'continu'
+        return None, None  # No s'ha trobat una subdivisió vàlida
 
 
 def _get_word_at_position(self, pos: int):
@@ -205,19 +214,18 @@ def _get_next_word_at_position(self, pos: int):
 def subdivideix(self):
     """Aquesta funció subdivideix el vers en còlons si conté un tall.
 
-    Observacions i millores aplicades:
-    - Si `self.posicio_tall` no existeix (o és None), intentem obtenir-la cridant
-      `tall(self)` i l'assignem explícitament. Això evita que `subdivideix` retornï
+    - Si `self.posicio_tall` no existeix (o és None), intenta obtenir-la cridant
+      `tall(self)` i l'assigna explícitament. Això evita que `subdivideix` retorni
       sempre `None` quan abans no s'hagi calculat el tall.
-    - Fem comprovacions robustes dels tipus (int) i del recompte de síl·labes
+    - Fa comprovacions robustes dels tipus (int) i del recompte de síl·labes
       mètriques abans de fer l'operació aritmètica.
-    - Si no es pot determinar el recompte mètric, retornem una cadena indicativa
-      en lloc de llançar una excepció.
+    - Si no es pot determinar el recompte mètric, retorna una cadena indicativa
+      en lloc de tirar una excepció.
     """
     # Intentem usar l'atribut existent
     pos = getattr(self, 'posicio_tall', None)
 
-    # Si no existeix, provem de calcular-lo cridant tall(self)
+    # Si no existeix, prova de calcular-lo cridant tall(self)
     if pos is None:
         try:
             pos = tall(self)[0]
@@ -229,13 +237,13 @@ def subdivideix(self):
         else:
             return None
 
-    # Assegurem-nos que és un enter vàlid
+    # Assegura que és un enter vàlid
     try:
         pos_int = int(pos)
     except Exception:
         return None
 
-    # Obtenim el recompte de síl·labes mètriques (int) de forma segura
+    # Obté el recompte de síl·labes mètriques (int) de forma segura
     recompte = getattr(self, 'recompte_sillabes_metriques', None)
     if recompte is None:
         # Intentem recalcular-lo sense importar la dependència exterior si ja existeix

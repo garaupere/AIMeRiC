@@ -47,33 +47,35 @@ class Hyphenator:
         # if len(word) <= 4:
         #    return [word]
         # If the word is an exception, get the stored points.
-        if word.lower() in self.exceptions:
-            points = self.exceptions[word.lower()]
-        else:
-            work = '.' + word.lower() + '.'
-            points = [0] * (len(work) + 1)
-            for i in range(len(work)):
-                t = self.tree
-                for c in work[i:]:
-                    if c in t:
-                        t = t[c]
-                        if None in t:
-                            p = t[None]
-                            for j in range(len(p)):
-                                points[i + j] = max(points[i + j], p[j])
-                    else:
-                        break
-            # No hyphens in the first two chars or the last two.
-            # points[1] = points[2] = points[-2] = points[-3] = 0
+        try:
+            if word.lower() in self.exceptions:
+                points = self.exceptions[word.lower()]
+            else:
+                work = '.' + word.lower() + '.'
+                points = [0] * (len(work) + 1)
+                for i in range(len(work)):
+                    t = self.tree
+                    for c in work[i:]:
+                        if c in t:
+                            t = t[c]
+                            if None in t:
+                                p = t[None]
+                                for j in range(len(p)):
+                                    points[i + j] = max(points[i + j], p[j])
+                        else:
+                            break
+                # No hyphens in the first two chars or the last two.
+                # points[1] = points[2] = points[-2] = points[-3] = 0
 
-        # Examine the points to build the pieces list.
-        pieces = ['']
-        for c, p in zip(word, points[2:]):
-            pieces[-1] += c
-            if p % 2:
-                pieces.append('')
-        return pieces
-
+            # Examine the points to build the pieces list.
+            pieces = ['']
+            for c, p in zip(word, points[2:]):
+                pieces[-1] += c
+                if p % 2:
+                    pieces.append('')
+            return pieces
+        except Exception as e:
+            pass
 
 patterns = (
     """
@@ -1384,6 +1386,8 @@ qu·4ú
 .ju4an
 .di4é4u
 re3lï3
+.per3xò3
+.per3xo3
 """)
 
 exceptions = ""
