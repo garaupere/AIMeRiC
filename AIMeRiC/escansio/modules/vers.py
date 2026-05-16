@@ -28,7 +28,7 @@ from AIMeRiC.escansio.modules.utils.display import anota_vers, escansio_plana, e
 from AIMeRiC.escansio.modules.utils.fonetica_sintactica import contactes_vocalics_info, resol_contactes_vocalics
 from AIMeRiC.escansio.modules.utils.llicencies import llicencies
 from AIMeRiC.escansio.modules.utils.metre import recompte_metric, metre_ajustat, abstract_pattern, \
-    maximal_comparison_pattern, patro_metric_PC
+    maximal_comparison_pattern, patro_metric_jerarquic
 from AIMeRiC.escansio.modules.utils.prosodia import accents_prosodics, cim_maxim
 from AIMeRiC.escansio.modules.utils.syntax import encavalcament
 from AIMeRiC.escansio.modules.utils.mot_info import quants_mots, safe_words
@@ -57,6 +57,7 @@ class Vers:
         self.colon_1, self.colon_2 = None, None
         # Preparació bàsica (etiquetatge i construcció d'objectes Mot)
         self.__prepara__(nlp)
+        self.subdivisio = None
 
         # Resol contactes i calcular si està ajustat (un cop després de preparar)
         resol_contactes_vocalics(self, best_mode='natural')
@@ -68,7 +69,7 @@ class Vers:
                 self.__disposicio__()
 
                 #self.__prosodia__(subdi=False)
-                self.__subdivisio2__()#self.__subdivisio__()
+                self.__subdivisio2__(volta=1)#self.__subdivisio__()
                 self.__prosodia__(subdi=True)
                 self.__patrons__()
                 self.__colons__()
@@ -76,20 +77,11 @@ class Vers:
 
                 self.__mot_info__()
                 self.__contactes_vocalics__()
-                self.__metronome__()
+                #self.__metronome__()
                 self.__rima__()
                 self.llicencies = None
                 if not self.subdivisio:
-                    subdivisio_info = subdivisiona(self)
-                    self.subdivisio = subdivisio_info[0] if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 0 else None
-                    self.tipus_subdivisio = subdivisio_info[1] if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 1 else None
-                    if self.subdivisio:
-                        self.colon_1 = self.patro_metric[:int(self.subdivisio.split('+')[0])] if self.subdivisio and '+' in self.subdivisio else None
-                        self.colon_2 = self.patro_metric[int(self.subdivisio.split('+')[0]):] if self.subdivisio and '+' in self.subdivisio else None
-                    self.patro_metric = maximal_comparison_pattern(self)
-                    # Actualitzem també la versió PC del patró mètric
-                    self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio) if self.subdivisio else None
-                    self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
+                    self.__subdivisio2__(volta=2)
 
                 self.__disposa_tall__()
             else:
@@ -127,36 +119,16 @@ class Vers:
         # Generem/actualitzem la versió 'PC' del patró mètric només si ja tenim subdivisió
         if getattr(self, 'subdivisio', None):
             try:
-                self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio)
+                self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio)
             except Exception:
                 # Si el càlcul falla, preservem el valor anterior si existia
-                self.patro_metric_PC = getattr(self, 'patro_metric_PC', None)
+                self.patro_metric_jerarquic = getattr(self, 'patro_metric_jerarquic', None)
         else:
             # No tenir subdivisió no hauria de sobreescriure un valor prèviament calculat
-            self.patro_metric_PC = getattr(self, 'patro_metric_PC', None)
+            self.patro_metric_jerarquic = getattr(self, 'patro_metric_jerarquic', None)
         self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
         self.recompte_sillabes_extrametriques = max(0, len(self.patro) - self.recompte_sillabes_metriques)
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
-
-    def __subdivisio__(self) -> None:
-        """Calcula la subdivisió i actualitza el patró mètric.
-        """
-        # Determina la posició del tall (enter o None)
-        self.posicio_tall = tall(self)[0] if isinstance(tall(self), tuple) and len(tall(self)) > 0 else None
-        self.tipus_subdivisio = tall(self)[1] if isinstance(tall(self), tuple) and len(tall(self)) > 1 else None
-
-        # Calcula la subdivisió en format 'X+Y' si existeix posicio_tall
-        try:
-            self.subdivisio = subdivideix(self)
-        except Exception:
-            # En cas d'errors inesperats, assegurem que l'atribut existeixi
-            self.subdivisio = None
-
-        # Actualitzar representacions derivades
-        self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
-        self.patro_metric = str(maximal_comparison_pattern(self))
-        self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio) if getattr(self, 'subdivisio', None) else None
-        self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
 
 
     def __anota__(self) -> None:
@@ -190,12 +162,13 @@ class Vers:
         self.escansio_array = scansion_array(self)
         self.escansio_text = escansio_accentual(self)
         # Després d'ajustar la prosòdia, la subdivisió pot haver de recalcular-se
-        try:
-            # Recalcula subdivisió i patro_metric_PC per coherència
-            self.__subdivisio2__()
-        except Exception:
-            # No hem de trencar el flux si la reassignació falla
-            pass
+        if not self.subdivisio:
+            try:
+                # Recalcula subdivisió i patro_metric_jerarquic per coherència
+                self.__subdivisio2__(volta=3)
+            except Exception:
+                # No hem de trencar el flux si la reassignació falla
+                pass
 
     def __mot_info__(self) -> None:
         """Nombre de mots i distribució respecte al còlon (informació de quants_mots)."""
@@ -230,19 +203,9 @@ class Vers:
     def __disposa_tall__(self) -> None:
         """Disposa la representació del patró afegint l'espai després de la posició de tall."""
         if getattr(self, 'subdivisio', None) is None:
-
-            if '3-7' in self.signatura:
-                self.subdivisio = '4+6'
-                self.tipus_subdivisio = 'continu'
-                if self.signatura == '3-7-10':
-                    self.patro_metric_PC = '[(001)0][(001)(001)]'
-                    self.colon_1 = self.patro_metric[:4]
-                    self.colon_2 = self.patro_metric[4:]
-                elif self.signatura == '1-3-7-10':
-                    self.patro_metric_PC = '[(1)(01)0][(001)(001)]'
-            else:
-                self.subdivisio = 'N/I'
-                self.patro_metric_PC = self.patro_metric
+            self.__subdivisio2__(volta=6)
+            if self.subdivisio is None:
+                self.patro_metric_jerarquic = self.patro_metric
 
     def __colons__(self):
         """Localitza i aïlla els còlons del vers"""
@@ -253,8 +216,6 @@ class Vers:
             self.colon_1 = self.patro_metric[:int(self.colon_1_pos)] if self.colon_1_pos else None
             self.colon_2 = self.patro_metric[int(self.colon_1_pos):] if self.colon_1_pos else None
 
-            if self.colon_1[-1] == '0' or self.colon_2[-1] == '2':
-                self.colon_1 = self.colon_2 = self.subdivisio = self.tipus_subdivisio = None
 
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
@@ -263,20 +224,20 @@ class Vers:
         self.__patrons__()
         # Reset del cim màxim
         self.__kill_cim_maxim__()
-        self.__subdivisio2__()
+        self.__subdivisio2__(volta=4)
         self.__disposicio__()
         self.ajustat = metre_ajustat(self)
         if self.ajustat:
             self.__prosodia__(subdi=True)
             if not self.subdivisio:
-                self.__subdivisio2__()
+                self.__subdivisio2__(volta=5)
 
         self.__patrons__()
         self.__colons__()
         self.__anota__()
         self.__mot_info__()
         self.__contactes_vocalics__()
-        self.__metronome__()
+        #self.__metronome__()
         self.__disposa_tall__()
 
     def mostra(self) -> None:
@@ -309,7 +270,7 @@ class Vers:
             "escansio_text": getattr(self, 'escansio_text', None),
             "patro": getattr(self, 'patro', None),
             "patro_metric": getattr(self, 'patro_metric', None),
-            "patro_metric_PC": getattr(self, 'patro_metric_PC', None),
+            "patro_metric_jerarquic": getattr(self, 'patro_metric_jerarquic', None),
             "signatura": getattr(self, 'signatura', None),
             "recompte_sillabes_metriques": getattr(self, 'recompte_sillabes_metriques', None),
             "recompte_sillabes_extrametriques": getattr(self, 'recompte_sillabes_extrametriques', None),
@@ -335,8 +296,8 @@ class Vers:
         if attrs["patro_metric"] is not None:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:", color_metric(str(attrs['patro_metric'])))
 
-        if attrs["patro_metric_PC"] is not None:
-            print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric PC:", (str(attrs['patro_metric_PC'])))
+        if attrs["patro_metric_jerarquic"] is not None:
+            print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric jeràrquic:", (str(attrs['patro_metric_jerarquic'])))
 
         if attrs["signatura"] is not None:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Signatura:", Fore.CYAN, attrs["signatura"], Fore.RESET)
@@ -387,7 +348,7 @@ class Vers:
                 "mots al còlon 2": getattr(self, 'mots_colon2', None),
                 "cv_info": getattr(self, 'contactes_vocalics', None),
                 "encavalcament": getattr(self, 'encavalcament', None),
-                "metronome": getattr(self, 'metronome', None),
+                #"metronome": getattr(self, 'metronome', None),
                 "etiquetatge": getattr(self, 'anotat', None)
             }
         }
@@ -414,20 +375,20 @@ class Vers:
             getattr(self, 'recompte_sillabes_extrametriques', None),
             getattr(self, 'subdivisio', None),
             getattr(self, 'tipus_subdivisio', None),
-            "'" + str(getattr(self, 'colon_1', '')),
-            "'" + str(getattr(self, 'colon_2', '')),
+            "'" + str(getattr(self, 'colon_1', None)),
+            "'" + str(getattr(self, 'colon_2', None)),
             getattr(self, 'llicencies', None),
             getattr(self, 'n_mots', None),
             getattr(self, 'l_mots', None),
             getattr(self, 'mots_colon1', None),
             getattr(self, 'mots_colon2', None),
-            str(getattr(self, 'signatura', '')),
+            str(getattr(self, 'signatura', None)),
             # Assegurem que els patrons rítmic i mètric s'exportin com a cadenes i prefixem l'apòstrof
-            "'" + str(getattr(self, 'patro_metric', '')),
-            "'" + str(getattr(self, 'patro_ritmic', '')),
-            "'" + str(getattr(self, 'patro_metric_PC', '')),
+            "'" + str(getattr(self, 'patro_metric', None)),
+            "'" + str(getattr(self, 'patro_ritmic', None)),
+            "'" + str(getattr(self, 'patro_metric_jerarquic', None)),
             getattr(self, 'encavalcament', None),
-            getattr(self, 'metronome', None)
+            #getattr(self, 'metronome', None)
         ]
 
         # Convertim tots els elements a cadena per evitar que pandas infereixi tipus numèrics
@@ -508,24 +469,44 @@ class Vers:
                         syllable.pes = s.pes
                         break
 
-    def __subdivisio2__(self):
-        subdivisio_info = subdivisiona(self)
-        if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 1:
-            self.subdivisio = subdivisio_info[0]
-            self.tipus_subdivisio = subdivisio_info[1]
-        else:
-            self.subdivisio = None
-            self.tipus_subdivisio = None
-        self.patro_metric = maximal_comparison_pattern(self)
-        # Calcular també patro_metric_PC
-        self.patro_metric_PC = patro_metric_PC(self.patro_metric, self.subdivisio) if getattr(self, 'subdivisio', None) else None
-        self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
-        if self.subdivisio:
-            self.colon_1 = self.patro_metric[:int(self.subdivisio.split('+')[0])] if '+' in self.subdivisio else None
-            self.colon_2 = self.patro_metric[int(self.subdivisio.split('+')[0]):] if '+' in self.subdivisio else None
-        else:
-            self.colon_1 = None
-            self.colon_2 = None
+    def __subdivisio2__(self, volta):
+        #print(f'({volta}) [DEBUG] Intentant detectar subdivisió amb subdivisiona()...')
+        if not self.subdivisio:
+            subdivisio_info = subdivisiona(self)
+            if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 1:
+                self.subdivisio = subdivisio_info[0]
+                self.tipus_subdivisio = subdivisio_info[1]
+            else:
+                self.subdivisio = None
+                self.tipus_subdivisio = None
+            self.patro_metric = maximal_comparison_pattern(self)
+            # Calcular també patro_metric_jerarquic
+            self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio) if getattr(self, 'subdivisio', None) else None
+            self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
+            if self.subdivisio:
+                self.colon_1 = self.patro_metric[:int(self.subdivisio.split('+')[0])] if '+' in self.subdivisio else None
+                self.colon_2 = self.patro_metric[int(self.subdivisio.split('+')[0]):] if '+' in self.subdivisio else None
+            else:
+                self.colon_1 = None
+                self.colon_2 = None
+            self.correccio_local_models(volta)
+        #print(f"\t[DEBUG] Subdivisió detectada: {self.subdivisio}, tipus: {self.tipus_subdivisio}")
+
+    def correccio_local_models(self, volta):
+        """Funció per a correccions locals en la detecció del model (subdivisió)"""
+        if volta > 1:
+            if '3-7' in self.signatura:
+                self.subdivisio = '4+6'
+                self.tipus_subdivisio = 'continu'
+                self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio)
+                self.colon_1 = self.patro_metric[:4]
+                self.colon_2 = self.patro_metric[4:]
+            if '3-5-8' in self.signatura and self.subdivisio != '5+5':
+                self.subdivisio = '5+5'
+                self.tipus_subdivisio = 'continu'
+                self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio)
+                self.colon_1 = self.patro_metric[:5]
+                self.colon_2 = self.patro_metric[5:]
 
 # Exemple d'ús
 if __name__ == "__main__":
