@@ -43,7 +43,8 @@ def correct_spacy(doc):
         'això': 'PRON',
         'açò': 'PRON', 'ço': 'PRON', 'so': 'NOUN', 'xo': 'PRON', 'xô': 'PRON', 'xò': 'PRON', "'xo": 'PRON',
         "'xô": 'PRON',
-        "'xò": 'PRON', 'més': 'PRON', 'mès': 'PRON', 'menys': 'PRON', 'molt': 'PRON', 'poc': 'PRON', 'pocs': 'PRON', 'molts': 'PRON',
+        "'xò": 'PRON', 'més': 'PRON', 'mès': 'PRON', 'menys': 'PRON', 'molt': 'PRON', 'poc': 'PRON', 'pocs': 'PRON',
+        'molts': 'PRON',
         'ab': 'ADPa', 'com': 'PRON', 'quan': 'ADP', 'on': 'ADPa', 'perquè': 'ADV', 'perque': 'ADV', 'perqué': 'ADV',
         'no': 'ADP', 'sí': 'ADP', 'ja': 'ADP', 'encara': 'ADV', 'ans': 'ADV', 'ara': 'ADV', 'ací': 'ADV', 'allà': 'ADV',
         'allí': 'ADV', 'açà': 'ADV', 'dallà': 'ADV', 'dallí': 'ADV', 'pus': 'ADV', 'am': 'VERB', 'cel': 'NOUN',
@@ -60,12 +61,16 @@ def correct_spacy(doc):
         'oh': 'INTJ', 'ah': 'INTJ', 'eh': 'INTJ', 'uh': 'INTJ', 'ai': 'INTJ', 'oi': 'INTJ', 'ui': 'INTJ', 'uf': 'INTJ',
         'neva': 'VERB', 'eva': 'PROPN', 'altre': 'ADJ', 'altres': 'ADJ', 'altra': 'ADJ', 'cap': 'ADP', 'ex': 'ADP',
         "d'ex": 'ADP', 'pro': 'ADP', 'desert': 'NOUN', 'deserts': 'NOUN', "d'en": 'DET', 'ben': 'DET', 'he': 'AUX',
-        'vaig': 'AUX', 'ha': 'AUX', 'han': 'AUX', 'vam': 'AUX', 'vau': 'AUX', 'van': 'AUX', 'vàrem': 'AUX', 'vàreu':'AUX', 'varen':'AUX', 'havia': 'AUX', 'havíem': 'AUX', 'havieu': 'AUX',
-        'urss': 'PROPN', 'front': 'NOUN', "dú": 'VERB', 'vull': 'AUX', 'vol': 'AUX', 'és':'AUX', 'ets': 'AUX', 'soc': 'AUX', 'som': 'AUX', 'sou': 'AUX',
+        'vaig': 'AUX', 'ha': 'AUX', 'han': 'AUX', 'vam': 'AUX', 'vau': 'AUX', 'van': 'AUX', 'vàrem': 'AUX',
+        'vàreu': 'AUX', 'varen': 'AUX', 'havia': 'AUX', 'havíem': 'AUX', 'havieu': 'AUX',
+        'urss': 'PROPN', 'front': 'NOUN', "dú": 'VERB', 'vull': 'AUX', 'vol': 'AUX', 'és': 'AUX', 'ets': 'AUX',
+        'soc': 'AUX', 'som': 'AUX', 'sou': 'AUX',
         'sóc': 'AUX', 'só': 'AUX',
-        'era': 'AUX', 'eres': 'AUX', 'érem': 'AUX', 'éreu': 'AUX', 'eren': 'AUX', 'seré': 'AUX', 'seràs': 'AUX', 'serà': 'AUX',
-        'sereu': 'AUX', 'serem': 'AUX', 'seran': 'AUX', 'siguí': 'AUX', 'sigués': 'AUX', 'sigui': 'AUX', 'siguem': 'AUX', 'sigueu': 'AUX', 'siguin': 'AUX',
-            'haguí': 'AUX', 'hagués': 'AUX', 'hagi': 'AUX', 'haguem': 'AUX', 'hagueu': 'AUX', 'hagin': 'AUX', 'hàgiu': 'AUX'
+        'era': 'AUX', 'eres': 'AUX', 'érem': 'AUX', 'éreu': 'AUX', 'eren': 'AUX', 'seré': 'AUX', 'seràs': 'AUX',
+        'serà': 'AUX',
+        'sereu': 'AUX', 'serem': 'AUX', 'seran': 'AUX', 'siguí': 'AUX', 'sigués': 'AUX', 'sigui': 'AUX',
+        'siguem': 'AUX', 'sigueu': 'AUX', 'siguin': 'AUX',
+        'haguí': 'AUX', 'hagués': 'AUX', 'hagi': 'AUX', 'haguem': 'AUX', 'hagueu': 'AUX', 'hagin': 'AUX', 'hàgiu': 'AUX'
     }
 
     normalized = []
@@ -147,6 +152,7 @@ def correct_spacy(doc):
 
     return new_doc
 
+
 def ortho_repair(text: str):
     """
     Repara errors ortogràfics comuns en el text donat utilitzant patrons regex predefinits.
@@ -160,17 +166,11 @@ def ortho_repair(text: str):
         r'no\-res': r'no-rès', r'\Bas$': r'es', r'(ç)([ie])': r'c\2', r'([dD])uu': r'\1ú',
         r"qu'": r"qu·", r"\B([qg]u)'([aeiouàéèéìíòóúù])": r"\1\2 \2", r" +": r" ", r"(.') (.)": r"\1\2",
         r"([aeiouàéèéìíòóúù])·\1": r"\1 \1", r"([aeiouàéèéìíòóúù]) *· *([aeiouàéèéìíòóúù])": r"\1 \2", r"·": r"'",
-        r"\b([sS][^aeiouàéèéìíòóúùyýÿhs]\B)": r"e\1", r"([aeiouy])h([iy]r)": r"\1\2", r"\Bch$": r"c", r"^ff": r"f"
+        r"([aeiouy])h([iy]r)": r"\1\2", r"\Bch$": r"c", r"^ff": r"f"
     }
     for pattern, replacement in regex_patterns.items():
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
     return text
-
-def abreviatures(token):
-    dict = {r"sra": "senyora", "srta": "senyoreta", "sr": "senyor", "dr": "doctor", "dra": "doctora"}
-    for pattern, replacement in dict.items():
-        if re.fullmatch(pattern, token[0], flags=re.IGNORECASE):
-            token[0] = replacement
 
 
 def ocr_errors(doc):
@@ -205,9 +205,10 @@ def spacy_asyllabic(doc):
     asyllabic_L = ["d'", "l'", "s'", "m'", "n'", "t'", "qu'", "qu", "qu·", "d", "p", "L", "m·", "t·", "l·", "s·", "n·",
                    "l'", "ll'", "ll·", "c'", "c·", "[^aàáeéèíìióòóúùuüïâêîôûyý]['·]"]
     asyllabic_R = ["'ns", "'ns", "'l", "'m", "'n", "'s", "'ls", "'t", "'ts", "l", "ll", "lls", "'ll", "'lls", "ls", "s",
-                   "·ns", "·l", "·ll", "·lls", "·m", "·n", "·s", "·ls", "·t", "·ts", "·ns", "·y"]#,'-te', '-me', '-se',
-                   #'-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li', '-hi'
-                   #'-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
+                   "·ns", "·l", "·ll", "·lls", "·m", "·n", "·s", "·ls", "·t", "·ts", "·ns",
+                   "·y"]  #,'-te', '-me', '-se',
+    #'-nos', '-vos', '-lo', '-la', '-los', '-les', '-las', '-els', '-ne', '-en', '-mos', '-us', '-li', '-hi'
+    #'-lis', "['·-][^aàáeéèíìióòóúùuâêîôûyý]"]
 
     new_doc = [(text, pos_, dep_, lemma_, morph, head) for text, pos_, dep_, lemma_, morph, head in doc]
     i = 0
@@ -228,34 +229,14 @@ def spacy_asyllabic(doc):
     return new_doc
 
 
-def inicials(text: str):
-    """
-    Substitueix inicials i algunes abreviatures comunes en català per la seva forma completa en un text donat.
-    Args:
-        text (str): El text d'entrada.
-    Returns:
-        str: El text amb les inicials substituïdes.
-    Nota:
-    Mòdul inactiu actualment, ja que genera més problemes que solucions en l'etiquetatge POS.
-    """
-    replacements = {
-        "B.": "be", "C.": "ce", "D.": "de", "F.": "efa", "G.": "ge", "H.": "hac", "J.": "jota", "K.": "ka", "L.": "ela",
-        "M.": "ema", "N.": "ena", "P.": "pe", "Q.": "cu", "R.": "erra", "S.": "essa", "T.": "te", "V.": "ve",
-        "W.": "ve-doble", "X.": "ics", "Y.": "i", "Z.": "zeta", "Sr.": "senyor", "Dr.": "doctor", "Sra.": "senyora",
-        "Dra.": "doctora", "Srta.": "senyoreta", "Mr.": 'míster', "Mrs.": "missis", "Ms.": "miss", "Mme.": "madame",
-    }
-
-    return ' '.join([replacements[word] if word in replacements else word for word in text.split()])
-
-
 def prones(doc):
-
     def previous_token(token, doc):
         """Comprova si el token anterior existeix i retorna'l, sinó retorna None."""
         index = doc.index(token)
         if index > 0:
             return doc[index - 1]
         return None
+
     for token in doc:
         if '-' in token[0]:
             if token[0].startswith('-'):
@@ -310,7 +291,7 @@ def posTagger(nlp, text: str):
         words.append(text_ or "")
 
     # Build a new Doc from corrected token texts
-    new_doc = Doc(nlp.vocab, words=words) # valors buits
+    new_doc = Doc(nlp.vocab, words=words)  # valors buits
 
     # Assigna les etiquetes corregides als tokens del nou Doc
     for i, tok in enumerate(tokens):
@@ -347,4 +328,5 @@ if __name__ == "__main__":
     words = posTagger(nlp, text)
     for w in words:
         print(w.i, w.text, w.lower_, w.pos_, w.dep_, w.head.i, w.has_head())
-        print(f"  Corrections: UPOS={w._.upos_corr}, LEMMA={w._.lemma_corr}, MORPH={w._.morph_corr}, DEP={w._.dep_corr}, HEAD={w._.head_corr}")
+        print(
+            f"  Corrections: UPOS={w._.upos_corr}, LEMMA={w._.lemma_corr}, MORPH={w._.morph_corr}, DEP={w._.dep_corr}, HEAD={w._.head_corr}")

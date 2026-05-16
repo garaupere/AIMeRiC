@@ -34,6 +34,7 @@ class Sillaba:
         self.last = True if self.s_index == self.len_word - 1 else False
         #self.has_PRONe = True if self.text.endswith('-') else False
         self.fono_info = self.fono()  # Afegir a un mòdul independent: /escansio/utils/phonology.py
+        self.flag = None # comodí per marcar coses a la síl·laba durant el processament
 
     def save_metadata(self):
         return {attr: getattr(self, attr) for attr in

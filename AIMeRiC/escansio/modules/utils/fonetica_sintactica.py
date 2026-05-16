@@ -188,8 +188,8 @@ def neutralitza_accents_secundaris(self):
             for syl in self.stress:
                 if syl.pes <= 2:
                     syl.pes = 0
-        word.stress = accent_secundari(word) # aplica alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
-
+        word.stress = accent_secundari(
+            word)  # aplica alternança rítmica després de neutralitzar secundaris (exemple: con.VIC.ci.Ó -> CON.vic.CIÓ)
 
 
 def split_syllable(self, syllable: Sillaba) -> Optional[Tuple[Sillaba, Sillaba]]:
@@ -259,18 +259,24 @@ def resol_contactes_vocalics(self, best_mode: str):
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
                     actualitza_s_index(self)
+                    resol_xoc_accentual_fusio(
+                        word)  # Resol xoc accentual creat per la fusió (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra)
                 elif word.n_syllables == 1 and next_word.n_syllables > 1:  # El primer és monosíl·lab i el segon polisíl·lab: assignar nova síl·laba al segon, eliminar la del primer
                     next_word.stress[0] = res
                     next_word.stress_index = get_index_accent(next_word)
                     next_word.n_syllables = len(next_word.stress)
                     del self.words[wi]
                     actualitza_s_index(self)
+                    resol_xoc_accentual_fusio(
+                        word)  # Resol xoc accentual creat per la fusió (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra)
                 elif word.n_syllables > 1 and next_word.n_syllables == 1:  # El primer és polisíl·lab i el segon monosíl·lab: assignar nova síl·laba al primer, eliminar la del segon
                     word.stress[-1] = res
                     word.stress_index = get_index_accent(word)
                     word.n_syllables = len(word.stress)
                     del self.words[wi + 1]
                     actualitza_s_index(self)
+                    resol_xoc_accentual_fusio(
+                        word)  # Resol xoc accentual creat per la fusió (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra)
                 else:
                     # ambdues polisíl·labes
                     word.stress[-1] = res
@@ -285,7 +291,9 @@ def resol_contactes_vocalics(self, best_mode: str):
                     if not word.stress:
                         del self.words[wi]
                     actualitza_s_index(self)
-                        # ajustar iterador natural de for
+                    resol_xoc_accentual_fusio(word)  # Resol xoc accentual creat per la fusió (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra)
+
+                    # ajustar iterador natural de for
                 # actualitzar estats globals
                 self.nomes_sillabes = [s for w in self.words for s in w.stress]
                 self.recompte_sillabes_metriques = recompte_metric(self)
@@ -294,6 +302,22 @@ def resol_contactes_vocalics(self, best_mode: str):
                 if diff <= 0:
                     break
         attempts += 1
+
+
+def resol_xoc_accentual_fusio(mot_fusionat):
+    """Resol un xoc accentual creat per la fusió de síl·labes (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra"""
+
+    # Detecta si hi ha dos accents consecutius en el mot_fusionat
+    accents = [s for s in mot_fusionat.stress if int(s.pes) >= 2]
+    if len(accents) < 2:
+        return  # No hi ha xoc accentual
+    # Si hi ha xoc, neutralitza l'accent de menor pes (o el primer si són iguals SS > WS)
+    accents.sort(key=lambda s: (int(s.pes), s.s_index))  # Ordena per pes i després per index
+    # comprova que són consecutius
+    if accents[1].s_index - accents[0].s_index == 1:
+        accents[0].pes = 0  # Neutralitza l'accent de menor pes (o el primer si són iguals)
+        mot_fusionat.stress_index = get_index_accent(mot_fusionat)  # Actualitza l'index d'accent del mot
+
 
 
 def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
@@ -419,19 +443,30 @@ def actualitza_s_index(self):
         for i, syllable in enumerate(word.stress):
             syllable.s_index = i
 
+
 def millor_sineresi(self) -> List[Tuple[Sillaba, Sillaba, int]]:
     """Candidats per sineresi."""
     candidats = []
     for w in self.words:
         for s in w.stress:
-            #print(f'[DEBUG] Analitzant síl·laba: {s.text} (index {s.s_index}) en paraula "{w.text}"')
             s1 = s
             s2 = w.stress[s.s_index + 1] if s.s_index + 1 < len(w.stress) else None
             if s2 and s1.ends_with_vowel and s2.starts_with_vowel and s2.s_index == s1.s_index + 1:
                 pts = puntua(s1, w.stress) + puntua(s2, w.stress) + puntua_diftong(s1, s2)
                 s1.fusionable = pts
-                if len(w.stress) == 2:
-                    pts -= 20 # penalització forta per sinèresi en paraules de dues síl·labes (ex: pa.ís > pais)
+                #print('[DEBUG] Candidat potencial per sinèresi:', s1.text, s2.text, pts)
+                if s1.pes > 3:  # Si la síl·laba 1 és forta, penalitza la sinèresi (és més probable en síl·labes àtones)
+                    #print('[DEBUG] Penalitzant sinèresi per síl·laba 1 forta:', s1.text, s2.text)
+                    pts = 0  # Candidat poc probable per sinèresi (co.llí.em, co.pé.o, se.rí.a, ma.sí.a, etc.)
+
+                elif s2.pes > 3 and s2.fono_info.get('alta'):  # Si la síl·laba 2 és forta i és i /u, penalitza la sinèresi (ex: be.ne.ít, a.gra.ír, pa.ú.ra, di.úr.na, etc.). Permet sinèresis tipus con.di.ció
+                    #print('[DEBUG] Penalitzant sinèresi entre síl·laba forta i vocal alta:', s1.text, s2.text)
+                    pts = 0  # Candidat poc probable per sinèresi (ex: be.ne.ít, a.gra.ír, pa.ú.ra, di.úr.na, etc.). Permet sinèresis tipus con.di.ció
+
+                if len(w.stress) == 2:  # Si el mot té només dues síl·labes,
+                    #print('[DEBUG] Penalitzant sinèresi en mot de dues síl·labes:', s1.text, s2.text)
+                    pts -= 20  # penalització forta per sinèresi en paraules de dues síl·labes (ex: pa.ís > pais)
+
                 if pts > 0:
                     candidats.append((s1, s2, pts))
     candidats.sort(key=lambda x: x[2], reverse=True)

@@ -147,7 +147,7 @@ def tall(self) -> None | int | tuple[int, str]:
 
 def subdivisiona(self):
     """Nova versió de la subdivisio: millorada i simplificada."""
-    if self.recompte_sillabes_metriques == 10:
+    if self.recompte_sillabes_metriques == 10 and self.subdivisio is None:
         subdpos = [3, 5, 4]  # Preferències de subdivisions
 
         # Per a les síl·labes del vers, obtenim els pesos de les subdpos
@@ -158,14 +158,16 @@ def subdivisiona(self):
                 if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes == 3:
                     self.nomes_sillabes[pos].pes = 3.75
             elif pos == 4 and len(candidats) > 0:
-                if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes > 2:
-                    self.nomes_sillabes[pos].pes -= 0.75
+                if 3 in [c[0] for c in candidats]:  # Si ja hem considerat el tall a la posició 4, no penalitzem
+                    if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes > 2:
+                        self.nomes_sillabes[pos].pes -= 0.50
+                        self.nomes_sillabes[pos].flag = 'penalitzat_per_tall'
             candidats.append((pos, self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None))
         # ordena els candidats per pes (descendent) i després per posició (segons la preferència). Elimina els candidats amb pes None o <= 2.0
         candidats_valids = [(pos, pes) for pos, pes in candidats if pes is not None and pes >= 2]
         candidats_valids.sort(
             key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
-
+        #print('>> Candidats de subdivisió ordenats per pes i preferència:', candidats_valids)
         # Defineix el tipus de subdivisió.
         for pos, pes in candidats_valids:
             # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
@@ -173,22 +175,36 @@ def subdivisiona(self):
             #print('\t> Candidat a subdivisió:', pos, 'Pes:', pes, 'Paraula:', word_at_pos.text if word_at_pos else None)
             if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
                     word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
-                if self.nomes_sillabes[pos].pes >= 4 or self.nomes_sillabes[pos].pes >= 3 and pos==3:  # Si el pes és un accent lèxic, considera que és un tall
+                #print('\t\t> És la darrera síl·laba del mot i el mot no té PRONe ni és fusionada')
+
+                if self.nomes_sillabes[pos].pes >= 4 or (self.nomes_sillabes[pos].pes >= 3 and pos==3) or (pos == 4 and self.nomes_sillabes[pos].pes == 3.5):  # Si el pes és un accent lèxic, considera que és un tall
                     self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és 5.0
+                    #print('\t\t> Pes de la síl·laba de tall assegurat a 5.0')
+                    if self.nomes_sillabes[pos + 1].flag and self.nomes_sillabes[pos + 1].pes is not None and self.nomes_sillabes[pos + 1].pes == 3.5:
+                        self.nomes_sillabes[pos+1].pes = 4.0 # Restaura el pes original de la síl·laba següent si havia estat penalitzada per ser candidata a tall
                     pos = pos + 1  # Convertim a 1-based
                     word_at_pos.paraula_tall = True  # Marca la paraula com a tall
                     return f'{pos}+{10 - pos}', 'tall'
                 elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[
                     pos].pes < 4:  # Si el pes és d'accent bivalent o secundari, considera que és discontinu
+                    #print('\t\t> Pes de la síl·laba indica accent bivalent o secundari, considerant com a discontinu')
+                    self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és alt
+                    if self.nomes_sillabes[pos + 1].flag and self.nomes_sillabes[pos + 1].pes is not None and self.nomes_sillabes[pos + 1].pes == 3.5:
+                        self.nomes_sillabes[pos+1].pes = 4.0 # Restaura el pes original de la síl·laba següent si havia estat penalitzada per ser candidata a tall
                     pos = pos + 1  # Convertim a 1-based
                     word_at_pos.paraula_tall = True  # Marca la paraula com a tall
                     return f'{pos}+{10 - pos}', 'discontinu'
             elif self.nomes_sillabes[
                 pos].pes >= 2:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
+                #print('\t\t> No és la darrera síl·laba del mot però té accent, considerant com a continu')
+                if self.nomes_sillabes[pos + 1].flag and self.nomes_sillabes[pos + 1].pes is not None and self.nomes_sillabes[pos + 1].pes == 3.5:
+                    self.nomes_sillabes[
+                        pos + 1].pes = 4.0  # Restaura el pes original de la síl·laba següent si havia estat penalitzada per ser candidata a tall
                 pos = pos + 1  # Convertim a 1-based
                 word_at_pos.paraula_tall = True  # Marca la paraula com a tall
                 return f'{pos}+{10 - pos}', 'continu'
         return None, None  # No s'ha trobat una subdivisió vàlida
+    return None
 
 
 def _get_word_at_position(self, pos: int):

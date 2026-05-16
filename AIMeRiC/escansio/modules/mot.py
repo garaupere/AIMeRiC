@@ -64,7 +64,7 @@ class Mot:
         self.correct_DET()
         self.safe_syllables()  # Aquest mòdul s'ha de fer independent i s'ha d'incloure a: escansio/utils/syllabes.py (?)
         self.word_ment = self.word_ment()
-        self.n_syllables = len(self.syllables)  # Número de síl·labes
+        self.n_syllables = len(self.syllables) if self.syllables else None # Número de síl·labes
         self.stress = accentua(self)
         self.stress_index = get_index_accent(self)
         self.is_compost = False
@@ -100,20 +100,22 @@ class Mot:
 
     def safe_syllables(self):
         """Aquesta funció elimina les síl·labes que no contenen vocals."""
-        for syllable in self.syllables:
-            #     if '-' in syllable:
-            #         print(">> SÍL·LABA FUSIONADA DETECTADA:", syllable, "en paraula:", self.text)  # Debug
-            #         next_syll = self.syllables[self.syllables.index(syllable) + 1] if self.syllables.index(
-            #             syllable) + 1 < len(self.syllables) else None
-            #         if next_syll:
-            #             self.syllables[self.syllables.index(next_syll)] = '-' + next_syll
-            #             self.syllables[self.syllables.index(syllable)] = syllable.replace('-', '')
-            #         else:
-            #             self.syllables[self.syllables.index(syllable)] = syllable
+        if self.syllables:
+            for syllable in self.syllables:
+                #     if '-' in syllable:
+                #         print(">> SÍL·LABA FUSIONADA DETECTADA:", syllable, "en paraula:", self.text)  # Debug
+                #         next_syll = self.syllables[self.syllables.index(syllable) + 1] if self.syllables.index(
+                #             syllable) + 1 < len(self.syllables) else None
+                #         if next_syll:
+                #             self.syllables[self.syllables.index(next_syll)] = '-' + next_syll
+                #             self.syllables[self.syllables.index(syllable)] = syllable.replace('-', '')
+                #         else:
+                #             self.syllables[self.syllables.index(syllable)] = syllable
 
-            if not re.search("[aeiouàáèéíìóòúùïüâêîôûy]", syllable.lower()):
-                self.syllables.remove(syllable)
-        return True
+                if not re.search("[aeiouàáèéíìóòúùïüâêîôûy]", syllable.lower()):
+                    self.syllables.remove(syllable)
+            return True
+        return None
 
     def plain(self):
         return '.'.join([syll.text.upper() if int(syll.pes) > 1 else syll.text.lower() for syll in self.stress])
@@ -233,7 +235,7 @@ class Mot:
 
 if __name__ == "__main__":
 
-    sentence = "puguin"
+    sentence = "tu aquesta"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)
