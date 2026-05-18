@@ -69,7 +69,7 @@ class Vers:
                 self.__disposicio__()
 
                 #self.__prosodia__(subdi=False)
-                self.__subdivisio2__(volta=1)#self.__subdivisio__()
+                self.__subdivisio2__(volta=1)  #self.__subdivisio__()
                 self.__prosodia__(subdi=True)
                 self.__patrons__()
                 self.__colons__()
@@ -130,7 +130,6 @@ class Vers:
         self.recompte_sillabes_extrametriques = max(0, len(self.patro) - self.recompte_sillabes_metriques)
         self.sillables_metriques = self.patro[:self.recompte_sillabes_metriques]
 
-
     def __anota__(self) -> None:
         """Genera l'etiquetatge del vers."""
         self.anotat = anota_vers(self)
@@ -173,7 +172,7 @@ class Vers:
     def __mot_info__(self) -> None:
         """Nombre de mots i distribució respecte al còlon (informació de quants_mots)."""
         self.n_mots = len(self.original)
-        self.l_mots = [len(word.stress) for word in self.original] # Longitud sil·làbica original de cada mot
+        self.l_mots = [len(word.stress) for word in self.original]  # Longitud sil·làbica original de cada mot
         qm = quants_mots(self)
         # quants_mots pot retornar una tupla; usem indices amb seguretat
         self.mots_colon1 = qm[0] if len(qm) > 0 else 0
@@ -215,7 +214,6 @@ class Vers:
 
             self.colon_1 = self.patro_metric[:int(self.colon_1_pos)] if self.colon_1_pos else None
             self.colon_2 = self.patro_metric[int(self.colon_1_pos):] if self.colon_1_pos else None
-
 
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
@@ -315,8 +313,10 @@ class Vers:
               attrs["subdivisio"] if attrs["subdivisio"] is not None else 'N/I'),
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Tipus de subdivisió:",
               attrs["tipus_subdivisio"] if attrs["tipus_subdivisio"] is not None else 'N/A'),
-        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 1:", attrs["colon_1"] if attrs["colon_1"] is not None else 'N/A'),
-        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 2:", attrs["colon_2"] if attrs["colon_2"] is not None else 'N/A'),
+        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 1:",
+              attrs["colon_1"] if attrs["colon_1"] is not None else 'N/A'),
+        print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Còlon 2:",
+              attrs["colon_2"] if attrs["colon_2"] is not None else 'N/A'),
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Número de mots:", attrs["n_mots"])
         print(Fore.CYAN, f"\t➥", Fore.RESET, f"Longitud sil·làbica dels mots:", attrs["l_mots"])
         print(Fore.CYAN, f"\t\t➥", Fore.RESET, f"Mots al primer colon:", attrs["mots_colon1"])
@@ -481,32 +481,19 @@ class Vers:
                 self.tipus_subdivisio = None
             self.patro_metric = maximal_comparison_pattern(self)
             # Calcular també patro_metric_jerarquic
-            self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio) if getattr(self, 'subdivisio', None) else None
+            self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio) if getattr(self,
+                                                                                                                'subdivisio',
+                                                                                                                None) else None
             self.signatura = '-'.join(str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1')
             if self.subdivisio:
-                self.colon_1 = self.patro_metric[:int(self.subdivisio.split('+')[0])] if '+' in self.subdivisio else None
-                self.colon_2 = self.patro_metric[int(self.subdivisio.split('+')[0]):] if '+' in self.subdivisio else None
+                self.colon_1 = self.patro_metric[
+                    :int(self.subdivisio.split('+')[0])] if '+' in self.subdivisio else None
+                self.colon_2 = self.patro_metric[
+                    int(self.subdivisio.split('+')[0]):] if '+' in self.subdivisio else None
             else:
                 self.colon_1 = None
                 self.colon_2 = None
-            self.correccio_local_models(volta)
-        #print(f"\t[DEBUG] Subdivisió detectada: {self.subdivisio}, tipus: {self.tipus_subdivisio}")
 
-    def correccio_local_models(self, volta):
-        """Funció per a correccions locals en la detecció del model (subdivisió)"""
-        if volta > 1:
-            if '3-7' in self.signatura:
-                self.subdivisio = '4+6'
-                self.tipus_subdivisio = 'continu'
-                self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio)
-                self.colon_1 = self.patro_metric[:4]
-                self.colon_2 = self.patro_metric[4:]
-            if '3-5-8' in self.signatura and self.subdivisio != '5+5':
-                self.subdivisio = '5+5'
-                self.tipus_subdivisio = 'continu'
-                self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio)
-                self.colon_1 = self.patro_metric[:5]
-                self.colon_2 = self.patro_metric[5:]
 
 # Exemple d'ús
 if __name__ == "__main__":
