@@ -116,7 +116,7 @@ class Vers:
         self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
         self.recompte_sillabes_metriques = recompte_metric(self)
         self.patro_metric = str(maximal_comparison_pattern(self))
-        # Generem/actualitzem la versió 'PC' del patró mètric només si ja tenim subdivisió
+        # Genera/actualitza la versió del patró mètric jeràrquic només si ja hi ha subdivisió
         if getattr(self, 'subdivisio', None):
             try:
                 self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, self.subdivisio)
@@ -150,29 +150,33 @@ class Vers:
 
     def __prosodia__(self, subdi=False) -> None:
         """Càlculs prosòdics addicionals (accents prosòdics, cim màxim)."""
-        cim_maxim(self)
-        #self.prosodia_original = deepcopy(self)
+        if self.ajustat:
+            cim_maxim(self)
+            #self.prosodia_original = deepcopy(self)
 
-        accents_prosodics(self, subdividit=subdi, debug=False)
-        #self.actualitza_pesos()
-        #cim_maxim(self)
-        # Actualitza anotacions i representacions
-        self.anotat = anota_vers(self)
-        self.escansio_array = scansion_array(self)
-        self.escansio_text = escansio_accentual(self)
-        # Després d'ajustar la prosòdia, la subdivisió pot haver de recalcular-se
-        if not self.subdivisio:
-            try:
-                # Recalcula subdivisió i patro_metric_jerarquic per coherència
-                self.__subdivisio2__(volta=3)
-            except Exception:
-                # No hem de trencar el flux si la reassignació falla
-                pass
+            accents_prosodics(self, subdividit=subdi, debug=False)
+            #self.actualitza_pesos()
+            #cim_maxim(self)
+            # Actualitza anotacions i representacions
+            self.anotat = anota_vers(self)
+            self.escansio_array = scansion_array(self)
+            self.escansio_text = escansio_accentual(self)
+            # Després d'ajustar la prosòdia, la subdivisió pot haver de recalcular-se
+            if not self.subdivisio:
+                try:
+                    # Recalcula subdivisió i patro_metric_jerarquic per coherència
+                    self.__subdivisio2__(volta=3)
+                except Exception:
+                    # No hem de trencar el flux si la reassignació falla
+                    pass
+            self.comprova_subdivisio(volta=2)
 
     def __mot_info__(self) -> None:
         """Nombre de mots i distribució respecte al còlon (informació de quants_mots)."""
         self.n_mots = len(self.original)
         self.l_mots = [len(word.stress) for word in self.original]  # Longitud sil·làbica original de cada mot
+        self.l_mots_mean = sum(self.l_mots) / self.n_mots if self.n_mots > 0 else 0
+        self.n_mots_mean = self.n_mots / len(self.patro) if len(self.patro) > 0 else 0
         qm = quants_mots(self)
         # quants_mots pot retornar una tupla; usem indices amb seguretat
         self.mots_colon1 = qm[0] if len(qm) > 0 else 0
@@ -229,7 +233,6 @@ class Vers:
             self.__prosodia__(subdi=True)
             if not self.subdivisio:
                 self.__subdivisio2__(volta=5)
-
         self.__patrons__()
         self.__colons__()
         self.__anota__()
@@ -237,6 +240,7 @@ class Vers:
         self.__contactes_vocalics__()
         #self.__metronome__()
         self.__disposa_tall__()
+        self.comprova_subdivisio(volta=4)
 
     def mostra(self) -> None:
         """Mostra informació del vers amb colors per consola."""
@@ -469,9 +473,31 @@ class Vers:
                         syllable.pes = s.pes
                         break
 
+    def comprova_subdivisio(self, volta):
+        if self.subdivisio:
+            pos = int(self.subdivisio.split('+')[0]) - 1
+            #print(f'[DEBUG] Volta {volta}: Comprovant subdivisió {self.subdivisio} al patró mètric {self.patro_ritmic}...')
+            if self.patro_metric[pos] != '1':
+                #print(f'[DEBUG] Subdivisió {self.subdivisio} no vàlida al patró mètric {self.patro_metric}.')
+                self.subdivisio = None
+                self.tipus_subdivisio = None
+                self.colon_1 = None
+                self.colon_2 = None
+                self.__subdivisio2__(volta + 1)
+        if not self.subdivisio and self.signatura == '3-7-10' or self.signatura == '1-3-7-10':
+            self.subdivisio = '4+6'
+            self.tipus_subdivisio = 'discontinu'
+            self.colon_1 = self.patro_metric[:4]
+            self.colon_2 = self.patro_metric[4:]
+        elif self.subdivisio == 'N/I' and self.signatura == '3-7-10' or self.signatura == '1-3-7-10':
+            self.subdivisio = '4+6'
+            self.tipus_subdivisio = 'discontinu'
+            self.colon_1 = self.patro_metric[:4]
+            self.colon_2 = self.patro_metric[4:]
+
     def __subdivisio2__(self, volta):
         #print(f'({volta}) [DEBUG] Intentant detectar subdivisió amb subdivisiona()...')
-        if not self.subdivisio:
+        if not self.subdivisio and self.ajustat:
             subdivisio_info = subdivisiona(self)
             if isinstance(subdivisio_info, tuple) and len(subdivisio_info) > 1:
                 self.subdivisio = subdivisio_info[0]
