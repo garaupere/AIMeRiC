@@ -287,6 +287,8 @@ class Vers:
         self.__contactes_vocalics__()
         self.__verifica_model__()
         self.__ensure_tall_spacing__()
+        self.__info_contactes_vocalics__()
+        self.__info_gramatical__()
 
     def __ensure_tall_spacing__(self) -> None:
         """Assegura que la representació del patró té espai després del tall."""
@@ -294,6 +296,26 @@ class Vers:
             self.__detecta_model__()
             if self.model is None:
                 self.patro_metric_jerarquic = self.patro_metric
+
+    def __info_contactes_vocalics__(self):
+        self.tipus_cv = []
+        self.tonicitat_cv = []
+        self.frontera_cv = []
+        self.vocals_cv = []
+        self.index_cv = []
+        if self.contactes_vocalics:
+            for contacte_id, info in self.contactes_vocalics.items():
+                self.tipus_cv.append(info['tipus'])
+                self.tonicitat_cv.append(info['tonicitat'])
+                self.frontera_cv.append(info['frontera'])
+                self.vocals_cv.append(info['vocals'])
+                self.index_cv.append(info['s_index'])
+
+    def __info_gramatical__(self):
+        if self.words:
+            self.cat_gramaticals = [word.pos_ for word in self.words]
+
+
 
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
@@ -317,6 +339,8 @@ class Vers:
         self.__contactes_vocalics__()
         self.__ensure_tall_spacing__()
         self.__verifica_model__()
+        self.__info_contactes_vocalics__()
+        self.__info_gramatical__()
 
     def mostra(self) -> None:
         """Mostra informació del vers amb colors per consola."""
@@ -528,6 +552,12 @@ class Vers:
             self._get_safe('l_mots'),  # longitud_mots
             self._get_safe('mots_colon1', default=0),  # mots_colon_1
             self._get_safe('mots_colon2', default=0),  # mots_colon_2
+            self._get_safe('tipus_cv', default=[]),
+            self._get_safe('tonicitat_cv', default=[]),
+            self._get_safe('frontera_cv', default=[]),
+            self._get_safe('vocals_cv', default=[]),
+            self._get_safe('index_cv', default=[]),
+            self._get_safe('cat_gramaticals', default=[]),
             self._get_safe('encavalcament', default=False),  # encavalcament
         ]
 

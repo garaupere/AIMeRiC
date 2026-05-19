@@ -82,7 +82,9 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                  'iambes', 'troqueus', 'anapests', 'amfibracs', 'dactils', 'degenerats', 'xocs', 'valls',
                  'sil_metriques', 'sil_extrametriques',
                  'llicencies', 'mots', 'longitud_mots',
-                 'mots_colon_1', 'mots_colon_2',  'encavalcament'])
+                 'mots_colon_1', 'mots_colon_2',
+                 'tipus_cv', 'tonicitat_cv', 'frontera_cv', 'vocals_cv', 'index_cv', 'info_gramatical',
+                 'encavalcament'])
 
         rows = []
         for book_title in author.books:  # Per a cada llibre de l'autor
