@@ -89,7 +89,7 @@ class Obra:
         return {
             self.number: {
                 "title": self.title,
-                "year": int(self.year),
+                "year": self.year,
                 "publisher": self.publisher,
                 "translation": bool(self.translation),
                 "font": self.font,
