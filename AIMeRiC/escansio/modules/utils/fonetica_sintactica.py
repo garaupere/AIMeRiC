@@ -315,7 +315,7 @@ def resol_xoc_accentual_fusio(mot_fusionat):
     accents.sort(key=lambda s: (int(s.pes), s.s_index))  # Ordena per pes i després per index
     # comprova que són consecutius
     if accents[1].s_index - accents[0].s_index == 1:
-        accents[0].pes = 0  # Neutralitza l'accent de menor pes (o el primer si són iguals)
+        accents[0].pes = 0.75  # Neutralitza l'accent de menor pes (o el primer si són iguals) [Deixa un residu accentual per si s'ha de recuperar com accent secundari)
         mot_fusionat.stress_index = get_index_accent(mot_fusionat)  # Actualitza l'index d'accent del mot
 
 

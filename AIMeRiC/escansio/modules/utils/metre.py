@@ -14,8 +14,8 @@ def recompte_metric(self):
 
 
 def metre_ajustat(self):
-    return True if self.recompte_sillabes_metriques == self.objectiu and self.patro_metric[
-        self.objectiu - 1] == '1' else False
+    return True if self.recompte_sillabes_metriques == self.objectiu and int(self.patro_ritmic[
+                                                                                 self.objectiu - 1]) > 1 else False
 
 
 def abstract_pattern(words):
@@ -50,7 +50,7 @@ def maximal_comparison_pattern(self) -> str:
         return result
 
 
-def patro_metric_jerarquic(seq, subdivisio):
+def patro_metric_jerarquic(seq, model):
     from functools import lru_cache
     peus = [
         ('(001)', "001", 1),  # anapest
@@ -95,11 +95,11 @@ def patro_metric_jerarquic(seq, subdivisio):
         return tot
 
     # Troba el tall sil·làbic
-    if subdivisio == "4+6":
+    if model == "4+6":
         n1, n2 = 4, 6
-    elif subdivisio == "6+4":
+    elif model == "6+4":
         n1, n2 = 6, 4
-    elif subdivisio == "5+5":
+    elif model == "5+5":
         n1, n2 = 5, 5
     else:
         raise ValueError("Estructura desconeguda")
@@ -127,3 +127,23 @@ def patro_metric_jerarquic(seq, subdivisio):
     patro = f"[{''.join(u1)}][{''.join(u2)}]"
     return patro
 
+
+def extreu_peus(patro):
+    """Extreu els peus (text entre parèntesis) d'un patró mètric"""
+    try:
+        peus = re.findall(r'\(([^)]+)\)', patro)
+        return peus
+    except TypeError:
+        return None
+
+def identifica_xocs(patro):
+    try:
+        return len(re.findall(r'[1-5][1-5]', patro))
+    except TypeError:
+        return None
+
+def identifica_valls(patro):
+    try:
+        return len(re.findall(r'[0-1][0-1][0-1]', patro))
+    except TypeError:
+        return None

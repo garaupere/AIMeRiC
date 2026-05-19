@@ -1,6 +1,6 @@
 """
 Resum
-Aquest mòdul gestiona particularitats mètriques del decasíl·lab en el procés d'escansió: detecta i aplica el `tall`, calcula la subdivisió del vers i inclou una funció en desenvolupament per la cesura femenina.
+Aquest mòdul gestiona particularitats mètriques del decasíl·lab en el procés d'escansió: detecta i aplica el `tall`, calcula la model del vers i inclou una funció en desenvolupament per la cesura femenina.
 
 ## Dependències
 - Mòduls interns:
@@ -12,7 +12,7 @@ Aquest mòdul gestiona particularitats mètriques del decasíl·lab en el procé
 Proporcionar utilitats per:
 - identificar la posició del tall en versos decasíl·labs,
 - marcar la síl·laba de tall amb pes màxim (5.0),
-- obtenir la subdivisió en còlons (`5+5`, etc.),
+- obtenir la model en còlons (`5+5`, etc.),
 - gestionar casos especials de cesura femenina (funció en desenvolupament).
 """
 
@@ -145,15 +145,15 @@ def tall(self) -> None | int | tuple[int, str]:
     return pos, result  # No s'ha trobat tall vàlid
 
 
-def subdivisiona(self):
-    """Nova versió de la subdivisio: millorada i simplificada."""
-    if self.recompte_sillabes_metriques == 10 and self.subdivisio is None:
-        subdpos = [3, 5, 4]  # Preferències de subdivisions
+def identifica_model(self):
+    """Identifica el model subjacent al decasíl·lab (4+6, 6+4 o 5+5)"""
+    if self.recompte_sillabes_metriques == 10 and self.model is None:
+        subdpos = [3, 5, 4]  # Preferències de modelns
 
         # Per a les síl·labes del vers, obtenim els pesos de les subdpos
         candidats = []
         for pos in subdpos:
-            #print('Evaluant posició de subdivisió:', pos, "amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
+            #print('Evaluant posició de model:', pos, "amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
             if pos == 3 or pos == 5:
                 if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes == 3:
                     self.nomes_sillabes[pos].pes = 3.75
@@ -167,12 +167,12 @@ def subdivisiona(self):
         candidats_valids = [(pos, pes) for pos, pes in candidats if pes is not None and pes >= 2]
         candidats_valids.sort(
             key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
-        #print('>> Candidats de subdivisió ordenats per pes i preferència:', candidats_valids)
-        # Defineix el tipus de subdivisió.
+        #print('>> Candidats de model ordenats per pes i preferència:', candidats_valids)
+        # Defineix el tipus de model.
         for pos, pes in candidats_valids:
             # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
             word_at_pos = _get_word_at_position(self, pos)
-            #print('\t> Candidat a subdivisió:', pos, 'Pes:', pes, 'Paraula:', word_at_pos.text if word_at_pos else None)
+            #print('\t> Candidat a model:', pos, 'Pes:', pes, 'Paraula:', word_at_pos.text if word_at_pos else None)
             if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
                     word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
                 #print('\t\t> És la darrera síl·laba del mot i el mot no té PRONe ni és fusionada')
@@ -203,7 +203,7 @@ def subdivisiona(self):
                 pos = pos + 1  # Convertim a 1-based
                 word_at_pos.paraula_tall = True  # Marca la paraula com a tall
                 return f'{pos}+{10 - pos}', 'continu'
-        return None, None  # No s'ha trobat una subdivisió vàlida
+        return None, None  # No s'ha trobat una model vàlida
     return None
 
 
@@ -302,7 +302,7 @@ def cesura_femenina(self):
                             ignore_syll = word.stress[word.stress.index(syllable) + 1]
                             del word.stress[word.stress.index(syllable) + 1:]
                             self.actualitza()
-                            self.subdivisio = "5'+5"
+                            self.model = "5'+5"
                             self.string = '#'.join(
                                 ['.'.join([syllable.text for syllable in word.stress]) for word in
                                  self.words[:word.w_index + 1]]) + ".<" + ignore_syll.text + '>#' + '#'.join(

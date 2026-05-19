@@ -73,13 +73,16 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
         results_dict = author.save_metadata()  # Guarda la metadata de l'autor
         processed_verses = set()  # Conjunt de versos processats, per evitar duplicats
         scansion_cols = [str(col) for col in range(1, mode + 1)]
-        head = (['autor_id', 'autor', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
-                 'obra', 'any', 'traducció', 'font', 'poema',
-                 'núm. de vers', 'text del vers',
-                 'escansió'] + scansion_cols +
-                ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'tipus subdivisió', 'còlon 1', 'còlon 2', 'llicències', 'mots', 'l mots',
-                 'mots al còlon 1', 'mots al còlon 2', 'signatura',
-                 'patró', 'patró rítmic', 'patró mètric', 'encavalcament'])
+        head = (['autor_id', 'nom_autor', 'naixement_autor', 'defuncio_autor', 'genere_autor', 'ciutat_autor', 'dialecte_autor', 'wiki_id_autor', 'viaf_autor',
+                 'obra', 'obra_publicacio', 'obra_traduccio', 'obra_font', 'poema',
+                 'num_vers', 'text_vers',
+                 'escansio'] + scansion_cols +
+                ['contorn_ritmic', 'patro_lineal', 'patro_ritmic', 'patro_metric', 'num_toniques', 'num_atones', 'densitat_accents',
+                 'model', 'correspondencia_model', 'colon_1', 'colon_2',
+                 'iambes', 'troqueus', 'anapests', 'amfibracs', 'dactils', 'degenerats', 'xocs', 'valls',
+                 'sil_metriques', 'sil_extrametriques',
+                 'llicencies', 'mots', 'longitud_mots',
+                 'mots_colon_1', 'mots_colon_2',  'encavalcament'])
 
         rows = []
         for book_title in author.books:  # Per a cada llibre de l'autor
@@ -176,7 +179,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                     new_df[sc_cols] = new_df[sc_cols].astype(str)
                 except Exception:
                     pass
-                for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició', 'signatura', 'còlon 1', 'còlon 2']:
+                for col in ['patró', 'patró_rítmic', 'model', 'posició', 'signatura', 'còlon 1', 'còlon 2']:
                     if col in new_df.columns:
                         try:
                             new_df[col] = new_df[col].astype(str)
@@ -196,7 +199,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                         df[sc_cols] = df[sc_cols].astype(str)
                     except Exception:
                         pass
-                    for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició', 'signatura', 'còlon 1', 'còlon 2']:
+                    for col in ['patró', 'patró_rítmic', 'model', 'posició', 'signatura', 'còlon 1', 'còlon 2']:
                         if col in df.columns:
                             try:
                                 df[col] = df[col].astype(str)
@@ -210,7 +213,7 @@ def etiqueta_corpus(corpus_path: str, results_path: str, versio: str, nlp, mode:
                     f.write(str(verse) + '\n')
 
             counts = {}
-            for value in df['subdivisió']:
+            for value in df['model']:
                 counts[value] = counts.get(value, 0) + 1
             # print(counts)
             if '4+6' not in counts:
