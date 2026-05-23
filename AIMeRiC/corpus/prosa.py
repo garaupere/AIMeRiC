@@ -137,7 +137,7 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
              'mots', 'longitud_mots', 'longitud_mitjana_mots',
              'mots_colon_1', 'mots_colon_2',
              'tipus_cv', 'tonicitat_cv', 'frontera_cv', 'vocals_cv', 'index_cv', 'info_gramatical',
-             'encavalcament'])
+             'encavalcament', 'posició'])
 
     # Crea el DataFrame i assegura que les columnes d'escansió i de patró siguin strings
     df = pd.DataFrame(rows, columns=head)
