@@ -127,13 +127,17 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
              'obra', 'obra_publicacio', 'obra_traduccio', 'obra_font', 'poema',
              'num_vers', 'text_vers',
              'escansio'] + scansion_cols +
-            ['contorn_ritmic', 'patro_lineal', 'patro_ritmic', 'patro_metric', 'num_toniques', 'num_atones',
-             'densitat_accents',
+            ['contorn_ritmic', 'patro_lineal', 'patro_ritmic', 'patro_metric', 'densitat_accents',
+             'accents_secundaris', 'index_iambicitat',
              'model', 'correspondencia_model', 'colon_1', 'colon_2',
-             'iambes', 'troqueus', 'anapests', 'amfibracs', 'dactils', 'degenerats', 'xocs', 'valls',
+             'iambes', 'troqueus', 'anapests', 'amfibracs', 'dactils', 'degenerats',
+             'xocs', 'xocs_pos', 'valls', 'valls_pos',
              'sil_metriques', 'sil_extrametriques',
-             'llicencies', 'mots', 'longitud_mots',
-             'mots_colon_1', 'mots_colon_2', 'encavalcament', 'posició'])
+             'sinalefa', 'sineresi', 'dialefa',
+             'mots', 'longitud_mots', 'longitud_mitjana_mots',
+             'mots_colon_1', 'mots_colon_2',
+             'tipus_cv', 'tonicitat_cv', 'frontera_cv', 'vocals_cv', 'index_cv', 'info_gramatical',
+             'encavalcament'])
 
     # Crea el DataFrame i assegura que les columnes d'escansió i de patró siguin strings
     df = pd.DataFrame(rows, columns=head)

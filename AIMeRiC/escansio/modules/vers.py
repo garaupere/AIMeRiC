@@ -17,6 +17,7 @@ __all__ = ["Vers"]
 import re
 import time
 from typing import Dict, Any, List, Optional
+from numpy import mean
 
 import spacy
 from colorama import Fore
@@ -49,17 +50,18 @@ class Vers:
     """
 
     def __init__(
-        self,
-        nlp: spacy.Language,
-        text: str,
-        objectiu: int = 10,
-        permet_llicencies: bool = True,
-        minimal: bool = False
+            self,
+            nlp: spacy.Language,
+            text: str,
+            objectiu: int = 10,
+            permet_llicencies: bool = True,
+            minimal: bool = False
     ):
         self.objectiu = objectiu
         self.text = text
         self.encavalcament = encavalcament(self.text)
         self._minimal = minimal
+        self.sinalefa, self.sineresi, self.dialefa = 0, 0, 0
 
         # Inicialitzar tots els atributs potencials per evitar AttributeError
         self._init_attributes()
@@ -136,6 +138,9 @@ class Vers:
         self.num_toniques = len(re.findall('1', self.patro_metric)) if self.patro_metric else 0
         self.num_atones = len(re.findall('0', self.patro_metric)) if self.patro_metric else 0
         self.densitat_accents = self.num_toniques / self.recompte_sillabes_metriques if self.recompte_sillabes_metriques else 0
+        self.accents_secundaris = len(re.findall(r'2', self.patro_ritmic)) / 10 if self.patro_ritmic else 0
+        self.index_iambicitat = (sum(1 for i in range(min(len(self.patro_metric), 10))
+                                    if self.patro_metric[i] == "0101010101"[i]) / 10) if self.patro_metric else 0
 
         if self.patro_metric_jerarquic and self.ajustat:
             self.peus = extreu_peus(self.patro_metric_jerarquic)
@@ -146,9 +151,12 @@ class Vers:
                 self.amfibracs = self.peus.count('010')
                 self.dactils = self.peus.count('100')
                 self.degenerats = self.peus.count('1')
-            self.xocs = identifica_xocs(self.patro_ritmic)
-            self.valls = identifica_valls(self.patro_ritmic)
-
+            xocs_ = identifica_xocs(self.patro_ritmic)
+            valls_ = identifica_valls(self.patro_ritmic)
+            self.xocs = xocs_[0] if xocs_ else None
+            self.valls = valls_[0] if valls_ else None
+            self.xocs_pos = xocs_[1] if xocs_ else None
+            self.valls_pos = valls_[1] if valls_ else None
 
     def __anota__(self) -> None:
         """Genera l'etiquetatge del vers."""
@@ -184,6 +192,7 @@ class Vers:
         """Nombre de mots i distribució respecte al còlon."""
         self.n_mots = len(self.original)
         self.l_mots = [len(word.stress) for word in self.original]
+        self.longitud_mitjana_mots = mean(self.l_mots) if self.l_mots else 0
 
         qm = quants_mots(self)
         self.mots_colon1 = qm[0] if len(qm) > 0 else 0
@@ -219,7 +228,7 @@ class Vers:
         )
 
         # Aplicar regles locals de model
-        self.__model_local__()
+        #self.__model_local__()
 
         # Actualitzar còlons
         self.__actualitza_colons__()
@@ -274,6 +283,10 @@ class Vers:
         """Processa el vers en mode complet."""
         if not self.ajustat:
             self.llicencies = llicencies(self, permet_llicencies, doc=self.pos)
+            self.sinalefa = self.llicencies.count('sinalefa') if self.llicencies else 0
+            self.sineresi = self.llicencies.count('sinèresi') if self.llicencies else 0
+            self.dialefa = self.llicencies.count('dialefa') if self.llicencies else 0
+
             return
 
         # Processar components en ordre
@@ -315,17 +328,15 @@ class Vers:
         if self.words:
             self.cat_gramaticals = [word.pos_ for word in self.words]
 
-
-
     def __actualitza__(self) -> None:
         """Actualitza l'estat del vers després d'aplicar llicències."""
         safe_words(self)
         self.__uneix_mots__()
         self.__patrons__()
         self.__reset_cim_maxim__()
+        self.ajustat = metre_ajustat(self)
         self.__detecta_model__()
         self.__disposicio__()
-        self.ajustat = metre_ajustat(self)
 
         if self.ajustat:
             self.__prosodia__(subdi=True)
@@ -530,9 +541,9 @@ class Vers:
             "'" + str(self._get_safe('patro_metric')),  # patro_lineal
             "'" + str(self._get_safe('patro_ritmic')),  # patro_ritmic
             "'" + str(self._get_safe('patro_metric_jerarquic')),  # patro_metric
-            self._get_safe('num_toniques', default=0),  # num_toniques
-            self._get_safe('num_atones', default=0),  # num_atones
             self._get_safe('densitat_accents', default=0),  # densitat_accents
+            self._get_safe('accents_secundaris', default=0),
+            self._get_safe('index_iambicitat', default=0),
             self._get_safe('model'),  # model
             self._get_safe('correspondencia_model'),  # correspondencia_model
             "'" + str(self._get_safe('colon_1')),  # colon_1
@@ -544,12 +555,18 @@ class Vers:
             self._get_safe('dactils', default=0),
             self._get_safe('degenerats', default=0),
             self._get_safe('xocs', default=0),
+            self._get_safe('xocs_pos'),
             self._get_safe('valls', default=0),
+            self._get_safe('valls_pos'),
             self._get_safe('recompte_sillabes_metriques', default=0),  # sil_metriques
             self._get_safe('recompte_sillabes_extrametriques', default=0),  # sil_extrametriques
-            self._get_safe('llicencies'),  # llicencies
+            #self._get_safe('llicencies'),  # llicencies
+            self._get_safe('sinalefa', default=0),
+            self._get_safe('sineresi', default=0),
+            self._get_safe('dialefa', default=0),
             self._get_safe('n_mots', default=0),  # mots
             self._get_safe('l_mots'),  # longitud_mots
+            self._get_safe('longitud_mitjana_mots', default=0),
             self._get_safe('mots_colon1', default=0),  # mots_colon_1
             self._get_safe('mots_colon2', default=0),  # mots_colon_2
             self._get_safe('tipus_cv', default=[]),

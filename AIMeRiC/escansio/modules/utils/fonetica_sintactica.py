@@ -158,7 +158,7 @@ def puntua_vallverdu(syllable1: Sillaba, syllable2: Sillaba) -> int:
     return 0
 
 
-def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba) -> Optional[Sillaba]:
+def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba, sineresi=False) -> Optional[Sillaba]:
     """Uneix dues síl·labes en contacte vocàlic si procedeix; retorna Sillaba o None."""
     if not (syllable1.ends_with_vowel and syllable2.starts_with_vowel):
         return None
@@ -172,7 +172,7 @@ def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba) -> Optional[Sil
     # retorna el pes de la síL·laba amb major pes
     syllable1.pes = syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
     syllable1.fusion_direction = "dreta" if float(syllable1.pes) >= float(syllable2.pes) else "esquerra"
-    syllable1.fusionada = True
+    syllable1.fusionada = True if not sineresi else False
     #syllable1.has_PRONe = True if syllable1.has_PRONe or syllable2.has_PRONe else False
     # actualitzar flag d'acabament amb vocal
     syllable1.ends_with_vowel = bool(_RE_VOWEL_CHAR.search(syllable1.text[-1]))

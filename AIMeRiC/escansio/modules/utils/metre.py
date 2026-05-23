@@ -52,13 +52,14 @@ def maximal_comparison_pattern(self) -> str:
 
 def patro_metric_jerarquic(seq, model):
     from functools import lru_cache
+
     peus = [
-        ('(001)', "001", 1),  # anapest
-        ('(01)', "01", 2),  # iambe
-        ('(10)', "10", 3),  # troqueu
-        ('(010)', "010", 4),  # amfíbrac
-        ('(100)', "100", 5),  # dàctil
-        ('(1)', "1", 6),  # degenerat
+        ('(001)', "001", 1),   # anapest
+        ('(01)',  "01",  2),   # iambe
+        ('(10)',  "10",  3),   # troqueu
+        ('(010)', "010", 4),   # amfíbrac
+        ('(100)', "100", 5),   # dàctil
+        ('(1)',   "1",   6),   # degenerat
     ]
     prio_dict = {p[0]: p[2] for p in peus}
 
@@ -73,12 +74,12 @@ def patro_metric_jerarquic(seq, model):
             opcions = []
             for nom, patro, prio in peus:
                 l = len(patro)
-                if i + l <= len(bits) and bits[i:i + l] == patro:
+                if i + l <= len(bits) and bits[i:i+l] == patro:
                     for llista, z, m, seq in rec(i + l):
-                        opcions.append(([nom] + llista, z, m + (1 if nom == '(1)' else 0), (prio,) + seq))
+                        opcions.append(([nom]+llista, z, m + (1 if nom == '(1)' else 0), (prio,)+seq))
             if bits[i] == "0":
                 for llista, z, m, seq in rec(i + 1):
-                    opcions.append((["0"] + llista, z + 1, m, (99,) + seq))
+                    opcions.append((["0"] + llista, z+1, m, (99,)+seq))
             return opcions
 
         tot = rec(0)
@@ -89,10 +90,18 @@ def patro_metric_jerarquic(seq, model):
         tot = [x for x in tot if x[1] == min_zeros]
         min_mono = min(x[2] for x in tot)
         tot = [x for x in tot if x[2] == min_mono]
-        # Aquí pots tenir diverses agrupacions igualment bones però que es diferencien en l’ordre (10) vs (01)
+        # Aquí pots tenir diverses agrupacions igualment bones però que es diferencien en l'ordre (10) vs (01)
         # Per preferir lexicogràficament per la dreta (p.ex. [1,6,2] < [1,3,6]) cal ordenar per prio[::-1]
         tot.sort(key=lambda x: x[3][::-1])
         return tot
+
+    # Si model és None, retorna els peus en un únic còlon
+    if model is None:
+        opcions = totes_les_agrupacions(seq)
+        if not opcions:
+            raise ValueError("Cap agrupació en peus vàlida")
+        u = opcions[0][0]
+        return f"[{''.join(u)}]"
 
     # Troba el tall sil·làbic
     if model == "4+6":
@@ -124,8 +133,7 @@ def patro_metric_jerarquic(seq, model):
     if not opcions2: raise ValueError("Cap agrupació en peus vàlida pel còlon 2")
     u2 = opcions2[0][0]
 
-    patro = f"[{''.join(u1)}][{''.join(u2)}]"
-    return patro
+    return f"[{''.join(u1)}][{''.join(u2)}]"
 
 
 def extreu_peus(patro):
@@ -138,12 +146,14 @@ def extreu_peus(patro):
 
 def identifica_xocs(patro):
     try:
-        return len(re.findall(r'[1-5][1-5]', patro))
+        matches = [m.start() for m in re.finditer(r'[1-5][1-5]', patro)]
+        return len(matches), matches
     except TypeError:
-        return None
+        return None, None
 
 def identifica_valls(patro):
     try:
-        return len(re.findall(r'[0-1][0-1][0-1]', patro))
+        matches = [m.start() for m in re.finditer(r'[0-1][0-1][0-1]', patro)]
+        return len(matches), matches
     except TypeError:
-        return None
+        return None, None

@@ -153,12 +153,12 @@ def identifica_model(self):
         # Per a les síl·labes del vers, obtenim els pesos de les subdpos
         candidats = []
         for pos in subdpos:
-            #print('Evaluant posició de model:', pos, "amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
+            #print('Evaluant posició de model:', pos, f"amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
             if pos == 3 or pos == 5:
                 if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes == 3:
                     self.nomes_sillabes[pos].pes = 3.75
             elif pos == 4 and len(candidats) > 0:
-                if 3 in [c[0] for c in candidats]:  # Si ja hem considerat el tall a la posició 4, no penalitzem
+                if 3 in [c[0] for c in candidats]:  # Si ja hem considerat el tall a la posició 4, no penalitza
                     if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes > 2:
                         self.nomes_sillabes[pos].pes -= 0.50
                         self.nomes_sillabes[pos].flag = 'penalitzat_per_tall'
