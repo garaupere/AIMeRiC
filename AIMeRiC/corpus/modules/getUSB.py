@@ -79,7 +79,7 @@ def getUSB():
                 print(f"   {letter}:")
         return None
 
-    return usb_devices[0]+'/tesi' if usb_devices else None
+    return usb_devices[0]+'/corpus_tesi' if usb_devices else None
 
 
 # Exemple d'ús
