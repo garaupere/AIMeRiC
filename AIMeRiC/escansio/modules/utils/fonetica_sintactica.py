@@ -26,6 +26,7 @@ _VOWELS = "aeiouyàáèéìíòóùúâêîôûüýÿï"
 _RE_VOWEL_CHAR = re.compile(r"[AEIOUaeiou]")
 _RE_TIE = re.compile(r"[_:]")
 _RE_QU = re.compile(r"([qg])u([ei])", re.IGNORECASE)
+_RE_NY = re.compile(r'(ny)', re.IGNORECASE)
 _RE_CLEAN_MAP = {
     re.compile(k): v for k, v in {
         r"[aàáâ]": "a", r"[eèéê]": "e", r"[iíìïyýÿî]": "i",
@@ -325,6 +326,7 @@ def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
     clean = deepcopy(getattr(self, "escansio_text", ""))
     # normalitzar text per facilitar cerca (treure 'qu' etc.)
     clean = _RE_QU.sub(r"\1\2", clean)
+    clean = _RE_NY.sub(r"ñ", clean)
     for pat, repl in _RE_CLEAN_MAP.items():
         clean = pat.sub(repl, clean)
 
