@@ -380,9 +380,9 @@ class Vers:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:",
                   self._color_metric(patro_met))
 
-        patro_jer = self._get_safe('patro_metric_jerarquic')
-        if patro_jer:
-            print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric jeràrquic:", patro_jer)
+        # patro_jer = self._get_safe('patro_metric_jerarquic')
+        # if patro_jer:
+        #     print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric jeràrquic:", patro_jer)
 
     def _print_metriques(self) -> None:
         """Imprimeix les mètriques."""
@@ -540,7 +540,7 @@ class Vers:
             self._get_safe('contorn_ritmic'),  # contorn_ritmic
             "'" + str(self._get_safe('patro_metric')),  # patro_lineal
             "'" + str(self._get_safe('patro_ritmic')),  # patro_ritmic
-            "'" + str(self._get_safe('patro_metric_jerarquic')),  # patro_metric
+            #"'" + str(self._get_safe('patro_metric_jerarquic')),  # patro_metric
             self._get_safe('densitat_accents', default=0),  # densitat_accents
             self._get_safe('accents_secundaris', default=0),
             self._get_safe('index_iambicitat', default=0),
