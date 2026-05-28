@@ -122,14 +122,22 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
                                          pagina.verses.index(paragraf)] + csv_result)
 
     scansion_cols = [str(s) for s in range(1, goal + 1)]
-    head = (['autor_id', 'autor', 'naixement', 'defunció', 'gènere', 'ciutat', 'dialecte', 'wiki_id', 'viaf',
-             'obra', 'any', 'traducció', 'font', 'poema',
-             'núm. de vers', 'text del vers',
-             'escansió'] + scansion_cols +
-            ['síl·labes mètriques', 'síl·labes extramètriques', 'subdivisió', 'tipus subdivisió', 'còlon 1', 'còlon 2',
-             'llicències', 'mots', 'l_mots',
-             'mots al còlon 1', 'mots al còlon 2', 'signatura',
-             'patró', 'patro mètric', 'patró_rítmic', 'encavalcament', 'metronome', 'posició'])
+    head = (['autor_id', 'nom_autor', 'naixement_autor', 'defuncio_autor', 'genere_autor', 'ciutat_autor',
+             'dialecte_autor', 'wiki_id_autor', 'viaf_autor',
+             'obra', 'obra_publicacio', 'obra_traduccio', 'obra_font', 'poema',
+             'num_vers', 'text_vers',
+             'escansio'] + scansion_cols +
+            ['contorn_ritmic', 'patro_metric', 'patro_ritmic', 'patro_metric_jerarquic', 'densitat_accents',
+             'accents_secundaris', 'index_iambicitat',
+             'model', 'correspondencia_model', 'colon_1', 'colon_2',
+             'iambes', 'troqueus', 'anapests', 'amfibracs', 'dactils', 'degenerats',
+             'xocs', 'xocs_pos', 'valls', 'valls_pos',
+             'sil_metriques', 'sil_extrametriques',
+             'sinalefa', 'sineresi', 'dialefa',
+             'mots', 'longitud_mots', 'longitud_mitjana_mots',
+             'mots_colon_1', 'mots_colon_2',
+             'tipus_cv', 'tonicitat_cv', 'frontera_cv', 'vocals_cv', 'index_cv', 'info_gramatical',
+             'encavalcament', 'posició'])
 
     # Crea el DataFrame i assegura que les columnes d'escansió i de patró siguin strings
     df = pd.DataFrame(rows, columns=head)
@@ -142,7 +150,7 @@ def etiqueta_prosa(nlp, file_path, goal) -> tuple[dict, pd.DataFrame]:
         pass
 
     # Assegura també que els camps de patró es guardin com a cadena
-    for col in ['patró', 'patró_rítmic', 'subdivisió', 'posició']:
+    for col in ['patró', 'patró_rítmic', 'model', 'posició']:
         if col in df.columns:
             try:
                 df[col] = df[col].astype(str)

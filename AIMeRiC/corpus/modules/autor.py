@@ -54,9 +54,9 @@ class Autor:
         if self.content:
             self.id = self.content.get('author_id').replace('\xad', '') if self.content.get('author_id') else None
             self.name = self.content.get('name')
-            self.gender = self.content.get('gender') if self.content.get('gender') else None
-            self.born_date = self.content.get('born_date') if self.content.get('born_date') else None
-            self.death_date = self.content.get('death_date') if self.content.get('death_date') else None
+            self.gender = 'Dona' if self.content.get('gender') == 1 else 'Home'
+            self.born_date = self.content.get('born_date') if self.content.get('born_date') else 0
+            self.death_date = self.content.get('death_date') if self.content.get('death_date') else False
             self.city = self.content.get('city') if self.content.get('city') else None
             self.dialect = self.content.get('dialect') if self.content.get('dialect') else None
             self.viaf = self.content.get('viaf') if self.content.get('viaf') else None

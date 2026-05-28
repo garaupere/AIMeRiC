@@ -1,6 +1,6 @@
 __author__ = "Pere Garau Borràs"
 __copyright__ = "Copyright © 2025, Pere Garau Borràs"
-__version__ = "0.8.1"
+__version__ = "0.8.3"
 
 import spacy
 import traceback
@@ -12,15 +12,16 @@ def escaneja(nlp, verse: str, goal: int, permet_llicencies: bool = True) -> Vers
     """Aquesta funció etiqueta un vers i retorna un objecte de la classe Verse.
     Si hi ha una excepció, retorna None però registra el motiu per ajudar a depurar.
     """
+    debug = False
     try:
         return Vers(nlp, verse, goal, permet_llicencies)
     except Exception as e:
-        # Mostrar informació de depuració en català per ajudar l'usuari
-#        print("\n" + "[ERROR] Excepció en escanejar el vers:")
-#        print(f"	Vers: {verse!r}")
-#        print(f"	Tipus d'excepció: {type(e).__name__}: {e}")
-#        traceback.print_exc()
-        return None
+        if debug:
+            print("\n" + "[ERROR] Excepció en escanejar el vers:")
+            print(f"	Vers: {verse!r}")
+            print(f"	Tipus d'excepció: {type(e).__name__}: {e}")
+            traceback.print_exc()
+            return None
 
 
 def escaneja_minim(nlp, verse: str, goal: int, permet_llicencies: bool = False) -> Vers | None:

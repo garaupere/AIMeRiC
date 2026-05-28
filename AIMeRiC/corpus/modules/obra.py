@@ -48,13 +48,13 @@ class Obra:
         self.book_content = self.author_content.get('books', {}).get(self.number)
         if self.book_content:
             try:
-                self.title = self.book_content.get('title')
-                self.year = self.book_content.get('year')
-                self.publisher = self.book_content.get('publisher')
-                self.translation = self.book_content.get('translation', False) is True
-                self.font = self.book_content.get('font')
+                self.title = self.book_content.get('title') if self.book_content.get('title') else None
+                self.year = self.book_content.get('year') if self.book_content.get('year') else 0
+                self.publisher = self.book_content.get('publisher') if self.book_content.get('publisher') else None
+                self.translation = self.book_content.get('translation', False) is True if self.book_content.get('translation') else False
+                self.font = self.book_content.get('font') if self.book_content.get('font') else None
                 self.poems = self.book_content.get('poems', [])
-                self.n_poems = len(self.poems)
+                self.n_poems = len(self.poems) if self.poems else 0
                 self.n_verses = sum(len(poem) for poem in self.poems)  # Nombre total de versos
             except AttributeError:
                 print(f"Error: El llibre '{self.number}' no té un títol vàlid.")
@@ -91,7 +91,7 @@ class Obra:
                 "title": self.title,
                 "year": self.year,
                 "publisher": self.publisher,
-                "translation": self.translation,
+                "translation": bool(self.translation),
                 "font": self.font,
                 "poems": {},  # Estructura inicial per a guardar poemes
                 "n_poems": self.n_poems,

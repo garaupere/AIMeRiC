@@ -26,6 +26,7 @@ _VOWELS = "aeiouyàáèéìíòóùúâêîôûüýÿï"
 _RE_VOWEL_CHAR = re.compile(r"[AEIOUaeiou]")
 _RE_TIE = re.compile(r"[_:]")
 _RE_QU = re.compile(r"([qg])u([ei])", re.IGNORECASE)
+_RE_NY = re.compile(r'(ny)', re.IGNORECASE)
 _RE_CLEAN_MAP = {
     re.compile(k): v for k, v in {
         r"[aàáâ]": "a", r"[eèéê]": "e", r"[iíìïyýÿî]": "i",
@@ -158,7 +159,7 @@ def puntua_vallverdu(syllable1: Sillaba, syllable2: Sillaba) -> int:
     return 0
 
 
-def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba) -> Optional[Sillaba]:
+def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba, sineresi=False) -> Optional[Sillaba]:
     """Uneix dues síl·labes en contacte vocàlic si procedeix; retorna Sillaba o None."""
     if not (syllable1.ends_with_vowel and syllable2.starts_with_vowel):
         return None
@@ -172,7 +173,7 @@ def join_syllables(self, syllable1: Sillaba, syllable2: Sillaba) -> Optional[Sil
     # retorna el pes de la síL·laba amb major pes
     syllable1.pes = syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
     syllable1.fusion_direction = "dreta" if float(syllable1.pes) >= float(syllable2.pes) else "esquerra"
-    syllable1.fusionada = True
+    syllable1.fusionada = True if not sineresi else False
     #syllable1.has_PRONe = True if syllable1.has_PRONe or syllable2.has_PRONe else False
     # actualitzar flag d'acabament amb vocal
     syllable1.ends_with_vowel = bool(_RE_VOWEL_CHAR.search(syllable1.text[-1]))
@@ -315,7 +316,7 @@ def resol_xoc_accentual_fusio(mot_fusionat):
     accents.sort(key=lambda s: (int(s.pes), s.s_index))  # Ordena per pes i després per index
     # comprova que són consecutius
     if accents[1].s_index - accents[0].s_index == 1:
-        accents[0].pes = 0  # Neutralitza l'accent de menor pes (o el primer si són iguals)
+        accents[0].pes = 0.75  # Neutralitza l'accent de menor pes (o el primer si són iguals) [Deixa un residu accentual per si s'ha de recuperar com accent secundari)
         mot_fusionat.stress_index = get_index_accent(mot_fusionat)  # Actualitza l'index d'accent del mot
 
 
@@ -325,6 +326,7 @@ def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
     clean = deepcopy(getattr(self, "escansio_text", ""))
     # normalitzar text per facilitar cerca (treure 'qu' etc.)
     clean = _RE_QU.sub(r"\1\2", clean)
+    clean = _RE_NY.sub(r"ñ", clean)
     for pat, repl in _RE_CLEAN_MAP.items():
         clean = pat.sub(repl, clean)
 

@@ -72,11 +72,7 @@ def getUSB():
         if os.path.isdir(corpus_path):
             return corpus_path
 
-    # Si no s'ha trobat, provar amb D:/corpus_tesi
-    if os.path.exists('D:'):
-        return 'D:/corpus_tesi'
-    # Sinó, C:/corpus_tesi
-    return 'C:/corpus_tesi'
+    return usb_devices[0]+'/corpus_tesi' if usb_devices else None
 
 
 # Exemple d'ús

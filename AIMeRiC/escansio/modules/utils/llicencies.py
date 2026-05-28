@@ -4,7 +4,7 @@ import re
 from AIMeRiC.escansio.modules.sillaba import Sillaba
 from AIMeRiC.escansio.modules.mot import Mot
 from .fonetica_sintactica import join_syllables, split_syllable, resol_contactes_vocalics, \
-    millor_sineresi
+    millor_sineresi, actualitza_s_index
 from .accentuacio import get_index_accent, accent_secundari
 from .metre import recompte_metric
 
@@ -45,6 +45,8 @@ def llicencies(self, permit, doc) -> list[str] | None:
             if diff > 0:
                 # Si hi ha excés de síl·labes: intentem reduir amb sinalefa
                 resol_contactes_vocalics(self, best_mode='sinalefa')
+                self.actualitza_w_index()
+                actualitza_s_index(self)
                 # comprova si s'ha aplicat la sinalefa (reducció de síl·labes)
                 #self.__actualitza__()
                 self.recompte_sillabes_metriques = recompte_metric(self)  # Actualitza el recompte de síl·labes després de la sinalefa
@@ -58,6 +60,8 @@ def llicencies(self, permit, doc) -> list[str] | None:
                 if initial_count < self.objectiu: # permet evitar que forci versos menors, per exemple de 8 a 10 síl·labes.
                     # Si falten síl·labes: intentem augmentar amb dialefa
                     dialefa(self, abs(diff), doc, times=1)
+                    self.actualitza_w_index()
+                    actualitza_s_index(self)
                     # comprova que s'ha aplicat la dialefa (augment de síl·labes)
                     self.__actualitza__()
                     new_diff = self.recompte_sillabes_metriques - self.objectiu
@@ -72,6 +76,8 @@ def llicencies(self, permit, doc) -> list[str] | None:
                     if hasattr(self, 'dieresi'):
                         try:
                             dieresi(self, times=1)
+                            self.actualitza_w_index()
+                            actualitza_s_index(self)
                             # comprova que s'ha aplicat la dièresi (augment de síl·labes)
                             self.__actualitza__()
                             new_diff = self.recompte_sillabes_metriques - self.objectiu
@@ -88,6 +94,8 @@ def llicencies(self, permit, doc) -> list[str] | None:
                 # intenta la sineresi (i marca-la com aplicada encara que no canviï el recompte)
                 try:
                     sineresi(self, times=1)
+                    self.actualitza_w_index()
+                    actualitza_s_index(self)
                     # comprova que s'ha aplicat la sineresi (reducció de síl·labes)
                     self.__actualitza__()
                     new_diff = self.recompte_sillabes_metriques - self.objectiu
@@ -119,7 +127,7 @@ def sineresi(self, times):
             change = best.pop(0)
             for word in self.words:
                 if change[0] in word.stress and change[1] in word.stress:
-                    result = join_syllables(self, change[0], change[1])
+                    result = join_syllables(self, change[0], change[1], sineresi=True)
                     result.text = re.sub(r"_", "", result.text)
                     if result:
                         word.stress.remove(change[1])
