@@ -108,7 +108,7 @@ def correct_spacy(doc):
 
         elif token[1] == "PUNCT" and token_text in string.punctuation:
             try:
-                punct_prev = new_doc.index(token)-1
+                punct_prev = new_doc.index(token)-1 # Fusiona el token de puntuació amb el token anterior: 'sol', ',' > 'sol,'
                 new_doc[punct_prev][0] = new_doc[punct_prev][0] + token[0]
             except ValueError:
                 pass
@@ -328,7 +328,6 @@ def posTagger(nlp, text: str):
 if __name__ == "__main__":
     text = "de dol,"
     import spacy
-
     nlp = spacy.load("ca_core_news_md")
     words = posTagger(nlp, text)
     for w in words:

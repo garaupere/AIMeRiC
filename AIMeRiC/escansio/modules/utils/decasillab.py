@@ -148,7 +148,7 @@ def tall(self) -> None | int | tuple[int, str]:
 def identifica_model(self):
     """Identifica el model subjacent al decasíl·lab (4+6, 6+4 o 5+5)"""
     if self.recompte_sillabes_metriques == 10 and self.model is None:
-        subdpos = [3, 5, 4, 2, 6]  # Preferències de models
+        subdpos = [3, 5, 4, 2, 6]  # Preferències de models: 4+6, 6+4, 5+5, 3+7, 7+3.
         # Per a les síl·labes del vers, obtenim els pesos de les subdpos
         candidats = []
         for pos in subdpos:

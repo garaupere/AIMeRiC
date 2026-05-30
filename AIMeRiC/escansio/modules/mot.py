@@ -235,7 +235,7 @@ class Mot:
                     self.syllables[0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
 
     def __mark_punct__(self):
-        """Desa els signes de puntuació i neteja el mot."""
+        """Desa els signes de puntuació i neteja el mot. Marca si el mot té puntuació adjacent."""
         if len(self.text) > 1:
             if self.text[-1] in '.:,;¿?!¡…':
                 self.has_PUNCT = True
