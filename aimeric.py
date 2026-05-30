@@ -282,7 +282,7 @@ if __name__ == "__main__":
     text = render("AIMeRiC")
     print(text)
     print(render(
-        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n©2026, Pere Garau Borràs\nv. {__version__}\n"
+        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n© 2026, Pere Garau Borràs\nv. {__version__}\n"
         f"https://github.com/garaupere/AIMeRiC",
         font='console', colors=['system']))
 
@@ -299,6 +299,6 @@ if __name__ == "__main__":
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
     print(
-        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n©2026, Pere Garau Borràs\nv. {__version__}\n"
+        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n© 2026, Pere Garau Borràs\nv. {__version__}\n"
         f"https://github.com/garaupere/AIMeRiC")
     print("--" * 40)

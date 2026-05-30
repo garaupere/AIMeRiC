@@ -16,10 +16,7 @@ Proporcionar utilitats per:
 - gestionar casos especials de cesura femenina (funció en desenvolupament).
 """
 
-import re
-
-from .fonetica_sintactica import split_syllable
-from .tools import seguent
+from .metre import patro_metric_jerarquic, maximal_comparison_pattern, abstract_pattern, recompte_metric
 
 
 def troba_tall_posible(self, tall, detect_nonBest: bool = False) -> str:
@@ -54,100 +51,6 @@ def troba_tall_posible(self, tall, detect_nonBest: bool = False) -> str:
     return 'invalid'
 
 
-def aplica_tall(self, tall):
-    """
-    Aplica efectivament el tall (pes=5.0, marques) a la posició indicada.
-    Retorna True si s'ha aplicat, False si no s'han complert les condicions.
-    """
-    word_at_tall = _get_word_at_position(self, tall)
-
-    # Comprovacions de seguretat: la síl·laba ha de ser l'última de la paraula,
-    # no estar fusionada i la paraula no haver de pronom enclític.
-    if not word_at_tall:
-        return False
-
-    syl = self.nomes_sillabes[tall]
-    if not getattr(syl, 'fusionada', False) and word_at_tall.stress and word_at_tall.stress[-1] == syl and not getattr(
-            word_at_tall, 'has_PRONe', False):
-        word_at_tall.stress[-1].pes = 5.0
-        # actualitzem anotacions i patró
-        try:
-            self.anotat[self.words.index(word_at_tall)] = word_at_tall.stress
-        except Exception:
-            pass
-        syl.pes = 5.0
-        try:
-            self.patro[tall] = 5
-        except Exception:
-            # patro podria ser més curt; ignorem si no existeix
-            pass
-        word_at_tall.paraula_tall = True
-        # assegurem la coherència en la llista
-        try:
-            self.words[self.words.index(word_at_tall)] = word_at_tall
-        except Exception:
-            pass
-
-        # Important: recordem la posició del tall (1-based)
-        try:
-            self.posicio_tall = int(tall) + 1
-        except Exception:
-            self.posicio_tall = tall
-
-        return True
-
-    return False
-
-
-def tall(self) -> None | int | tuple[int, str]:
-    """Aplica el tall mètric segons criteris prioritaris, evitant assignació prematura."""
-    pos, result = None, None
-    if self.recompte_sillabes_metriques != 10:
-        return None
-
-    talls = [3, 5, 4]  # Preferències de talls
-
-    # === PRIMERA PASSADA: 'best' ===
-    for tall_actual in talls:
-        result = troba_tall_posible(self, tall_actual, True)
-        if result == 'best':
-            aplica_tall(self, tall_actual)
-            # assegurem la coherència i retornem posició 1-based
-            try:
-                self.posicio_tall = int(tall_actual) + 1
-            except Exception:
-                pass
-            return tall_actual + 1
-
-    # === SEGONA PASSADA: 'discontinu'/alternatius ===
-    for tall_actual in talls:
-        result = troba_tall_posible(self, tall_actual, False)
-        if result in {'discontinu', 'continu'}:
-            pos = tall_actual + 1
-            word_at_tall = _get_word_at_position(self, tall_actual)
-            next_word = _get_next_word_at_position(self, tall_actual)
-            if word_at_tall and next_word:
-                if (word_at_tall.pos_ in ["NOUN", "VERB", "PRON", "ADJ", "PROPN"] and
-                        next_word.pos_ in ["VERB"]):
-                    aplica_tall(self, tall_actual)
-                    self.posicio_tall = pos
-                    return pos, result
-                elif next_word.pos_ in ["NOUN", "VERB", "ADJ", "ADV", "PROPN"]:
-                    continue
-                else:
-                    aplica_tall(self, tall_actual)
-                    self.posicio_tall = pos
-                    return pos, result
-            else:
-                aplica_tall(self, tall_actual)
-                self.posicio_tall = pos
-                return pos, result
-    return pos, result  # No s'ha trobat tall vàlid
-
-
-
-
-
 def identifica_model(self):
     """Identifica el model subjacent al decasíl·lab."""
     if self.recompte_sillabes_metriques == 10 and self.model is None:
@@ -166,14 +69,13 @@ def identifica_model(self):
             if self.nomes_sillabes[pos].has_PUNCT:
                 signe_punt = self.nomes_sillabes[pos].which_PUNCT
                 if signe_punt == ',':
-                    pts += 0.25
+                    pts += 0.1
                 elif signe_punt == ';':
                     pts += 0.35
                 elif signe_punt in ['.', ':', '?', '!']:
-                    pts += 0.45
+                    pts += 0.55
 
             pes = self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None
-            #print(f'Candidat {pos}, pts: {pts}, pes: {pes}, text: {self.nomes_sillabes[pos].text}')
             candidats.append((pos, pts, pes))
 
         candidats_valids = [(pos, pts, pes) for pos, pts, pes in candidats if pes is not None and pes >= 1]
@@ -193,10 +95,10 @@ def identifica_model(self):
 
                 if self.nomes_sillabes[pos].pes >= 4:
                     model_type = 'tall'
-                elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[pos].pes < 4:
+                elif self.nomes_sillabes[pos].pes > 1 and self.nomes_sillabes[pos].pes < 4:
                     model_type = 'discontinu'
-                elif self.nomes_sillabes[pos].pes > 1:
-                    model_type = 'continu'
+                #elif self.nomes_sillabes[pos].pes > 1:
+                #    model_type = 'continu'
             elif self.nomes_sillabes[pos].pes > 1:
                 model_type = 'continu'
 
@@ -209,49 +111,121 @@ def identifica_model(self):
                     'word': word_at_pos
                 })
 
-        # Evalua tipus de model per a cada candidat i suma punts per prioritat
+        # Evalua tipus de model per a cada candidat i suma punts per prioritat (integrant PUNCT)
+        def _hierarchy_bonus(pos, model_type, syll):
+            """Assigna bonus de jerarquia segons (pos, model_type).
+            Base bonus sense tenir en compte PUNCT. PUNCT s'afegeix a _punct_bonus()."""
+            # 1. 3 o 5, tall
+            if pos in (3, 5) and model_type == 'tall':
+                return 100
+            # 3. 4 tall (més prioritari que 3/5 discontinu sense PUNCT)
+            if pos == 4 and model_type == 'tall':
+                return 80
+            # 2. 3 o 5 discontinu (sense PUNCT)
+            if pos in (3, 5) and model_type == 'discontinu':
+                return 70
+            # 5. 3 o 5 continu
+            if pos in (3, 5) and model_type == 'continu':
+                return 60
+            # 6. 2 o 6 tall
+            if pos in (2, 6) and model_type == 'tall':
+                return 50
+            # 7. 2 o 6 discontinu o continu
+            if pos in (2, 6) and model_type in ('discontinu', 'continu'):
+                return 40
+            # 8. 4 discontinu o continu
+            if pos == 4 and model_type in ('discontinu', 'continu'):
+                return 30
+            return 0
+
+        def _punct_bonus(pos, model_type, syll):
+            """Assigna bonus segons la jerarquia de which_PUNCT.
+            El bonus és diferent segons la posició i tipus (PUNCT enforteix prioritats altes)."""
+            if not getattr(syll, 'has_PUNCT', False):
+                return 0
+            signe_punt = syll.which_PUNCT
+            # Per a 3 o 5 discontinu amb PUNCT alto, incrementa molt el bonus
+            if pos in (3, 5) and model_type == 'discontinu':
+                if signe_punt in ['.', ':', '?', '!']:
+                    return 35  # Enforteix molt 3/5 discontinu amb puntuació final
+                elif signe_punt == ';':
+                    return 25
+                elif signe_punt == ',':
+                    return 10
+            # Per a altres casos, bonus menor
+            elif signe_punt in ['.', ':', '?', '!']:
+                return 20
+            elif signe_punt == ';':
+                return 10
+            elif signe_punt == ',':
+                return 5
+            return 0
+
         scores = []
-        for pos, pts, pes in candidats_valids:
+        for pos, base_pts, pes in candidats_valids:
+            if pos >= len(self.nomes_sillabes):
+                continue
+            syll = self.nomes_sillabes[pos]
             word_at_pos = _get_word_at_position(self, pos)
-            pts_prioritat = pts  # Punts base de posició i puntuació
 
             model_type = None
-            if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and \
-                    not getattr(word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos],
-                                                                                 'fusionada', False):
+            if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == syll and \
+               not getattr(word_at_pos, 'has_PRONe', False) and not getattr(syll, 'fusionada', False):
 
-                if self.nomes_sillabes[pos].pes >= 4:
+                if syll.pes >= 4:
                     model_type = 'tall'
-                    pts_prioritat += 1
-                elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[pos].pes < 4:
+                elif syll.pes > 0.5 and syll.pes < 4:
                     model_type = 'discontinu'
-                    pts_prioritat += 0.5
-                elif self.nomes_sillabes[pos].pes > 1:
+                elif syll.pes > 1:
                     model_type = 'continu'
-                    pts_prioritat += 0.25
-            elif self.nomes_sillabes[pos].pes > 1:
+            elif syll.pes > 1:
                 model_type = 'continu'
-                pts_prioritat += 0.25
 
-            if model_type:
-                scores.append({
-                    'pos': pos,
-                    'pts': pts_prioritat,  # ✅ Punts totals (base + prioritat)
-                    'pes': pes,
-                    'type': model_type,
-                    'word': word_at_pos
-                })
+            if not model_type:
+                continue
 
-        # Ordena per punts totals (descendent) - candidat amb més punts és el millor
-        scores.sort(key=lambda x: -x['pts'])
-        #print(scores)
-        if scores:
-            best = scores[0]
-            _apply_model(self, best['pos'], best['word'], best['type'])
+            # Calcula punts finals: base_pts (posició + PUNCT inicial) + bonus jerarquia + bonus PUNCT extra
+            hierarchy_bonus = _hierarchy_bonus(pos, model_type, syll)
+            punct_bonus = _punct_bonus(pos, model_type, syll)
+            tiebreak = (pes or 0) / 100.0  # Molt petit, només per desempats
+            total_pts = base_pts + hierarchy_bonus + punct_bonus + tiebreak
+
+            scores.append({
+                'pos': pos,
+                'pts': total_pts,
+                'pes': pes,
+                'type': model_type,
+                'word': word_at_pos,
+                'hierarchy_bonus': hierarchy_bonus,
+                'punct_bonus': punct_bonus
+            })
+
+        # Ordena per punts totals (descendent); desempats per (jerarquia, posició)
+        if not scores:
+            return None, None
+
+        scores.sort(key=lambda x: (-x['pts'], -x['hierarchy_bonus'], x['pos']))
+
+        #print('\n'.join([f"Candidat {s['pos']}, pts: {s['pts']:.2f} (hierarq: {s['hierarchy_bonus']}, punct: {s['punct_bonus']}), pes: {s['pes']}, type: {s['type']}, text: {syll.text}" for s in scores for syll in [self.nomes_sillabes[s['pos']]]]))
+
+        best = scores[0]
+
+        # Marca com a "S/M" (sense model) si el millor candidat és un cas fora de 4+6, 6+4 (amb qualsevol correspondència) o 5+5 (amb tall)
+        if (best['pos'] == 4 and best['type'] in ('discontinu', 'continu')) or best['pos'] in (2, 6):
             pos_1based = best['pos'] + 1
-            return f'{pos_1based}+{10 - pos_1based}', best['type']
+            self.patro = abstract_pattern(self.words)
+            self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
+            self.recompte_sillabes_metriques = recompte_metric(self)
+            self.patro_metric = str(maximal_comparison_pattern(self))
+            if best['type'] == 'tall':
+                best['type'] = 'discontinu'
+            self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, f'{pos_1based}+{10 - pos_1based}')
+            return 'S/M', best['type']
 
-        return None, None
+        _apply_model(self, best['pos'], best['word'], best['type'])
+        pos_1based = best['pos'] + 1
+        return f'{pos_1based}+{10 - pos_1based}', best['type']
+
 
 
 def _apply_model(self, pos, word_at_pos, model_type):
@@ -259,8 +233,11 @@ def _apply_model(self, pos, word_at_pos, model_type):
 
     if model_type == 'tall':
         self.nomes_sillabes[pos].pes = 5.0
-        if word_at_pos:
-            word_at_pos.paraula_tall = True
+    elif model_type == 'discontinu':
+        if self.nomes_sillabes[pos-1].pes > self.nomes_sillabes[pos].pes or self.nomes_sillabes[pos+1].pes > self.nomes_sillabes[pos].pes:
+            self.nomes_sillabes[pos].pes = 5.0
+    if word_at_pos:
+        word_at_pos.paraula_tall = True
 
 
 
@@ -285,56 +262,6 @@ def _get_next_word_at_position(self, pos: int):
     return None
 
 
-def subdivideix(self):
-    """Aquesta funció subdivideix el vers en còlons si conté un tall.
-
-    - Si `self.posicio_tall` no existeix (o és None), intenta obtenir-la cridant
-      `tall(self)` i l'assigna explícitament. Això evita que `subdivideix` retorni
-      sempre `None` quan abans no s'hagi calculat el tall.
-    - Fa comprovacions robustes dels tipus (int) i del recompte de síl·labes
-      mètriques abans de fer l'operació aritmètica.
-    - Si no es pot determinar el recompte mètric, retorna una cadena indicativa
-      en lloc de tirar una excepció.
-    """
-    # Intentem usar l'atribut existent
-    pos = getattr(self, 'posicio_tall', None)
-
-    # Si no existeix, prova de calcular-lo cridant tall(self)
-    if pos is None:
-        try:
-            pos = tall(self)[0]
-        except Exception:
-            pos = None
-        # Assignem si l'hem obtingut
-        if pos is not None:
-            self.posicio_tall = pos
-        else:
-            return None
-
-    # Assegura que és un enter vàlid
-    try:
-        pos_int = int(pos)
-    except Exception:
-        return None
-
-    # Obté el recompte de síl·labes mètriques (int) de forma segura
-    recompte = getattr(self, 'recompte_sillabes_metriques', None)
-    if recompte is None:
-        # Intentem recalcular-lo sense importar la dependència exterior si ja existeix
-        try:
-            from AIMeRiC.escansio.modules.utils.metre import recompte_metric
-            recompte = recompte_metric(self)
-            self.recompte_sillabes_metriques = recompte
-        except Exception:
-            # No podem obtenir el recompte, retornem una forma parcial
-            return f'{pos_int}+?'
-
-    try:
-        right = int(recompte) - pos_int
-    except Exception:
-        return f'{pos_int}+?'
-
-    return f'{pos_int}+{right}'
 
 
 def detecta_cesura_femenina(self):
@@ -403,7 +330,7 @@ def detecta_cesura_femenina(self):
 #         candidats = []
 #         for pos in subdpos:
 #             pts = 0
-#             #print('Evaluant posició de model:', pos, f"amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
+#             ##print('Evaluant posició de model:', pos, f"amb la síl·laba corresponent:", self.nomes_sillabes[pos].text if pos < len(self.nomes_sillabes) else None, "pes: ", self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None)
 #             if pos == 3 or pos == 5:
 #                 pts = self.nomes_sillabes[pos].pes
 #             elif pos == 3 or pos == 5:
@@ -441,19 +368,19 @@ def detecta_cesura_femenina(self):
 #             key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
 #
 #
-#         #print('>> Candidats de model ordenats per pes i preferència:', candidats_valids)
+#         ##print('>> Candidats de model ordenats per pes i preferència:', candidats_valids)
 #         # Defineix el tipus de model.
 #         for pos, pts, pes in candidats_valids:
 #             # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
 #             word_at_pos = _get_word_at_position(self, pos)
-#             #print('\t> Candidat a model:', pos, 'Pes:', 'Punts:', pts, pes,'Paraula:', word_at_pos.text if word_at_pos else None)
+#             ##print('\t> Candidat a model:', pos, 'Pes:', 'Punts:', pts, pes,'Paraula:', word_at_pos.text if word_at_pos else None)
 #             if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
 #                     word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
-#                 #print('\t\t> És la darrera síl·laba del mot i el mot no té PRONe ni és fusionada')
+#                 ##print('\t\t> És la darrera síl·laba del mot i el mot no té PRONe ni és fusionada')
 #
 #                 if self.nomes_sillabes[pos].pes >= 4 or (self.nomes_sillabes[pos].pes >= 3 and pos==3) or (pos == 4 and self.nomes_sillabes[pos].pes == 3.5):  # Si el pes és un accent lèxic, considera que és un tall
 #                     self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és 5.0
-#                     #print('\t\t> Pes de la síl·laba de tall assegurat a 5.0')
+#                     ##print('\t\t> Pes de la síl·laba de tall assegurat a 5.0')
 #                     if self.nomes_sillabes[pos + 1].flag and self.nomes_sillabes[pos + 1].pes is not None and self.nomes_sillabes[pos + 1].pes == 3.5:
 #                         self.nomes_sillabes[pos+1].pes = 4.0 # Restaura el pes original de la síl·laba següent si havia estat penalitzada per ser candidata a tall
 #                     pos = pos + 1  # Convertim a 1-based
@@ -461,7 +388,7 @@ def detecta_cesura_femenina(self):
 #                     return f'{pos}+{10 - pos}', 'tall'
 #                 elif self.nomes_sillabes[pos].pes > 0.5 and self.nomes_sillabes[
 #                     pos].pes < 4:  # Si el pes és d'accent bivalent o secundari, considera que és discontinu
-#                     #print('\t\t> Pes de la síl·laba indica accent bivalent o secundari, considerant com a discontinu')
+#                     ##print('\t\t> Pes de la síl·laba indica accent bivalent o secundari, considerant com a discontinu')
 #                     self.nomes_sillabes[pos].pes = 5.0  # Assegura que el pes de la síl·laba de tall és alt
 #                     if self.nomes_sillabes[pos + 1].flag and self.nomes_sillabes[pos + 1].pes is not None and self.nomes_sillabes[pos + 1].pes == 3.5:
 #                         self.nomes_sillabes[pos+1].pes = 4.0 # Restaura el pes original de la síl·laba següent si havia estat penalitzada per ser candidata a tall
@@ -470,7 +397,7 @@ def detecta_cesura_femenina(self):
 #                     return f'{pos}+{10 - pos}', 'discontinu'
 #             elif self.nomes_sillabes[
 #                 pos].pes >= 2:  # Si no és la darrera síl·laba del mot però té accent, considera que és continu
-#                 #print('\t\t> No és la darrera síl·laba del mot però té accent, considerant com a continu')
+#                 ##print('\t\t> No és la darrera síl·laba del mot però té accent, considerant com a continu')
 #                 if self.nomes_sillabes[pos + 1].flag and self.nomes_sillabes[pos + 1].pes is not None and self.nomes_sillabes[pos + 1].pes == 3.5:
 #                     self.nomes_sillabes[
 #                         pos + 1].pes = 4.0  # Restaura el pes original de la síl·laba següent si havia estat penalitzada per ser candidata a tall

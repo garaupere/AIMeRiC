@@ -111,15 +111,13 @@ class Vers:
 
     def __actualitza_patro_jerarquic__(self) -> None:
         """Actualitza el patró mètric jeràrquic de forma segura."""
-        if self.model:
+        if self.model and not self.patro_metric_jerarquic:
             try:
                 self.patro_metric_jerarquic = patro_metric_jerarquic(
                     self.patro_metric, self.model
                 )
             except Exception:
                 self.patro_metric_jerarquic = None
-        else:
-            self.patro_metric_jerarquic = None
 
     def __patrons__(self) -> None:
         """Calcula patrons rítmics i mètrics."""
@@ -184,7 +182,7 @@ class Vers:
         # Recalcular model si necessari
         if not self.model:
             try:
-                self.__detecta_model__()
+                self.__detecta_model__(debug_index='prosòdia')
             except Exception:
                 pass
 
@@ -207,8 +205,9 @@ class Vers:
         else:
             self.contactes_vocalics = result if result else None
 
-    def __detecta_model__(self) -> None:
+    def __detecta_model__(self, debug_index=None) -> None:
         """Detecta la model del vers."""
+        #print(debug_index)
         if self.model or not self.ajustat:
             return
 
@@ -222,7 +221,8 @@ class Vers:
             self.correspondencia_model = None
 
         self.patro_metric = maximal_comparison_pattern(self)
-        self.__actualitza_patro_jerarquic__()
+        if not self.patro_metric_jerarquic:
+            self.__actualitza_patro_jerarquic__()
         self.contorn_ritmic = '-'.join(
             str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1'
         )
@@ -260,7 +260,7 @@ class Vers:
         if pos >= len(self.patro_metric) or self.patro_metric[pos] != '1':
             self.model = None
             self.correspondencia_model = None
-            self.__detecta_model__()
+            self.__detecta_model__(debug_index='verifica')
 
     def __reset_cim_maxim__(self) -> None:
         """Elimina el cim màxim existent."""
@@ -291,14 +291,14 @@ class Vers:
 
         # Processar components en ordre
         self.__disposicio__()
-        self.__detecta_model__()
+        self.__detecta_model__(debug_index='proses')
         self.__prosodia__(subdi=True)
         self.__patrons__()
         self.__actualitza_colons__()
         self.__anota__()
         self.__mot_info__()
         self.__contactes_vocalics__()
-        self.__verifica_model__()
+        #self.__verifica_model__()
         self.__ensure_tall_spacing__()
         self.__info_contactes_vocalics__()
         self.__info_gramatical__()
@@ -306,7 +306,7 @@ class Vers:
     def __ensure_tall_spacing__(self) -> None:
         """Assegura que la representació del patró té espai després del tall."""
         if self.model is None:
-            self.__detecta_model__()
+            self.__detecta_model__(debug_index='ensure_tall_spacing')
             if self.model is None:
                 self.patro_metric_jerarquic = self.patro_metric
 
@@ -335,13 +335,13 @@ class Vers:
         self.__patrons__()
         self.__reset_cim_maxim__()
         self.ajustat = metre_ajustat(self)
-        self.__detecta_model__()
+        self.__detecta_model__(debug_index='actualitza')
         self.__disposicio__()
 
         if self.ajustat:
             self.__prosodia__(subdi=True)
             if not self.model:
-                self.__detecta_model__()
+                self.__detecta_model__(debug_index='actualitza2')
 
         self.__patrons__()
         self.__actualitza_colons__()
@@ -349,7 +349,7 @@ class Vers:
         self.__mot_info__()
         self.__contactes_vocalics__()
         self.__ensure_tall_spacing__()
-        self.__verifica_model__()
+        #self.__verifica_model__()
         self.__info_contactes_vocalics__()
         self.__info_gramatical__()
 

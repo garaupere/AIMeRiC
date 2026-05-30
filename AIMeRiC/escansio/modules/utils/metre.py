@@ -110,6 +110,10 @@ def patro_metric_jerarquic(seq, model):
         n1, n2 = 6, 4
     elif model == "5+5":
         n1, n2 = 5, 5
+    elif model == "3+7":
+        n1, n2 = 3, 7
+    elif model == "7+3":
+        n1, n2 = 7, 3
     else:
         raise ValueError("Estructura desconeguda")
 
