@@ -10,12 +10,18 @@ __all__ = ["Sillaba"]
 
 import re
 from copy import deepcopy
+from typing import Optional, Any
 
 from AIMeRiC.escansio.modules.utils.fonologia import get_vowel
 
 
 class Sillaba:
-    def __init__(self, index: int, syllable: tuple, len_word: int, fusion_direction=None):
+    def __init__(self, index: int, syllable: tuple, len_word: int,
+                 token: Optional[Any] = None,
+                 length: Optional[int] = None,
+                 parent: Optional[Any] = None,
+                 fusion_direction: Optional[Any] = None):
+        self.parent = parent
         self.text = syllable[0]
         self.s_index = index
         self.pes = float(syllable[1])
@@ -32,9 +38,15 @@ class Sillaba:
         self.ends_with_vowel = self.vowel_end()  # Afegir a un mòdul independent: /escansio/utils/phonology.py i reciclar el de la classe Mot
         self.first = True if self.s_index == 0 else False
         self.last = True if self.s_index == self.len_word - 1 else False
-        #self.has_PRONe = True if self.text.endswith('-') else False
         self.fono_info = self.fono()  # Afegir a un mòdul independent: /escansio/utils/phonology.py
         self.flag = None # comodí per marcar coses a la síl·laba durant el processament
+
+    def __getattr__(self, name):
+        # delegate reads to parent for attributes not found on Sillaba
+        parent = object.__getattribute__(self, "parent")
+        if parent is not None:
+            return getattr(parent, name)
+        raise AttributeError(name)
 
     def save_metadata(self):
         return {attr: getattr(self, attr) for attr in

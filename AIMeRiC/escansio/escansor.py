@@ -1,6 +1,6 @@
 __author__ = "Pere Garau Borràs"
 __copyright__ = "Copyright © 2025, Pere Garau Borràs"
-__version__ = "0.8.3"
+__version__ = "0.8.5"
 
 import spacy
 import traceback

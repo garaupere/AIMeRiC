@@ -23,7 +23,7 @@ def abstract_pattern(words):
     pattern = []  # Patró abstracte
     for word in words:  # Recorre les paraules del vers
         pattern.extend(
-            [int(syllable.pes) for syllable in word.stress])  # Afegeix l'abstracció de cada síl·laba
+            [int(syllable.pes) if int(syllable.pes) >=0 else 0 for syllable in word.stress])  # Afegeix l'abstracció de cada síl·laba
     return pattern  # Retorna el patró abstracte
 
 

@@ -108,6 +108,11 @@ def correct_spacy(doc):
 
         elif token[1] == "PUNCT" and token_text in string.punctuation:
             try:
+                punct_prev = new_doc.index(token)-1
+                new_doc[punct_prev][0] = new_doc[punct_prev][0] + token[0]
+            except ValueError:
+                pass
+            try:
                 new_doc.remove(token)
             except ValueError:
                 pass
@@ -321,7 +326,7 @@ def posTagger(nlp, text: str):
 
 
 if __name__ == "__main__":
-    text = "plau-me"
+    text = "de dol,"
     import spacy
 
     nlp = spacy.load("ca_core_news_md")

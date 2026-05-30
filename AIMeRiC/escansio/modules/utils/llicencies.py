@@ -262,9 +262,9 @@ def dieresi(self, times):
                     # Crea dues síl·labes a partir del diftong
                     sillaba_split = re.sub(r"(.*[aeiouàéèíòóú])([iy].*)", r"\1@\2",
                                            syllable.text)
-                    sil1 = Sillaba(syllable.s_index, (sillaba_split.split("@")[0], 0), syllable.len_word + 1)
+                    sil1 = Sillaba(syllable.s_index, (sillaba_split.split("@")[0], 0), syllable.len_word + 1, parent=word)
                     sil2 = Sillaba(syllable.s_index + 1, (sillaba_split.split("@")[1], syllable.pes),
-                                   syllable.len_word)
+                                   syllable.len_word, parent=word)
 
                     sil1.diftong = False
                     sil2.diftong = False

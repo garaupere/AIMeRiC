@@ -93,9 +93,9 @@ def accentua(self):
             if self.word_ment is not None:
                 w_ment = result + [("ment", 4.0)]
                 w_ment = resol_xoc_ment(w_ment)
-                return [Sillaba(0, w_ment[0], 2), Sillaba(1, w_ment[1], 2)]
+                return [Sillaba(0, w_ment[0], 2, parent=self), Sillaba(1, w_ment[1], 2, parent=self)]
 
-            return [Sillaba(0, result[0], 1)]
+            return [Sillaba(0, result[0], 1, parent=self)]
 
         elif n >= 2:
             """Si el mot té dues o més de dues síl·labes"""
@@ -111,7 +111,7 @@ def accentua(self):
         result = result + [("ment", 4.0)]
         result = resol_xoc_ment(result)
         self.stress = result
-    result = [Sillaba(num, syllable, len(result)) for num, (syllable) in enumerate(result)]
+    result = [Sillaba(num, syllable, len(result), parent=self) for num, (syllable) in enumerate(result)]
 
     if clean:
         result[-1].text = result[-1].text + pronoun
@@ -126,7 +126,8 @@ def accent_secundari(self) -> list:
       - distància senar (1,3,5,...) sempre 0.0
       - el primari (pes > 2.0) es manté
     """
-    result = deepcopy(self.stress)
+    # use a shallow copy to avoid deepcopying objects that reference spaCy Tokens
+    result = self.stress.copy()
 
     # Trobar l'índex de l'accent primari
     idx_primary = None
@@ -154,7 +155,8 @@ def accent_secundari(self) -> list:
             else:
                 new_weight = 1.5
 
-        result[i] = Sillaba(i, (syllable.text, new_weight), len(self.stress))
+        # replace with a new Sillaba referencing the same parent (self)
+        result[i] = Sillaba(i, (syllable.text, new_weight), len(self.stress), parent=self)
 
     self.stress = result
     return result

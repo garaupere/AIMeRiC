@@ -148,8 +148,7 @@ def tall(self) -> None | int | tuple[int, str]:
 def identifica_model(self):
     """Identifica el model subjacent al decasíl·lab (4+6, 6+4 o 5+5)"""
     if self.recompte_sillabes_metriques == 10 and self.model is None:
-        subdpos = [3, 5, 4]  # Preferències de modelns
-
+        subdpos = [3, 5, 4, 2, 6]  # Preferències de models
         # Per a les síl·labes del vers, obtenim els pesos de les subdpos
         candidats = []
         for pos in subdpos:
@@ -162,17 +161,45 @@ def identifica_model(self):
                     if self.nomes_sillabes[pos].pes is not None and self.nomes_sillabes[pos].pes > 2:
                         self.nomes_sillabes[pos].pes -= 0.50
                         self.nomes_sillabes[pos].flag = 'penalitzat_per_tall'
-            candidats.append((pos, self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None))
+            elif pos == 2 and len(candidats) > 0:
+                self.nomes_sillabes[pos].flag = 'N/I'
+                self.nomes_sillabes[pos].pes -= self.nomes_sillabes[pos+1].pes if self.nomes_sillabes[pos+1].pes >= 2.5 else 0
+                if pos == 2:
+                    if self.nomes_sillabes[6].pes < 2 or self.nomes_sillabes[4].pes >= self.nomes_sillabes[pos].pes: # Si la síl·laba 7 no és tònica o la 5 és major que la 3, omet el candidat
+                        continue
+            elif pos == 6 and len(candidats) > 0:
+                self.nomes_sillabes[pos].flag = 'N/I'
+                self.nomes_sillabes[pos].pes -= self.nomes_sillabes[pos-1].pes if self.nomes_sillabes[pos-1].pes >= 2.5 else 0
+                #if any(pos == 3 for pos, pts, pes in candidats):
+                #    continue
+                if self.nomes_sillabes[2].pes < 2 or self.nomes_sillabes[3].pes >= self.nomes_sillabes[pos].pes: # Si la síl·laba 3 no és tònica o la 4 és major que la 7, omet el candidat
+                    continue
+                #elif pos == 6:
+                #    if self.nomes_sillabes[2].pes < 2 or self.nomes_sillabes[4].pes >= self.nomes_sillabes[pos].pes: # Si la síl·laba 3 no és tònica o la 5 és major que la 7
+                #        continue
+
+            if self.nomes_sillabes[pos].has_PUNCT:
+                pts = self.nomes_sillabes[pos].pes + 1
+            else:
+                pts = self.nomes_sillabes[pos].pes
+
+            candidats.append((pos, pts, self.nomes_sillabes[pos].pes if pos < len(self.nomes_sillabes) else None))
         # ordena els candidats per pes (descendent) i després per posició (segons la preferència). Elimina els candidats amb pes None o <= 2.0
-        candidats_valids = [(pos, pes) for pos, pes in candidats if pes is not None and pes >= 2]
+        candidats_valids = [(pos, pts, pes) for pos, pts, pes in candidats if pes is not None and pes >= 2]
+
+        if any(pos == 5 for pos, pts, pes in candidats_valids): # Si hi ha cap candidat de la posició 6 (model 6+4) i hi ha candidat de la posició 3 (model 3+7) descarta el 3+7.
+            candidats_valids = [(pos, pts, pes) for pos, pts, pes in candidats_valids if pos != 2]
+
         candidats_valids.sort(
             key=lambda x: (-x[1], subdpos.index(x[0])))  # Ordena per pes descendent i després per preferència de posició
+
+
         #print('>> Candidats de model ordenats per pes i preferència:', candidats_valids)
         # Defineix el tipus de model.
-        for pos, pes in candidats_valids:
+        for pos, pts, pes in candidats_valids:
             # si el candidat és la darrera síl·laba del mot i el mot no té PRONe, ni és fusionada
             word_at_pos = _get_word_at_position(self, pos)
-            #print('\t> Candidat a model:', pos, 'Pes:', pes, 'Paraula:', word_at_pos.text if word_at_pos else None)
+            #print('\t> Candidat a model:', pos, 'Pes:', 'Punts:', pts, pes,'Paraula:', word_at_pos.text if word_at_pos else None)
             if word_at_pos and word_at_pos.stress and word_at_pos.stress[-1] == self.nomes_sillabes[pos] and not getattr(
                     word_at_pos, 'has_PRONe', False) and not getattr(self.nomes_sillabes[pos], 'fusionada', False):
                 #print('\t\t> És la darrera síl·laba del mot i el mot no té PRONe ni és fusionada')

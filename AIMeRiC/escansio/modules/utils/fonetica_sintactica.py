@@ -61,6 +61,8 @@ def puntua(syllable: Sillaba, vers: List[Sillaba]) -> int:
         pts -= 3
     if syllable.fusionada:
         pts -= 20
+    if syllable.has_PUNCT:
+        pts -= 10
 
     # Penalitzacions segons posició (tall potencial)
     if len(vers) > 6:
@@ -110,6 +112,8 @@ def millor_contacte_vocalic(self) -> List[Tuple[Sillaba, Sillaba, int]]:
             pts = puntua(s1, vers) + puntua(s2, vers)
             pts = pts * puntua_vallverdu(s1, s2) + puntua_diftong(s1, s2)
             if s1.fusionada or s2.fusionada:
+                pts -= 4
+            if s1.has_PUNCT:
                 pts -= 4
             if pts > 0:
                 s1.fusionable = pts

@@ -1388,6 +1388,7 @@ qu·4ú
 re3lï3
 .per3xò3
 .per3xo3
+.bru4e3gel
 """)
 
 exceptions = ""
