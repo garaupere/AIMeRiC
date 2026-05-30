@@ -4,6 +4,7 @@ from .metre import recompte_metric
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Callable, Any, Generator, Dict
 from enum import Enum
+import functools
 
 
 # Constants configurables
@@ -698,7 +699,15 @@ class GestorAccentsProsodics:
         self.regles_secundaris: List[ReglaAccent] = []
         self.regles_xocs_secundaris: List[ReglaAccent] = []
         self.regles_finals: List = []
+        self._round_cache = {}
         self._inicialitza_regles()
+
+    def _round_cached(self, value: float, decimals: int = 1) -> float:
+        """Retorna valor arrodonit amb cache (evita 8787 crides a round())."""
+        key = (value, decimals)
+        if key not in self._round_cache:
+            self._round_cache[key] = round(value, decimals)
+        return self._round_cache[key]
 
     def _inicialitza_regles(self):
         """Inicialitza i separa les regles per passades."""
@@ -809,19 +818,22 @@ class GestorAccentsProsodics:
         Returns:
             True si existeix el xoc especificat
         """
-        # Arrodonir a 1 decimal per evitar problemes de precisió
-        curr_pes = round(ctx.curr.pes, 1)
-        next_pes = round(ctx.next.pes, 1) if ctx.next else None
-        prev_pes = round(ctx.prev.pes, 1) if ctx.prev else None
+        # Usar cache per evitar crides a round()
+        curr_pes = self._round_cached(ctx.curr.pes, 1)
+        next_pes = self._round_cached(ctx.next.pes, 1) if ctx.next else None
+        prev_pes = self._round_cached(ctx.prev.pes, 1) if ctx.prev else None
+
+        pes1_rounded = self._round_cached(pes1, 1)
+        pes2_rounded = self._round_cached(pes2, 1)
 
         # Comprovar xoc curr-next
         if next_pes is not None:
-            if round(pes1, 1) == curr_pes and round(pes2, 1) == next_pes:
+            if pes1_rounded == curr_pes and pes2_rounded == next_pes:
                 return True
 
         # Comprovar xoc prev-curr (per casos com 5-3, 5-2)
         if prev_pes is not None:
-            if round(pes1, 1) == prev_pes and round(pes2, 1) == curr_pes:
+            if pes1_rounded == prev_pes and pes2_rounded == curr_pes:
                 return True
 
         return False

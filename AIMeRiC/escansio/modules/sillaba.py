@@ -4,7 +4,6 @@ Mòdul: sillaba.py
 Classe principal:
 - Sillaba: representa una síl·laba amb metadades fonològiques i propietats
   útils per a l'escansió mètrica (pes, tonicitat, diftong, triftong, límits vocàlics).
-  Té la capacitat de rebre els atributs de Word.
 """
 __autor__ = "Pere Garau"
 __all__ = ["Sillaba"]

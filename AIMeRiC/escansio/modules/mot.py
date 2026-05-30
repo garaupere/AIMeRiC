@@ -24,6 +24,7 @@ class Mot:
         self.original_text = deepcopy(token.text)
         self.has_PRONe = False
         self.has_PUNCT = False
+        self.which_PUNCT = False
         self.__mark_punct__()
 
         # helper to read extension safely
@@ -235,10 +236,11 @@ class Mot:
                     self.syllables[0:div_index]))  # Dividim el mot en dues parts de nou amb el nou índex de divisió.
 
     def __mark_punct__(self):
-        """Desa els signes de puntuació i neteja el mot. Marca si el mot té puntuació adjacent."""
+        """Desa els signes de puntuació i neteja el mot."""
         if len(self.text) > 1:
             if self.text[-1] in '.:,;¿?!¡…':
                 self.has_PUNCT = True
+                self.which_PUNCT = self.text[-1]
                 self.text = re.sub(r"[.:,;¿?!¡…]", "", self.text).replace('-', '')
                 self.lower = self.text.lower()
 

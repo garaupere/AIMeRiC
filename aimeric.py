@@ -15,7 +15,7 @@ from AIMeRiC.escansio.escansor import escaneja, __version__
 from AIMeRiC.corpus.modules.getUSB import getUSB
 
 __author__ = "Pere Garau Borràs"
-__copyright__ = "Copyright © 2025, Pere Garau Borràs"
+__copyright__ = "Copyright © 2026, Pere Garau Borràs"
 __version__ = __version__
 
 import os
@@ -279,11 +279,12 @@ def main(nlp):
 if __name__ == "__main__":
     from cfonts import render
 
-    text = render("AIMeRiC", font='chrome', colors=['system', 'gray', 'system'], align='center')
+    text = render("AIMeRiC")
     print(text)
     print(render(
-        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n ©2026, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}",
-        font='console', colors=['system'], align='center'))
+        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n©2026, Pere Garau Borràs\nv. {__version__}\n"
+        f"https://github.com/garaupere/AIMeRiC",
+        font='console', colors=['system']))
 
     # Carrega el model de Spacy en català
     print("--" * 40)
@@ -298,5 +299,6 @@ if __name__ == "__main__":
     print("Gràcies per utilitzar l'aplicació.")
     print("--" * 40)
     print(
-        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n © 2022-2025, Pere Garau Borràs\n\t\t\t\t\t\tv. {__version__}")
+        f"Anàlisi Informatitzada del Metre i el Ritme del Català\n©2026, Pere Garau Borràs\nv. {__version__}\n"
+        f"https://github.com/garaupere/AIMeRiC")
     print("--" * 40)

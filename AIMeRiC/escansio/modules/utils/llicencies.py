@@ -133,11 +133,7 @@ def sineresi(self, times):
                         word.stress.remove(change[1])
                         word.stress_index = get_index_accent(word)
                         if 2 in [int(syllable.pes) for syllable in word.stress]:
-                            for syllable in word.stress:
-                                if syllable.pes >= 2.0:
-                                    syllable.pes = 0.0
-                                    word.stress = accent_secundari(word)
-                                    #neutralitza_accents_secundaris(self)
+                            word.stress = accent_secundari(word)
                         counter += 1  # Incrementa el comptador cada cop que s'aplica la sineresi
             diff = self.recompte_sillabes_metriques - self.objectiu
             self.nomes_sillabes = sum((word.stress for word in self.words), [])
