@@ -27,6 +27,7 @@ _RE_VOWEL_CHAR = re.compile(r"[AEIOUaeiou]")
 _RE_TIE = re.compile(r"[_:]")
 _RE_QU = re.compile(r"([qg])u([ei])", re.IGNORECASE)
 _RE_NY = re.compile(r'(ny)', re.IGNORECASE)
+_RE_IGX = re.compile(r"([aeiouàéèíóòú]ix|igs?$)", re.IGNORECASE)
 _RE_CLEAN_MAP = {
     re.compile(k): v for k, v in {
         r"[aàáâ]": "a", r"[eèéê]": "e", r"[iíìïyýÿî]": "i",
@@ -328,9 +329,10 @@ def resol_xoc_accentual_fusio(mot_fusionat):
 def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
     """Detecta diftongs/triftongs/hiats en el text d'escansió i retorna mapping amb s_index (1-based)."""
     clean = deepcopy(getattr(self, "escansio_text", ""))
-    # normalitzar text per facilitar cerca (treure 'qu' etc.)
+    # normalitzar text per facilitar cerca (elimina que, qui, gue, gui, ny, ix, ig$)
     clean = _RE_QU.sub(r"\1\2", clean)
     clean = _RE_NY.sub(r"ñ", clean)
+    clean = _RE_IGX.sub(r"x", clean)
     for pat, repl in _RE_CLEAN_MAP.items():
         clean = pat.sub(repl, clean)
 
@@ -353,7 +355,7 @@ def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
         frontera = "exterior" if sep in ("#", "‿", "_") else "interior"
         return {"tipus": tipo, "tonicitat": tonicitat, "frontera": frontera, "vocals": vocals}
 
-    # buscar triftongs amb i sense marcador de ligadura
+    # triftongs amb i sense marcador de ligadura
     for m in re.finditer(r"([AEIOUaeiou])[‿_]([AEIOUaeiou])[‿_]([AEIOUaeiou])", clean):
         span = m.span()
         if not overlaps(span):

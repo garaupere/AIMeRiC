@@ -111,7 +111,7 @@ class Vers:
 
     def __actualitza_patro_jerarquic__(self) -> None:
         """Actualitza el patró mètric jeràrquic de forma segura."""
-        if self.model and not self.patro_metric_jerarquic:
+        if self.model:
             try:
                 self.patro_metric_jerarquic = patro_metric_jerarquic(
                     self.patro_metric, self.model
@@ -207,38 +207,57 @@ class Vers:
 
     def __detecta_model__(self, debug_index=None) -> None:
         """Detecta la model del vers."""
-        #print(debug_index)
-        if self.model or not self.ajustat:
-            return
-
+        # Recompute model info (do not early-return; revalidate on each call)
         model_info = identifica_model(self)
 
-        if isinstance(model_info, tuple) and len(model_info) > 1:
+        if isinstance(model_info, (tuple, list)) and len(model_info) >= 2:
             self.model = model_info[0]
             self.correspondencia_model = model_info[1]
+        elif isinstance(model_info, str):
+            self.model = model_info
+            self.correspondencia_model = None
         else:
             self.model = None
             self.correspondencia_model = None
 
-        self.patro_metric = maximal_comparison_pattern(self)
+        # Ensure patro_metric is a string and safe to iterate
+        try:
+            self.patro_metric = str(maximal_comparison_pattern(self))
+        except Exception:
+            self.patro_metric = ''
+
         if not self.patro_metric_jerarquic:
             self.__actualitza_patro_jerarquic__()
-        self.contorn_ritmic = '-'.join(
-            str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1'
-        )
 
-        # Aplicar regles locals de model
+        # Update colons based on final patro_metric
+        self.__actualitza_colons__()
+
+        # Safely build contorn_ritmic only when patro_metric is valid
+        if self.patro_metric:
+            try:
+                self.contorn_ritmic = '-'.join(
+                    str(i + 1) for i, ch in enumerate(self.patro_metric) if ch == '1'
+                )
+            except Exception:
+                self.contorn_ritmic = None
+        else:
+            self.contorn_ritmic = None
+
+        # Apply local model rules after colons/contorn have been computed
         #self.__model_local__()
 
-        # Actualitzar còlons
-        self.__actualitza_colons__()
+
 
     def __model_local__(self) -> None:
         """Aplica regles locals de model basades en contorn_ritmic."""
-        if not self.model and self.contorn_ritmic in ['3-7-10', '1-3-7-10', '2-7-10']:
-            self.model = '4+6'
-            self.correspondencia_model = 'discontinu'
-            self.__actualitza_patro_jerarquic__()
+        if self.model:
+            if self.model in ['3+7', '7+3']:
+                self.model = 'S/M'
+                if self.correspondencia_model == 'tall':
+                    self.correspondencia_model = 'discontinu'
+            elif self.model == '5+5':
+                if self.correspondencia_model != 'tall':
+                    self.model = 'S/M'
 
     def __actualitza_colons__(self) -> None:
         """Actualitza els còlons del vers basats en model."""
@@ -380,9 +399,9 @@ class Vers:
             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric:",
                   self._color_metric(patro_met))
 
-        # patro_jer = self._get_safe('patro_metric_jerarquic')
-        # if patro_jer:
-        #     print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric jeràrquic:", patro_jer)
+        patro_jer = self._get_safe('patro_metric_jerarquic')
+        if patro_jer:
+             print(Fore.CYAN, f"\t➥", Fore.RESET, f"Patró mètric jeràrquic:", patro_jer)
 
     def _print_metriques(self) -> None:
         """Imprimeix les mètriques."""

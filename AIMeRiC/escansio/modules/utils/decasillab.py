@@ -54,7 +54,7 @@ def troba_tall_posible(self, tall, detect_nonBest: bool = False) -> str:
 def identifica_model(self):
     """Identifica el model subjacent al decasíl·lab."""
     if self.recompte_sillabes_metriques == 10 and self.model is None:
-        subdpos = [3, 5, 4, 2, 6]  # Posicions: 4+6, 6+4, 5+5, 3+7, 7+3
+        subdpos = [3, 5, 4] #, 2, 6]  # Posicions: 4+6, 6+4, 5+5, 3+7, 7+3
         candidats = []
 
         for pos in subdpos:
@@ -63,8 +63,6 @@ def identifica_model(self):
                 pts += 3
             elif pos == 4: # 5+5
                 pts += 2
-            elif pos == 2 or pos == 6: # 3+7, 7+3
-                pts += 1
 
             if self.nomes_sillabes[pos].has_PUNCT:
                 signe_punt = self.nomes_sillabes[pos].which_PUNCT
@@ -119,23 +117,17 @@ def identifica_model(self):
             if pos in (3, 5) and model_type == 'tall':
                 return 100
             # 3. 4 tall (més prioritari que 3/5 discontinu sense PUNCT)
-            if pos == 4 and model_type == 'tall':
+            elif pos == 4 and model_type == 'tall':
                 return 80
             # 2. 3 o 5 discontinu (sense PUNCT)
-            if pos in (3, 5) and model_type == 'discontinu':
+            elif pos in (3, 5) and model_type == 'discontinu':
                 return 70
             # 5. 3 o 5 continu
-            if pos in (3, 5) and model_type == 'continu':
+            elif pos in (3, 5) and model_type == 'continu':
                 return 60
-            # 6. 2 o 6 tall
-            if pos in (2, 6) and model_type == 'tall':
-                return 50
-            # 7. 2 o 6 discontinu o continu
-            if pos in (2, 6) and model_type in ('discontinu', 'continu'):
-                return 40
             # 8. 4 discontinu o continu
-            if pos == 4 and model_type in ('discontinu', 'continu'):
-                return 30
+            elif pos == 4 and model_type in ('discontinu', 'continu'):
+                return 40
             return 0
 
         def _punct_bonus(pos, model_type, syll):
@@ -210,20 +202,10 @@ def identifica_model(self):
 
         best = scores[0]
 
-        # Marca com a "S/M" (sense model) si el millor candidat és un cas fora de 4+6, 6+4 (amb qualsevol correspondència) o 5+5 (amb tall)
-        if (best['pos'] == 4 and best['type'] in ('discontinu', 'continu')) or best['pos'] in (2, 6):
-            pos_1based = best['pos'] + 1
-            self.patro = abstract_pattern(self.words)
-            self.patro_ritmic = str(''.join(str(int(x)) for x in self.patro).rstrip('0'))
-            self.recompte_sillabes_metriques = recompte_metric(self)
-            self.patro_metric = str(maximal_comparison_pattern(self))
-            if best['type'] == 'tall':
-                best['type'] = 'discontinu'
-            self.patro_metric_jerarquic = patro_metric_jerarquic(self.patro_metric, f'{pos_1based}+{10 - pos_1based}')
-            return 'S/M', best['type']
 
         _apply_model(self, best['pos'], best['word'], best['type'])
         pos_1based = best['pos'] + 1
+
         return f'{pos_1based}+{10 - pos_1based}', best['type']
 
 
