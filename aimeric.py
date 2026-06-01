@@ -269,6 +269,14 @@ def main(nlp):
                         check_jsons(corpus)
                     except FileNotFoundError:
                         print('El corpus seleccionat no existeix.')
+                elif options[0] == '-len':
+                    corpus = '__test'
+                    try:
+                        import pandas as pd
+                        df = pd.read_csv(f"{root}__test/etiquetat/csv/foix.csv", sep=';', encoding='utf-8')
+                        print(f"El corpus '__test' conté {len(df)} versos etiquetats.")
+                    except FileNotFoundError:
+                        print('El corpus seleccionat no existeix.')
 
             else:
                 verse = ' '.join(options[0:])

@@ -250,7 +250,7 @@ class Mot:
 
 if __name__ == "__main__":
 
-    sentence = "Sol, i de dol,"
+    sentence = "en"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     start = time.time()
     doc = posTagger(nlp, sentence)

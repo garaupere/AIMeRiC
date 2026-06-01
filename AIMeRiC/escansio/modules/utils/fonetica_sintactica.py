@@ -18,7 +18,7 @@ import re
 from typing import List, Tuple, Optional, Dict, Any
 
 from AIMeRiC.escansio.modules.sillaba import Sillaba
-from AIMeRiC.escansio.modules.utils.metre import recompte_metric
+from AIMeRiC.escansio.modules.utils.metre import recompte_metric, maximal_comparison_pattern, abstract_pattern
 from AIMeRiC.escansio.modules.utils.accentuacio import get_index_accent, accent_secundari
 
 # Caràcters vocals (majúscules/minúscules es tracten on calgui)
@@ -44,7 +44,28 @@ def max_pes(syllable1: Sillaba, syllable2: Sillaba) -> float:
     return syllable1.pes if float(syllable1.pes) >= float(syllable2.pes) else syllable2.pes
 
 
-def puntua(syllable: Sillaba, vers: List[Sillaba]) -> int:
+def puntua_euritmia(syllable: Sillaba, vers: List[Sillaba], pos) -> int:
+    """Puntuació basada en l'eurítmia de la possible resolució del contacte vocàlic."""
+    pts = 0
+    sA = vers[syllable.s_index - 1].pes if syllable.s_index - 1 >= 0 else 0
+    sB = syllable.pes if syllable else 0
+    sC = vers[syllable.s_index + 1].pes if syllable.s_index + 1 < len(vers) else 0
+    sD = vers[syllable.s_index + 2].pes if syllable.s_index + 2 < len(vers) else 0
+
+    # contacte = sB + sC
+
+    if sA and sC:
+        if max(sB, sC) >= sA and max(sB,
+                                     sC) >= sD:  # Si la fusió del contacte (pes màxim) és major que la síl·laba anterior o posterior, penalitza
+            pts -= 40
+    elif not sA:
+        if max(sB,
+               sC) >= sD:  # Si el contacte és en la síl·laba inicial i és major que la síl·laba posterior, penalitza
+            pts -= 20
+    return pts
+
+
+def puntua(syllable: Sillaba, vers: List[Sillaba], pos, type: str = None) -> int:
     """Calcula una puntuació heurística per a un candidat de fusió."""
     pts = 0
     f = syllable.fono_info
@@ -58,12 +79,12 @@ def puntua(syllable: Sillaba, vers: List[Sillaba]) -> int:
         pts -= 20
     if not syllable.tonic:
         pts += 2
-    if f.get("rotica"):
+    if f.get("rotica") and pos == 1 and type != 'sinèresi':  # Només afecta la síl·laba 1 entre paraules
         pts -= 3
     if syllable.fusionada:
         pts -= 20
-    if syllable.has_PUNCT:
-        pts -= 10
+    if syllable.has_PUNCT and pos == 1 and type != 'sinèresi':  # Només afecta la síl·laba 1 entre paraules
+        pts -= 20
 
     # Penalitzacions segons posició (tall potencial)
     if len(vers) > 6:
@@ -73,13 +94,14 @@ def puntua(syllable: Sillaba, vers: List[Sillaba]) -> int:
             idx = vers.index(syllable)
         except ValueError:
             idx = -1
-        if idx == 3 and pes_i > 2:
+        if idx == 0 and pes_i > 1 and pos == 1:
             pts -= 8
-        elif idx == 4 and pes_i > 2:
-            pts -= 4
-        elif idx == 5 and pes_i > 2:
+        elif idx == (3, 4) and pes_i > 2:
+            pts -= 3
+        #elif idx == 4 and pes_i > 2:
+        #    pts -= 4
+        elif idx == (5, 6) and pes_i > 2:
             pts -= 2
-
     syllable.fusionable = pts
     return pts
 
@@ -90,12 +112,17 @@ def puntua_diftong(syll1: Sillaba, syll2: Sillaba) -> int:
         return 0
     f1, f2 = syll1.fono_info, syll2.fono_info
 
-    if f1.get("alta"):
+    if not f1.get("neutra") and not f2.get("neutra"):
+        if f1.get("vocal") == f2.get("vocal"):
+            return 0
+    elif f1.get("alta"):
         return 10
-    if f1.get("neutra") and f2.get("neutra"):
+    elif f1.get("neutra") and f2.get("neutra"):
         return 12
-    if f1.get("neutra") or f2.get("alta"):
-        return 1
+    elif f1.get("neutra") or f2.get("neutra"):
+        return 8
+    elif f2.get("alta"):
+        return 6
     return 0
 
 
@@ -110,8 +137,12 @@ def millor_contacte_vocalic(self) -> List[Tuple[Sillaba, Sillaba, int]]:
         s1 = vers[i]
         s2 = vers[i + 1]
         if s1.last and s2.first and s1.ends_with_vowel and s2.starts_with_vowel:
-            pts = puntua(s1, vers) + puntua(s2, vers)
-            pts = pts * puntua_vallverdu(s1, s2) + puntua_diftong(s1, s2)
+            ini_punts = puntua(s1, vers, pos=1) + puntua(s2, vers, pos=2)
+            vallverdu_score = puntua_vallverdu(s1, s2)
+            diftong_score = puntua_diftong(s1, s2)
+            euritmia_score = puntua_euritmia(s1, vers, pos=1)
+            pts = (ini_punts * vallverdu_score) + diftong_score + euritmia_score
+            #print(fr"\t Punts {ini_punts} * {vallverdu_score} + {diftong_score} + {euritmia_score} = {pts} per contacte entre '{s1.text}' i '{s2.text}'")
             if s1.fusionada or s2.fusionada:
                 pts -= 4
             if s1.has_PUNCT:
@@ -136,29 +167,47 @@ def puntua_vallverdu(syllable1: Sillaba, syllable2: Sillaba) -> int:
     v1, v2 = syllable1.fono_info, syllable2.fono_info
     p1, p2 = int(syllable1.pes), int(syllable2.pes)
 
-    # Tòniques / àtones combinacions
-    if p1 >= 3 and p2 >= 3:
+    tonic1 = p1 >= 3
+    tonic2 = p2 >= 3
+    alta1 = bool(v1.get("alta"))
+    alta2 = bool(v2.get("alta"))
+    neut1 = bool(v1.get("neutra"))
+    neut2 = bool(v2.get("neutra"))
+    vocal1 = v1.get("vocal")
+    vocal2 = v2.get("vocal")
+
+    # ambdues tòniques -> no fusió segons regles per defecte
+    if tonic1 and tonic2:
         return 0
-    if p1 >= 3 > p2:
-        if v2.get("neutra"):
-            return 2
-    if p1 < 3 <= p2:
-        if p2 == 3 and v2.get("alta"):
-            return 1
-        if v1.get("alta") and not v2.get("alta"):
-            return 1
-        if v1.get("alta") and v2.get("vocal") != v1.get("vocal"):
-            return 1
-        if (v1.get("neutra") and (not v2.get("alta"))) or v2.get("neutra"):
+
+    # primera tònica, segona àtona
+    if tonic1 and not tonic2:
+        if neut2:
             return 2
         return 0
 
-    # p1 < 3 and p2 < 3 (ambdues àtones)
-    if (v1.get("neutra") and v2.get("neutra")) or v2.get("neutra") or (v1.get("neutra") and v2.get("alta")):
+    # primera àtona, segona tònica
+    if not tonic1 and tonic2:
+        if p2 == 3 and alta2:
+            return 1
+        if alta1 and not alta2:
+            return 1
+        if alta1 and vocal1 and vocal2 and vocal2 != vocal1:
+            return 1
+        if (neut1 and not alta2) or neut2:
+            return 2
+        return 0
+
+    # ambdues àtones
+    if neut1 and neut2:
         return 2
-    if v1.get("alta") and v2.get("alta") and v1.get("vocal") == v2.get("vocal"):
+    if neut2:
         return 2
-    if (v1.get("alta") and not v2.get("alta")) or (not v1.get("alta") and v2.get("alta")):
+    if neut1 and alta2:
+        return 2
+    if alta1 and alta2 and vocal1 == vocal2:
+        return 2
+    if (alta1 and not alta2) or (not alta1 and alta2):
         return 1
 
     return 0
@@ -240,6 +289,7 @@ def resol_contactes_vocalics(self, best_mode: str):
         return []
 
     best = get_best(best_mode)
+
     #    if len(best) > 4 and self.recompte_sillabes_metriques - self.objectiu > 4:
     #        return  # Evita aplicar contactes si hi ha massa candidats o la diferència és gran
     if not best or self.recompte_sillabes_metriques <= self.objectiu:
@@ -297,7 +347,8 @@ def resol_contactes_vocalics(self, best_mode: str):
                     if not word.stress:
                         del self.words[wi]
                     actualitza_s_index(self)
-                    resol_xoc_accentual_fusio(word)  # Resol xoc accentual creat per la fusió (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra)
+                    resol_xoc_accentual_fusio(
+                        word)  # Resol xoc accentual creat per la fusió (exemple: SE.va.O.bra > SE.VAO.bra > se.VAO.bra)
 
                     # ajustar iterador natural de for
                 # actualitzar estats globals
@@ -321,9 +372,9 @@ def resol_xoc_accentual_fusio(mot_fusionat):
     accents.sort(key=lambda s: (int(s.pes), s.s_index))  # Ordena per pes i després per index
     # comprova que són consecutius
     if accents[1].s_index - accents[0].s_index == 1:
-        accents[0].pes = 0.75  # Neutralitza l'accent de menor pes (o el primer si són iguals) [Deixa un residu accentual per si s'ha de recuperar com accent secundari)
+        accents[
+            0].pes = 0.75  # Neutralitza l'accent de menor pes (o el primer si són iguals) [Deixa un residu accentual per si s'ha de recuperar com accent secundari)
         mot_fusionat.stress_index = get_index_accent(mot_fusionat)  # Actualitza l'index d'accent del mot
-
 
 
 def contactes_vocalics_info(self) -> Dict[int, Dict[str, Any]]:
@@ -439,7 +490,7 @@ def millor_sinalefa(self) -> List[Tuple[Sillaba, Sillaba, int]]:
             w2 = next((w for w in self.words if s2 in getattr(w, "stress", [])), None)
             if w1.stress[-1] == s1 and w2.stress[0] == s2:
                 # Comprovar que s1 és l'última síl·laba de w1 i s2 és la primera síl·laba de w2
-                pts = puntua(s1, vers) + puntua(s2, vers)
+                pts = puntua(s1, vers, pos=1) + puntua(s2, vers, pos=2)
                 candidats.append((s1, s2, pts))
     candidats.sort(key=lambda x: x[2], reverse=True)
     return candidats
@@ -460,14 +511,16 @@ def millor_sineresi(self) -> List[Tuple[Sillaba, Sillaba, int]]:
             s1 = s
             s2 = w.stress[s.s_index + 1] if s.s_index + 1 < len(w.stress) else None
             if s2 and s1.ends_with_vowel and s2.starts_with_vowel and s2.s_index == s1.s_index + 1:
-                pts = puntua(s1, w.stress) + puntua(s2, w.stress) + puntua_diftong(s1, s2)
+                pts = puntua(s1, w.stress, pos=1, type='sinèresi') + puntua(s2, w.stress, pos=2,
+                                                                            type='sinèresi') + puntua_diftong(s1, s2)
                 s1.fusionable = pts
                 #print('[DEBUG] Candidat potencial per sinèresi:', s1.text, s2.text, pts)
                 if s1.pes > 3:  # Si la síl·laba 1 és forta, penalitza la sinèresi (és més probable en síl·labes àtones)
                     #print('[DEBUG] Penalitzant sinèresi per síl·laba 1 forta:', s1.text, s2.text)
                     pts = 0  # Candidat poc probable per sinèresi (co.llí.em, co.pé.o, se.rí.a, ma.sí.a, etc.)
 
-                elif s2.pes > 3 and s2.fono_info.get('alta'):  # Si la síl·laba 2 és forta i és i /u, penalitza la sinèresi (ex: be.ne.ít, a.gra.ír, pa.ú.ra, di.úr.na, etc.). Permet sinèresis tipus con.di.ció
+                elif s2.pes > 3 and s2.fono_info.get(
+                        'alta'):  # Si la síl·laba 2 és forta i és i /u, penalitza la sinèresi (ex: be.ne.ít, a.gra.ír, pa.ú.ra, di.úr.na, etc.). Permet sinèresis tipus con.di.ció
                     #print('[DEBUG] Penalitzant sinèresi entre síl·laba forta i vocal alta:', s1.text, s2.text)
                     pts = 0  # Candidat poc probable per sinèresi (ex: be.ne.ít, a.gra.ír, pa.ú.ra, di.úr.na, etc.). Permet sinèresis tipus con.di.ció
 

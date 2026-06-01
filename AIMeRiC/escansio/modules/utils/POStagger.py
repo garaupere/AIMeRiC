@@ -70,7 +70,8 @@ def correct_spacy(doc):
         'serà': 'AUX',
         'sereu': 'AUX', 'serem': 'AUX', 'seran': 'AUX', 'siguí': 'AUX', 'sigués': 'AUX', 'sigui': 'AUX',
         'siguem': 'AUX', 'sigueu': 'AUX', 'siguin': 'AUX',
-        'haguí': 'AUX', 'hagués': 'AUX', 'hagi': 'AUX', 'haguem': 'AUX', 'hagueu': 'AUX', 'hagin': 'AUX', 'hàgiu': 'AUX'
+        'haguí': 'AUX', 'hagués': 'AUX', 'hagi': 'AUX', 'haguem': 'AUX', 'hagueu': 'AUX', 'hagin': 'AUX', 'hàgiu': 'AUX',
+        'nou': 'ADJ', 'mig': 'ADJ', 'fet': 'ADJ'
     }
 
     normalized = []

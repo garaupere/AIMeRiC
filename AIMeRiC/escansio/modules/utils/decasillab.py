@@ -60,9 +60,9 @@ def identifica_model(self):
         for pos in subdpos:
             pts = 0
             if pos == 3 or pos == 5: # 4+6, 6+4
-                pts += 3
+                pts += 40
             elif pos == 4: # 5+5
-                pts += 2
+                pts += 20
 
             if self.nomes_sillabes[pos].has_PUNCT:
                 signe_punt = self.nomes_sillabes[pos].which_PUNCT
@@ -109,18 +109,36 @@ def identifica_model(self):
                     'word': word_at_pos
                 })
 
+
+
         # Evalua tipus de model per a cada candidat i suma punts per prioritat (integrant PUNCT)
         def _hierarchy_bonus(pos, model_type, syll):
             """Assigna bonus de jerarquia segons (pos, model_type).
             Base bonus sense tenir en compte PUNCT. PUNCT s'afegeix a _punct_bonus()."""
             # 1. 3 o 5, tall
             if pos in (3, 5) and model_type == 'tall':
-                return 100
+                if syll.pos_ in ('NOUN', 'PROPN', 'VERB'):
+                    return 100
+                elif syll.pos_ in ('ADJ', 'ADV'):
+                    return 90
+                elif syll.pos_ in ('AUX', 'ADP', 'PRON'):
+                    return 70
+                else:
+                    return 60
             # 3. 4 tall (més prioritari que 3/5 discontinu sense PUNCT)
             elif pos == 4 and model_type == 'tall':
-                return 80
+                if syll.pos_ in ('NOUN', 'PROPN', 'VERB'):
+                    return 80
+                elif syll.pos_ in ('ADJ', 'ADV'):
+                    return 75
+                elif syll.pos_ in ('AUX', 'ADP', 'PRON'):
+                    return 70
+                else:
+                    return 50
             # 2. 3 o 5 discontinu (sense PUNCT)
             elif pos in (3, 5) and model_type == 'discontinu':
+                if syll.__getattr__('lower') in ('aquell', 'aquells') and self.nomes_sillabes[pos + 1].lower in ('que', 'qui'):
+                    return 121
                 return 70
             # 5. 3 o 5 continu
             elif pos in (3, 5) and model_type == 'continu':
@@ -153,6 +171,83 @@ def identifica_model(self):
                 return 5
             return 0
 
+        def _sintax_bonus(pos, model_type, syll):
+            """Assigna punts segons la construcció sintàctica."""
+            syll2 = self.nomes_sillabes[pos + 1] if pos + 1 < len(self.nomes_sillabes) else None
+            if not syll2 or not getattr(syll2, 'pos_', False):
+                return 0
+        
+            p1 = (getattr(syll, 'pos_', '') or '').upper()
+            p2 = (getattr(syll2, 'pos_', '') or '').upper()
+            t2 = (getattr(syll2, 'text', '') or '').lower()
+            s1_punct = getattr(syll, 'has_PUNCT', False)
+        
+            possessius = {
+                'meu', 'meva', 'meua', 'teu', 'teva', 'teua', 'seu', 'seva', 'seua',
+                'meus', 'meves', 'teus', 'teves', 'seus', 'seves', 'llur', 'llurs',
+                'mia', 'tua', 'sua', 'mies', 'tues', 'sues'
+            }
+        
+            # Strong penalties when a cut (tall) splits tight syntactic units
+
+            if model_type == 'tall':
+                if p1 in ('ADJ', 'DET', 'PRON', 'ADV') and p2 in ('NOUN', 'PROPN', 'ADJ', 'ADV'):
+                    return -20  # adjectiu/det/pron + nom
+                if p1 == 'AUX' and p2 == 'VERB':
+                    return -15  # aux + verb
+                if p1 == 'VERB' and p2 == 'VERB':
+                    return -15  # verb + verb
+                if p1 in ('VERB', 'AUX') and p2 in ('NOUN', 'PROPN'):
+                    return -10  # verb/aux + noun
+                if p1 in ('NOUN', 'PROPN', 'VERB', 'AUX', 'ADJ') and t2 in possessius:
+                    return -20  # mot + possessiu
+                if p1 == 'VERB' and p2 == 'VERB':
+                    return -10  # perífrasis
+                if p1 in ('ADP', 'ADPa'):
+                    return -10  # preposicions
+                return 0
+
+            # Milder penalties for discontinuous cut
+            if model_type == 'discontinu':
+                if p1 in ('ADJ', 'DET', 'PRON', 'ADV') and p2 in ('NOUN', 'PROPN', 'ADJ', 'ADV'):
+                    return -20
+                if p1 == 'AUX' and p2 == 'VERB':
+                    return -20
+                if p1 in ('VERB', 'AUX') and p2 in ('NOUN', 'PROPN'):
+                    return -20
+                if t2 in possessius:
+                    return -5
+                return 0
+
+            return 0
+
+        def _syntax_winer(pos, model_type, syll):
+            """Determina si la construcció sintàctica guanya o perd segons el model."""
+            syll2 = self.nomes_sillabes[pos + 1] if pos + 1 < len(self.nomes_sillabes) else None
+            if not syll2 or not getattr(syll2, 'pos_', False):
+                return 0
+
+            p1 = (getattr(syll, 'pos_', '') or '').upper()
+            p2 = (getattr(syll2, 'pos_', '') or '').upper()
+
+            if model_type == 'tall':
+                if p1 in ('NOUN', 'PROPN', 'VERB') and p2 not in ('NOUN', 'PROPN', 'VERB'):
+                    return 20
+            return 0
+
+        def _accent_bonus(pos, model_type, syll):
+            """Assigna bonus segons el pes de la síl·laba i per als discontinus."""
+            pes = syll.pes
+            if model_type == 'discontinu':
+                if 4 > pes > 2:
+                    return 20  # Accent bivalent o secundari reforça discontinu
+                elif 1 < pes <= 2:
+                    return 0  # Accent secundari no reforça discontinu
+            elif model_type == 'continu':
+                if pes <= 2:
+                    return -40  # Accent secundari no reforça continu (prefereix accents lèxics)
+            return 0
+
         scores = []
         for pos, base_pts, pes in candidats_valids:
             if pos >= len(self.nomes_sillabes):
@@ -179,9 +274,13 @@ def identifica_model(self):
             # Calcula punts finals: base_pts (posició + PUNCT inicial) + bonus jerarquia + bonus PUNCT extra
             hierarchy_bonus = _hierarchy_bonus(pos, model_type, syll)
             punct_bonus = _punct_bonus(pos, model_type, syll)
+            sintax_bonus = _sintax_bonus(pos, model_type, syll)
+            sintax_winer_bonus = _syntax_winer(pos, model_type, syll)
+            accent_score = _accent_bonus(pos, model_type, syll)
             tiebreak = (pes or 0) / 100.0  # Molt petit, només per desempats
-            total_pts = base_pts + hierarchy_bonus + punct_bonus + tiebreak
 
+            total_pts = base_pts + hierarchy_bonus + punct_bonus + sintax_bonus + sintax_winer_bonus + accent_score + tiebreak
+            #print(f"> Candidat pos {pos} ('{syll.text}'):\n\t- model {model_type}\n\t-base_pts {base_pts}\n\t-hierarchy_bonus {hierarchy_bonus}\n\t-punct_bonus {punct_bonus}\n\t-sintax_bonus {sintax_bonus}\n\t-sintax_winer {sintax_winer_bonus}\n\t-accent_bonus {accent_score}\n\t-tiebreak {tiebreak:.4f}\n\t-=> total_pts {total_pts:.2f}")
             scores.append({
                 'pos': pos,
                 'pts': total_pts,
@@ -212,12 +311,7 @@ def identifica_model(self):
 
 def _apply_model(self, pos, word_at_pos, model_type):
     """Aplica els canvis associats al model identificat"""
-
-    if model_type == 'tall':
-        self.nomes_sillabes[pos].pes = 5.0
-    elif model_type == 'discontinu':
-        if self.nomes_sillabes[pos-1].pes > self.nomes_sillabes[pos].pes or self.nomes_sillabes[pos+1].pes > self.nomes_sillabes[pos].pes:
-            self.nomes_sillabes[pos].pes = 5.0
+    self.nomes_sillabes[pos].pes = 5.0  # Marca la síl·laba de tall amb el pes màxim (evita desaccentuacions)
     if word_at_pos:
         word_at_pos.paraula_tall = True
 

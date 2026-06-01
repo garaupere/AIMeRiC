@@ -551,7 +551,7 @@ de1bye
 .de3s4eu.
 .de3s4in.
 .de3s4è.
-.des3em
+.de4s3em
 .de3s4em3bre
 .de3s4em3bral
 .de3s4em3brist
@@ -566,7 +566,7 @@ de1bye
 .de3s4e3nà3ri
 .de3s4e3na3ri
 .de3s4e3ner
-de2s3envol
+.de2s3envol
 .des3e3qui
 .de3s4ert
 .de3s4èrt
