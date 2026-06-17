@@ -8,7 +8,7 @@ import csv
 from AIMeRiC.corpus.backup import backup_files
 from AIMeRiC.corpus.compila import compile_corpus
 from AIMeRiC.corpus.modules.dictionary_scan import escaneja_diccionari, escaneja_diccionari_frequencies
-from AIMeRiC.corpus.etiqueta import etiqueta_corpus
+from AIMeRiC.corpus.etiqueta import etiqueta_corpus, clean_results_folders
 from AIMeRiC.corpus.prosa import etiqueta_prosa
 from AIMeRiC.corpus.valida import valida
 from AIMeRiC.escansio.escansor import escaneja, __version__
@@ -233,7 +233,8 @@ def main(nlp):
                     start = time.time()
                     corpus_path = f"{root}{corpus}/sense_etiquetar/json/"
                     results_path = f"{root}{corpus}/etiquetat/"
-                    for json_file in tqdm(os.listdir(corpus_path), desc=f"Etiquetant fitxers JSON de '{corpus}'"):
+                    clean_results_folders(results_path)
+                    for json_file in tqdm(os.listdir(corpus_path), desc=f"Etiquetant el corpus '{corpus}'"):
                         if json_file.endswith('.json'):
                             try:
                                 json_file_path = os.path.join(corpus_path, json_file)
@@ -244,10 +245,10 @@ def main(nlp):
                                 with open(f"{results_path}json/{name}.json", 'w', encoding='utf-8') as f:
                                     json.dump(corpus_result[0], f, indent=4, ensure_ascii=False)
                                 # Desa un CSV amb els resultats
-                                print("Desant els resultats en format CSV...")
+                                #print("Desant els resultats en format CSV...")
                                 print(corpus_result[1])
                                 os.makedirs(f"{results_path}csv/", exist_ok=True)
-                                corpus_result[1].to_csv(f"{results_path}csv/prosa.csv", index=False, sep=';', encoding='utf-8',
+                                corpus_result[1].to_csv(f"{results_path}csv/{name}.csv", index=False, sep=';', encoding='utf-8',
                                         lineterminator='\n', header=True, decimal=',', quoting=csv.QUOTE_ALL)
                             except FileNotFoundError:
                                 print('El corpus seleccionat no existeix.')
