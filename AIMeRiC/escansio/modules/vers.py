@@ -640,8 +640,9 @@ class Vers:
 # Exemple d'ús
 if __name__ == "__main__":
     start = time.time()
-    sentence = "Jo sóc aquell home en mar vers veleja"
+    sentence = "el sant de pedra sobre el portal"
     nlp = spacy.load("ca_core_news_md", disable=["ner"])
     vers = Vers(nlp, sentence, 10, permet_llicencies=True)
     vers.mostra()
     print([[(s.text, s.pes) for s in word.stress] for word in vers.words])
+    print(vers.desa)

@@ -72,7 +72,7 @@ def accentua(self):
         r"[^qg][aeiou][iu]s)"  # vocal + i/u + s (maqueis, belais, antiherois, etc.)
         r"s?(?:$|-')"  # s opcional + final o guionet.
     )
-
+# aouïü][^'aeiuos]+|
     accents = re.compile("[àáèéíìóòúù]")
 
     if self.word_ment is not None:
